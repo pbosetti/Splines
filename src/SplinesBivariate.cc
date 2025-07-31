@@ -887,24 +887,40 @@ namespace Splines {
 
       vector_type const & data{ gc_z.get_vector() };
       vec_real_type tmp;
-      UTILS_ASSERT(
-        static_cast<size_t>(NR) == data.size(),
-        "{}, field `zdata` (vector of vector) expected of size {} found of size {}\n",
-        where, NR, data.size()
-      );
-      for ( integer j{0}; j < NC; ++j ) {
-        GenericContainer const & row{ data[j] };
-        string const msg1{ fmt::format( "{}, reading row {}\n", where, j ) };
-        row.copyto_vec_real( tmp, msg1 );
+      
+      if ( transposed ) {
         UTILS_ASSERT(
-          static_cast<size_t>(NC) == tmp.size(),
-          "{}, row {}-th of size {}, expected {}\n",
-          where, j, tmp.size(), NC
+          static_cast<size_t>(NC) == data.size(),
+          "{}, field `zdata` (vector of vector transposed) expected of size {} found of size {}\n",
+          where, NC, data.size()
         );
-        if ( transposed ) {
-          for ( integer i{0}; i < NC; ++i ) z_node_ref(j,i) = tmp[ i ];
-        } else {
+        for ( integer j{0}; j < NC; ++j ) {
+          GenericContainer const & col{ data[j] };
+          string const msg1{ fmt::format( "{}, reading row {}\n", where, j ) };
+          col.copyto_vec_real( tmp, msg1 );
+          UTILS_ASSERT(
+            static_cast<size_t>(NR) == tmp.size(),
+            "{}, col {}-th of size {}, expected {}\n",
+            where, j, tmp.size(), NR
+          );
           for ( integer i{0}; i < NC; ++i ) z_node_ref(i,j) = tmp[ i ];
+        }
+      } else {
+        UTILS_ASSERT(
+          static_cast<size_t>(NR) == data.size(),
+          "{}, field `zdata` (vector of vector) expected of size {} found of size {}\n",
+          where, NR, data.size()
+        );
+        for ( integer i{0}; i < NR; ++i ) {
+          GenericContainer const & row{ data[i] };
+          string const msg1{ fmt::format( "{}, reading row {}\n", where, i ) };
+          row.copyto_vec_real( tmp, msg1 );
+          UTILS_ASSERT(
+            static_cast<size_t>(NC) == tmp.size(),
+            "{}, row {}-th of size {}, expected {}\n",
+            where, i, tmp.size(), NC
+          );
+          for ( integer j{0}; j < NC; ++j ) z_node_ref(i,j) = tmp[ j ];
         }
       }
 

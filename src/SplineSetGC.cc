@@ -285,22 +285,21 @@ namespace Splines {
         std::set<std::string> keywords2;
         for ( auto const & pair : item.get_map(where) ) { keywords2.insert(pair.first); }
 
-        keywords2.erase("extend");
-        keywords2.erase("can_extend");
-        keywords2.erase("extend_constant");
-        keywords2.insert("closed");
 
         bool is_closed{false};
-        item.get_if_exists("closed",is_closed);
+        item.get_if_exists("closed",is_closed); keywords2.erase("closed");
         if ( is_closed ) {
           S->make_closed();
         } else {
+          keywords2.erase("extend");
+          keywords2.erase("can_extend");
           S->make_opened();
           bool can_extend{false};
           if ( !item.get_if_exists("extend",can_extend) ) item.get_if_exists("can_extend",can_extend) ;
           if ( can_extend ) {
             S->make_unbounded();
             bool extend_constant{false};
+            keywords2.erase("extend_constant");
             item.get_if_exists("extend_constant",extend_constant);
             if ( extend_constant ) S->make_extended_constant();
             else                   S->make_extended_not_constant();

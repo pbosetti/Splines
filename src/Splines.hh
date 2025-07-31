@@ -421,6 +421,8 @@ namespace Splines {
 
     SearchInterval( SearchInterval const & ) = delete;
     SearchInterval const & operator = ( SearchInterval const & ) = delete;
+    SearchInterval(SearchInterval&&) = delete;
+    SearchInterval& operator=(SearchInterval&&) = delete;
 
     SearchInterval() {}
 
