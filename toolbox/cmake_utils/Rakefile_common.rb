@@ -288,14 +288,21 @@ def url_resolve(
   # response.body
 end
 
-def url_download( url_address, filename )
+def url_download(url_address, filename)
   if File.exist?(filename)
     puts "file: `#{filename}` already downloaded"
   else
     puts "downloading: #{filename}..."
     uri_str = url_resolve(url_address)
-    uri     = URI( uri_str )
-    File.binwrite( filename, Net::HTTP.get(uri) )
+    uri     = URI(uri_str)
+
+    Net::HTTP.start(uri.host, uri.port,
+                    use_ssl: uri.scheme == 'https',
+                    verify_mode: OpenSSL::SSL::VERIFY_NONE) do |http|
+      request = Net::HTTP::Get.new(uri)
+      response = http.request(request)
+      File.binwrite(filename, response.body)
+    end
     puts "done"
   end
 end

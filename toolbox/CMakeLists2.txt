@@ -174,6 +174,15 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
+# Set MEX-specific linker flags manually for macOS
+set(MEX_LINKER_FLAGS
+    "-Wl,-U,_mexCreateMexFunction"
+    "-Wl,-U,_mexDestroyMexFunction" 
+    "-Wl,-U,_mexFunctionAdapter"
+    "-Wl,-exported_symbols_list,${Matlab_ROOT_DIR}/extern/lib/maca64/c_exportsmexfileversion.map"
+    "-Wl,-exported_symbols_list,${Matlab_ROOT_DIR}/extern/lib/maca64/cppMexFunction.map"
+)
+
 foreach(MEX ${MEX_LIST})
 
   message( STATUS "Building MEX: ${MEX}")
@@ -181,9 +190,10 @@ foreach(MEX ${MEX_LIST})
   # Create MEX target manually to have more control
   add_library(mex_${MEX} MODULE 
     src_mex/mex_${MEX}.cc
+    ${Matlab_ROOT_DIR}/extern/version/c_mexapi_version.c
   )
 
-  # Set MEX file properties - APPROCCIO CORRETTO per R2025b su Apple Silicon
+  # Set MEX file properties
   set_target_properties(mex_${MEX} PROPERTIES
     SUFFIX ".mexmaca64"
     PREFIX ""
@@ -191,7 +201,6 @@ foreach(MEX ${MEX_LIST})
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
-    BUNDLE TRUE
   )
 
   # Add include directories
@@ -203,23 +212,20 @@ foreach(MEX ${MEX_LIST})
     src/Utils
   )
 
-  # Link libraries
+  # Link libraries - use the actual MATLAB library files
   target_link_libraries(mex_${MEX}
     ${EXTRA_LIBS}
     ${Matlab_MEX_LIBRARY}
     ${Matlab_MX_LIBRARY}
   )
 
-  # SOLUZIONE CORRETTA per MATLAB R2025b su macOS Apple Silicon:
-  # Usa dynamic lookup invece di forzare i simboli specifici
-  target_link_options(mex_${MEX} PRIVATE
-    "-Wl,-undefined,dynamic_lookup"
-  )
+  # Add MEX-specific linker flags
+  target_link_options(mex_${MEX} PRIVATE ${MEX_LINKER_FLAGS})
 
-  # MEX-specific compile definitions
+  # Add MEX-specific compile definitions
   target_compile_definitions(mex_${MEX} PRIVATE
     MATLAB_MEX_FILE
-    MX_COMPAT_64
+    MATLAB_DEFAULT_RELEASE=R2017b
     _USE_MATH_DEFINES
   )
 
