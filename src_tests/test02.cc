@@ -103,13 +103,13 @@ string format_array( const real_type * arr, size_t n )
 // Function to print colored header
 void print_header( const string & title )
 {
-  fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold,
+  fmt::print(
+    fg( fmt::color::cyan ) | fmt::emphasis::bold,
     "\n"
     "╔══════════════════════════════════════════════╗\n"
     "║{:^46}║\n"
     "╚══════════════════════════════════════════════╝\n",
-    title
-  );
+    title );
 }
 
 // Function to print a table of results for 2D splines
@@ -129,8 +129,7 @@ void print_2D_spline_table( const vector<Spline2DInfo> & results )
     "y_max",
     "z_min",
     "z_max",
-    "z_avg"
-  );
+    "z_avg" );
 
   // Table rows with alternating colors
   for ( size_t i = 0; i < results.size(); ++i )
@@ -177,70 +176,35 @@ string format_cell_with_stats(
     return fmt::format(
       fg( fmt::color::green ) | fmt::emphasis::bold,
       "{:52}",
-      fmt::format(
-        "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)",
-        location,
-        max_err,
-        avg_err,
-        points
-      )
-    );
+      fmt::format( "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)", location, max_err, avg_err, points ) );
   }
   else if ( max_err < 1e-4 && avg_err < 1e-5 )
   {
     return fmt::format(
       fg( fmt::color::light_green ),
       "{:52}",
-      fmt::format(
-        "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)",
-        location,
-        max_err,
-        avg_err,
-        points
-      )
-    );
+      fmt::format( "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)", location, max_err, avg_err, points ) );
   }
   else if ( max_err < 1e-2 && avg_err < 1e-3 )
   {
     return fmt::format(
       fg( fmt::color::yellow ),
       "{:52}",
-      fmt::format(
-        "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)",
-        location,
-        max_err,
-        avg_err,
-        points
-      )
-    );
+      fmt::format( "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)", location, max_err, avg_err, points ) );
   }
   else if ( max_err < 1.0 && avg_err < 0.1 )
   {
     return fmt::format(
       fg( fmt::color::orange ),
       "{:52}",
-      fmt::format(
-        "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)",
-        location,
-        max_err,
-        avg_err,
-        points
-      )
-    );
+      fmt::format( "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)", location, max_err, avg_err, points ) );
   }
   else
   {
     return fmt::format(
       fg( fmt::color::red ) | fmt::emphasis::bold,
       "{:52}",
-      fmt::format(
-        "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)",
-        location,
-        max_err,
-        avg_err,
-        points
-      )
-    );
+      fmt::format( "{:<6} max:{:>8.1e} avg:{:>8.1e} ({:>3} pts)", location, max_err, avg_err, points ) );
   }
 }
 
@@ -262,8 +226,9 @@ void print_derivative_table(
     "│ {:^12} │ {:^52} │ {:^52} │\n"
     "├──────────────┼──────────────────────────────────────────────────────┼──────────────────────────────────────────────────────┤\n",
     fmt::format( "DERIVATIVE {} - FINITE DIFFERENCE ERRORS", derivative_name ),
-    "Spline Type", "Interior Points (within patches)", "Boundary Points (between patches)"
-  );
+    "Spline Type",
+    "Interior Points (within patches)",
+    "Boundary Points (between patches)" );
 
   // Function to get the appropriate error stats for the derivative
   auto get_error_stats = [&]( const DerivativeErrors & err, const string & deriv ) -> const DerivativeErrorStats &

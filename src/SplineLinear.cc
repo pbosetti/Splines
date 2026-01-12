@@ -52,8 +52,9 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] ) return m_Y[0];
-      if ( x >= m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] ) return m_Y[0];
+      if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
     }
     real_type const s = ( x - m_X[ni] ) / ( m_X[ni + 1] - m_X[ni] );
     return ( 1 - s ) * m_Y[ni] + s * m_Y[ni + 1];
@@ -107,7 +108,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     return ( m_Y[i + 1] - m_Y[i] ) / ( m_X[i + 1] - m_X[i] );
   }
@@ -118,7 +120,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // metto a 0 solo se esco dalla spline
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     std::pair<integer, real_type> res( 0, x );
     m_search.find( res );
@@ -201,7 +204,7 @@ namespace Splines
   void LinearSpline::write_to_stream( ostream_type & s ) const
   {
     integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
-    for ( integer i{ 0 }; i < nseg; ++i )
+    for ( integer i = 0; i < nseg; ++i )
       fmt::print(
         s,
         "segment N.{:4} X:[{:.5},{:.5}] Y:[{:.5},{:.5}] slope: {:.5}\n",
@@ -221,7 +224,7 @@ namespace Splines
     UTILS_ASSERT( m_npts >= 2, "LinearSpline::coeffs, npts={} must be >= 2\n", m_npts );
 
     integer const n{ m_npts - 1 };
-    for ( integer i{ 0 }; i < n; ++i )
+    for ( integer i = 0; i < n; ++i )
     {
       real_type const a{ m_Y[i] };
       real_type const b{ ( m_Y[i + 1] - m_Y[i] ) / ( m_X[i + 1] - m_X[i] ) };

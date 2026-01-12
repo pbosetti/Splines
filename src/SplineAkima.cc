@@ -70,7 +70,7 @@ namespace Splines
     }
 
     // 1. Calcola le pendenze m_i = (Y[i+1] - Y[i]) / (X[i+1] - X[i])
-    for ( integer i{ 0 }; i < N - 1; ++i )
+    for ( integer i = 0; i < N - 1; ++i )
     {
       UTILS_ASSERT(
         X[i + 1] > X[i],
@@ -84,7 +84,7 @@ namespace Splines
 
     // 2. Calcolo epsi
     real_type epsi{ 0 };
-    for ( integer i{ 0 }; i < N - 2; ++i )
+    for ( integer i = 0; i < N - 2; ++i )
     {
       real_type const dm{ std::abs( m[i + 1] - m[i] ) };
       if ( dm > epsi ) epsi = dm;

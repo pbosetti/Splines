@@ -56,7 +56,7 @@ namespace Splines
     real_type * m{ mem.malloc( npts ) };
 
     // calcolo slopes
-    for ( integer i{ 0 }; i < n; ++i ) m[i] = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
+    for ( integer i = 0; i < n; ++i ) m[i] = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
 
     if ( npts == 2 )
     {  // caso speciale 2 o 3 punti

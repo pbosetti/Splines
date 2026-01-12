@@ -37,6 +37,18 @@ namespace Splines
     BESSEL = 3
   };
 
+  inline std::string to_string( QuinticSpline_sub_type t )
+  {
+    switch ( t )
+    {
+      case QuinticSpline_sub_type::CUBIC: return "CUBIC";
+      case QuinticSpline_sub_type::PCHIP: return "PCHIP";
+      case QuinticSpline_sub_type::AKIMA: return "AKIMA";
+      case QuinticSpline_sub_type::BESSEL: return "BESSEL";
+    }
+    return "NOTYPE";
+  }
+
   //! Quintic spline class
   class QuinticSpline : public QuinticSplineBase
   {

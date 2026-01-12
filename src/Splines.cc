@@ -92,7 +92,7 @@ namespace Splines
     {
       real_type const * p1{ p0 + ld_pnts };
       real_type         dst = 0;
-      for ( integer j{ 0 }; j < dim; ++j )
+      for ( integer j = 0; j < dim; ++j )
       {
         real_type const c{ p1[j] - p0[j] };
         dst += c * c;
@@ -119,7 +119,7 @@ namespace Splines
     {
       real_type const * p1{ p0 + ld_pnts };
       real_type         dst{ 0 };
-      for ( integer j{ 0 }; j < dim; ++j )
+      for ( integer j = 0; j < dim; ++j )
       {
         real_type const c{ p1[j] - p0[j] };
         dst += c * c;
@@ -336,7 +336,7 @@ namespace Splines
     //
     std::fill_n( m_LO, m_table_size + 1, -1 );
     std::fill_n( m_HI, m_table_size + 1, -1 );
-    for ( integer k{ 0 }; k < n; ++k )
+    for ( integer k = 0; k < n; ++k )
     {
       real_type pos{ ( X[k] - m_x_min ) / m_dx };
       integer   i_LO{ static_cast<integer>( std::ceil( pos + 1e-6 ) ) };
@@ -352,7 +352,7 @@ namespace Splines
     }
     m_HI[m_table_size] = n - 1;
 
-    for ( integer i{ 0 }; i < m_table_size; ++i )
+    for ( integer i = 0; i < m_table_size; ++i )
       if ( m_LO[i + 1] == -1 ) m_LO[i + 1] = m_LO[i];
     for ( integer i{ m_table_size }; i > 0; --i )
       if ( m_HI[i - 1] == -1 ) m_HI[i - 1] = m_HI[i];
@@ -427,8 +427,8 @@ namespace Splines
     integer const   n )
   {
     reserve( n );
-    for ( integer i{ 0 }; i < n; ++i ) m_X[i] = x[i * incx];
-    for ( integer i{ 0 }; i < n; ++i ) m_Y[i] = y[i * incy];
+    for ( integer i = 0; i < n; ++i ) m_X[i] = x[i * incx];
+    for ( integer i = 0; i < n; ++i ) m_Y[i] = y[i * incy];
     m_npts = n;
     build();
   }
@@ -517,7 +517,7 @@ namespace Splines
   {
     s << header << '\n';
     real_type const dx{ ( x_max() - x_min() ) / nintervals };
-    for ( integer i{ 0 }; i <= nintervals; ++i )
+    for ( integer i = 0; i <= nintervals; ++i )
     {
       real_type x{ x_min() + i * dx };
       fmt::print( s, "{}\t{}\n", x, this->eval( x ) );

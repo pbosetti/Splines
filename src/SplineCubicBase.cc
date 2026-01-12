@@ -58,7 +58,7 @@ namespace Splines
     integer const   n )
   {
     this->reserve( n );
-    for ( integer i{ 0 }; i < n; ++i )
+    for ( integer i = 0; i < n; ++i )
     {
       m_X[i]  = x[i * incx];
       m_Y[i]  = y[i * incy];
@@ -126,8 +126,9 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] ) return m_Y[0];
-      if ( x >= m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] ) return m_Y[0];
+      if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
     }
     real_type base[4];
     Hermite3( x - m_X[ni], m_X[ni + 1] - m_X[ni], base );
@@ -149,7 +150,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type base_D[4];
     Hermite3_D( x - m_X[ni], m_X[ni + 1] - m_X[ni], base_D );
@@ -188,7 +190,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type base_DD[4];
     Hermite3_DD( x - m_X[ni], m_X[ni + 1] - m_X[ni], base_DD );
@@ -229,7 +232,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type base_DDD[4];
     Hermite3_DDD( x - m_X[ni], m_X[ni + 1] - m_X[ni], base_DDD );
@@ -281,7 +285,7 @@ namespace Splines
     UTILS_ASSERT( m_npts >= 2, "CubicSplineBase::coeffs, npts={} must be >= 2\n", m_npts );
 
     integer const n{ m_npts - 1 };
-    for ( integer i{ 0 }; i < n; ++i )
+    for ( integer i = 0; i < n; ++i )
     {
       real_type const H{ m_X[i + 1] - m_X[i] };
       real_type       a, b, c, d;
@@ -343,7 +347,7 @@ namespace Splines
   void CubicSplineBase::write_to_stream( ostream_type & s ) const
   {
     integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
-    for ( integer i{ 0 }; i < nseg; ++i )
+    for ( integer i = 0; i < nseg; ++i )
       fmt::print(
         s,
         "segment N.{:4} X:[{:.5},{:.5}] Y:[{:.5},{:.5}] Yp:[{:.5},{:.5}] slope: {}\n",
@@ -387,7 +391,7 @@ namespace Splines
       q.setup( 3 * A, 2 * B, C );
       real_type     r[2];
       integer const nr{ q.getRootsInOpenRange( 0, H, r ) };
-      for ( integer j{ 0 }; j < nr; ++j )
+      for ( integer j = 0; j < nr; ++j )
       {
         real_type const rr{ r[j] };
         real_type const yy{ ( ( ( A * rr ) + B ) * rr + C ) * rr + D };
@@ -465,7 +469,7 @@ namespace Splines
       q.setup( 3 * A, 2 * B, C );
       real_type     r[2];
       integer const nr{ q.getRootsInOpenRange( 0, H, r ) };
-      for ( integer j{ 0 }; j < nr; ++j )
+      for ( integer j = 0; j < nr; ++j )
       {
         real_type const rr{ r[j] };
         real_type const yy{ ( ( ( A * rr ) + B ) * rr + C ) * rr + D };

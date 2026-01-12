@@ -449,7 +449,7 @@ namespace Splines
       Z[0] -= UU * Z[2];
     }
 
-    for ( integer i{ 0 }; i < n; ++i )
+    for ( integer i = 0; i < n; ++i )
     {
       real_type const DX = X[i + 1] - X[i];
       Yp[i]              = ( Y[i + 1] - Y[i] ) / DX - ( 2 * Z[i] + Z[i + 1] ) * ( DX / 6 );

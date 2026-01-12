@@ -150,8 +150,8 @@ namespace Splines
     integer const   n )
   {
     reserve( n );
-    for ( integer i{ 0 }; i < n; ++i ) m_X[i] = x[i * incx];
-    for ( integer i{ 0 }; i + 1 < n; ++i ) m_Y[i] = y[i * incy];
+    for ( integer i = 0; i < n; ++i ) m_X[i] = x[i * incx];
+    for ( integer i = 0; i + 1 < n; ++i ) m_Y[i] = y[i * incy];
     m_npts = n;
     build();
   }
@@ -171,7 +171,7 @@ namespace Splines
   void ConstantSpline::write_to_stream( ostream_type & s ) const
   {
     integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
-    for ( integer i{ 0 }; i < nseg; ++i )
+    for ( integer i = 0; i < nseg; ++i )
       fmt::print( s, "segment N. {:4} X:[{:.5},{:.5}] Y:{:.5}\n", i, m_X[i], m_X[i + 1], m_Y[i] );
   }
 

@@ -76,14 +76,14 @@ namespace Splines
   {
     vector<real_type> vals;
     stream << 's';
-    for ( integer i{ 0 }; i < m_dim; ++i ) stream << '\t' << i;
+    for ( integer i = 0; i < m_dim; ++i ) stream << '\t' << i;
     stream << '\n';
-    for ( integer j{ 0 }; j < num_points; ++j )
+    for ( integer j = 0; j < num_points; ++j )
     {
       real_type const s = x_min() + ( ( x_max() - x_min() ) * j ) / ( num_points - 1 );
       this->eval( s, vals );
       stream << s;
-      for ( integer i{ 0 }; i < m_dim; ++i ) stream << '\t' << vals[i];
+      for ( integer i = 0; i < m_dim; ++i ) stream << '\t' << vals[i];
       stream << '\n';
     }
   }
@@ -128,7 +128,7 @@ namespace Splines
   {
     allocate( dim, npts );
     for ( integer spl{ 0 }; spl < m_dim; ++spl )
-      for ( integer j{ 0 }; j < m_npts; ++j ) m_Y[spl][j] = Y[spl + j * ldY];
+      for ( integer j = 0; j < m_npts; ++j ) m_Y[spl][j] = Y[spl + j * ldY];
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -154,7 +154,7 @@ namespace Splines
     switch ( m_dim )
     {
       case 2:
-        for ( integer j{ 0 }; j < nn; ++j )
+        for ( integer j = 0; j < nn; ++j )
         {
           real_type const dx{ m_Y[0][j + 1] - m_Y[0][j] };
           real_type const dy{ m_Y[1][j + 1] - m_Y[1][j] };
@@ -162,7 +162,7 @@ namespace Splines
         }
         break;
       case 3:
-        for ( integer j{ 0 }; j < nn; ++j )
+        for ( integer j = 0; j < nn; ++j )
         {
           real_type const dx{ m_Y[0][j + 1] - m_Y[0][j] };
           real_type const dy{ m_Y[1][j + 1] - m_Y[1][j] };
@@ -171,10 +171,10 @@ namespace Splines
         }
         break;
       default:
-        for ( integer j{ 0 }; j < nn; ++j )
+        for ( integer j = 0; j < nn; ++j )
         {
           real_type l{ 0 };
-          for ( integer k{ 0 }; k < m_dim; ++k )
+          for ( integer k = 0; k < m_dim; ++k )
           {
             real_type const d{ m_Y[k][j + 1] - m_Y[k][j] };
             l += d * d;
@@ -192,7 +192,7 @@ namespace Splines
     compute_chords();
     integer const nn{ m_npts - 1 };
     real_type     acc{ 0 };
-    for ( integer j{ 0 }; j <= nn; ++j )
+    for ( integer j = 0; j <= nn; ++j )
     {
       real_type const l{ m_X[j] };
       m_X[j] = acc;
@@ -210,7 +210,7 @@ namespace Splines
     compute_chords();
     integer const nn{ m_npts - 1 };
     real_type     acc{ 0 };
-    for ( integer j{ 0 }; j <= nn; ++j )
+    for ( integer j = 0; j <= nn; ++j )
     {
       real_type const l{ sqrt( m_X[j] ) };
       m_X[j] = acc;
@@ -236,7 +236,7 @@ namespace Splines
       ll = l1 + l2;
       a  = ( l2 / l1 ) / ll;
       b  = ( l1 / l2 ) / ll;
-      for ( integer k{ 0 }; k < d; ++k )
+      for ( integer k = 0; k < d; ++k )
         m_Yp[k][j] = a * ( m_Y[k][j] - m_Y[k][j - 1] ) + b * ( m_Y[k][j + 1] - m_Y[k][j] );
     }
 
@@ -245,14 +245,14 @@ namespace Splines
     ll = l1 + l2;
     a  = ll / ( l1 * l2 );
     b  = ( l1 / l2 ) / ll;
-    for ( integer k{ 0 }; k < d; ++k ) m_Yp[k][0] = a * ( m_Y[k][1] - m_Y[k][0] ) - b * ( m_Y[k][2] - m_Y[k][0] );
+    for ( integer k = 0; k < d; ++k ) m_Yp[k][0] = a * ( m_Y[k][1] - m_Y[k][0] ) - b * ( m_Y[k][2] - m_Y[k][0] );
 
     l1 = m_X[n] - m_X[n - 1];
     l2 = m_X[n - 1] - m_X[n - 2];
     ll = l1 + l2;
     a  = ll / ( l1 * l2 );
     b  = ( l1 / l2 ) / ll;
-    for ( integer k{ 0 }; k < d; ++k )
+    for ( integer k = 0; k < d; ++k )
       m_Yp[k][n] = b * ( m_Y[k][n - 2] - m_Y[k][n] ) - a * ( m_Y[k][n - 1] - m_Y[k][n] );
   }
 
@@ -315,7 +315,7 @@ namespace Splines
     integer const i{ res.first };
     Hermite3( res.second - m_X[i], m_X[i + 1] - m_X[i], base );
     real_type * v{ vals };
-    for ( integer j{ 0 }; j < m_dim; ++j, v += inc )
+    for ( integer j = 0; j < m_dim; ++j, v += inc )
       *v = base[0] * m_Y[j][i] + base[1] * m_Y[j][i + 1] + base[2] * m_Yp[j][i] + base[3] * m_Yp[j][i + 1];
   }
 
@@ -522,7 +522,7 @@ namespace Splines
       integer const npts{ static_cast<integer>( Y.num_cols() ) };
       allocate( dim, npts );
       for ( integer spl{ 0 }; spl < m_dim; ++spl )
-        for ( integer j{ 0 }; j < m_npts; ++j ) m_Y[spl][j] = Y( spl, j );
+        for ( integer j = 0; j < m_npts; ++j ) m_Y[spl][j] = Y( spl, j );
     }
     else
     {
@@ -530,7 +530,7 @@ namespace Splines
       integer const npts{ static_cast<integer>( Y.num_rows() ) };
       allocate( dim, npts );
       for ( integer spl{ 0 }; spl < m_dim; ++spl )
-        for ( integer j{ 0 }; j < m_npts; ++j ) m_Y[spl][j] = Y( j, spl );
+        for ( integer j = 0; j < m_npts; ++j ) m_Y[spl][j] = Y( j, spl );
     }
 
     UTILS_WARNING(

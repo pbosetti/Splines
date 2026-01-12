@@ -94,8 +94,9 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] ) return m_Y[0];
-      if ( x >= m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] ) return m_Y[0];
+      if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
     }
     real_type       base[6];
     real_type const x0{ m_X[ni] };
@@ -120,7 +121,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type       base_D[6];
     real_type const x0{ m_X[ni] };
@@ -145,7 +147,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type       base_DD[6];
     real_type const x0 = m_X[ni];
@@ -170,7 +173,7 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type       base_DDD[6];
     real_type const x0{ m_X[i] };
@@ -195,7 +198,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type       base_DDDD[6];
     real_type const x0{ m_X[ni] };
@@ -220,7 +224,8 @@ namespace Splines
   {
     if ( m_curve_can_extend && m_curve_extended_constant )
     {
-      if ( x <= m_X[0] || x >= m_X[m_npts - 1] ) return 0;
+      // estendo solo quando esco effettivamente
+      if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
     }
     real_type       base_DDDDD[6];
     real_type const x0{ m_X[ni] };
@@ -323,7 +328,7 @@ namespace Splines
 
     integer const n{ m_npts - 1 };
 
-    for ( integer i{ 0 }; i < n; ++i )
+    for ( integer i = 0; i < n; ++i )
     {
       real_type const H{ m_X[i + 1] - m_X[i] };
       real_type       a, b, c, d, e, f;
@@ -377,7 +382,7 @@ namespace Splines
   void QuinticSplineBase::write_to_stream( ostream_type & s ) const
   {
     integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
-    for ( integer i{ 0 }; i < nseg; ++i )
+    for ( integer i = 0; i < nseg; ++i )
       fmt::print(
         s,
         "segment N.{:4} X:[{:.5},{:.5}] Y:[{:.5},{:.5}] Yp:[{:.5},{:.5}] Ypp:[{:.5},{:.5}] slope: {:.5}\n",
@@ -425,7 +430,7 @@ namespace Splines
       q.setup( 5 * A, 4 * B, 3 * C, 2 * D, E );
       real_type     r[4];
       integer const nr{ q.getRootsInOpenRange( 0, H, r ) };
-      for ( integer j{ 0 }; j < nr; ++j )
+      for ( integer j = 0; j < nr; ++j )
       {
         real_type const rr = r[j];
         real_type       yy = ( ( ( ( ( A * rr ) + B ) * rr + C ) * rr + D ) * rr + E ) * rr + F;
@@ -506,7 +511,7 @@ namespace Splines
       q.setup( 5 * A, 4 * B, 3 * C, 2 * D, E );
       real_type     r[4];
       integer const nr = q.get_roots_in_open_range( 0, H, r );
-      for ( integer j{ 0 }; j < nr; ++j )
+      for ( integer j = 0; j < nr; ++j )
       {
         real_type const rr  = r[j];
         real_type       yy  = ( ( ( ( ( A * rr ) + B ) * rr + C ) * rr + D ) * rr + E ) * rr + F;

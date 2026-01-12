@@ -124,7 +124,7 @@ namespace Splines
       }
     }
 
-    integer i{ 0 };
+    integer i = 0;
     do
     {
       Z[i] /= D[i];

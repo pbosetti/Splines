@@ -155,7 +155,7 @@ int main()
 
   ofstream file_li, file_co, file_ak, file_cs, file_be, file_pc, file_qs;
 
-  for ( integer k{ 0 }; k < 6; ++k )
+  for ( integer k = 0; k < 6; ++k )
   {
     fmt::print( fg( fmt::color::magenta ) | fmt::emphasis::bold, "\n\n📊 DATASET {} ANALYSIS\n", k );
 
@@ -219,7 +219,7 @@ int main()
 
       spline.clear();
       spline.reserve( nn[k] );
-      for ( integer i{ 0 }; i < integer( nn[k] ); ++i ) spline.push_back( xx[i], yy[i] );
+      for ( integer i = 0; i < integer( nn[k] ); ++i ) spline.push_back( xx[i], yy[i] );
 
       spline.build();
 

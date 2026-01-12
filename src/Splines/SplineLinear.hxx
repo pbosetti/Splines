@@ -79,18 +79,28 @@ namespace Splines
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override;
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override;
 
+    // Template unificato per tutti i tipi
     template <typename T>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> eval( T const & x ) const
+    auto eval( T const & x ) const
     {
-      return eval( autodiff::detail::to_dual( x ) );
+      if constexpr ( std::is_arithmetic<T>::value )
+      {
+        // Se T è un tipo numerico (int, float, double, etc.), promuovi a real_type
+        return eval( static_cast<real_type>( x ) );
+      }
+      else
+      {
+        // Altrimenti deduce automaticamente il tipo duale appropriato
+        return eval( autodiff::detail::to_dual( x ) );
+      }
     }
 
     template <typename T>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> operator()( T const & x ) const
+    auto operator()( T const & x ) const -> decltype( eval( x ) )
     {
-      return eval( autodiff::detail::to_dual( x ) );
+      return eval( x );
     }
-#endif
+#endif  // AUTODIFF_SUPPORT
 
     void reserve( integer const npts ) override;
     void build() override { m_search.must_reset(); }

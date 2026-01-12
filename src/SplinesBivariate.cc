@@ -157,8 +157,8 @@ namespace Splines
     m_X = m_mem( nx );
     m_Y = m_mem( ny );
     m_Z = m_mem( nx * ny );
-    for ( integer i{ 0 }; i < nx; ++i ) m_X[i] = x[i * incx];
-    for ( integer j{ 0 }; j < ny; ++j ) m_Y[j] = y[j * incy];
+    for ( integer i = 0; i < nx; ++i ) m_X[i] = x[i * incx];
+    for ( integer j = 0; j < ny; ++j ) m_Y[j] = y[j * incy];
     load_Z( z, ldZ, fortran_storage, transposed );
     make_spline();
   }
@@ -200,8 +200,8 @@ namespace Splines
     m_X = m_mem( nx );
     m_Y = m_mem( ny );
     m_Z = m_mem( nx * ny );
-    for ( integer i{ 0 }; i < nx; ++i ) m_X[i] = static_cast<real_type>( i );
-    for ( integer j{ 0 }; j < ny; ++j ) m_Y[j] = static_cast<real_type>( j );
+    for ( integer i = 0; i < nx; ++i ) m_X[i] = static_cast<real_type>( i );
+    for ( integer j = 0; j < ny; ++j ) m_Y[j] = static_cast<real_type>( j );
     load_Z( z, ldZ, fortran_storage, transposed );
     make_spline();
   }
@@ -771,7 +771,7 @@ namespace Splines
     s << " ]\nY = [ " << m_Y[0];
     for ( integer j{ 1 }; j < m_ny; ++j ) s << ", " << m_Y[j];
     s << " ]\nZ = [\n";
-    for ( integer j{ 0 }; j < m_ny; ++j )
+    for ( integer j = 0; j < m_ny; ++j )
     {
       s << "  [ " << z_node( 0, j );
       for ( integer i{ 1 }; i < m_nx; ++i ) s << ", " << z_node( i, j );
@@ -842,8 +842,8 @@ namespace Splines
     m_Y = m_mem( m_ny );
     m_Z = m_mem( m_nx * m_ny );
 
-    for ( integer i{ 0 }; i < m_nx; ++i ) m_X[i] = gc_x.get_number_at( i );
-    for ( integer j{ 0 }; j < m_ny; ++j ) m_Y[j] = gc_y.get_number_at( j );
+    for ( integer i = 0; i < m_nx; ++i ) m_X[i] = gc_x.get_number_at( i );
+    for ( integer j = 0; j < m_ny; ++j ) m_Y[j] = gc_y.get_number_at( j );
 
     bool fortran_storage{ gc.get_map_bool( "fortran_storage", where ) };
     keywords.erase( "fortran_storage" );
@@ -910,7 +910,7 @@ namespace Splines
         m_ny,
         nz );
 
-      for ( integer k{ 0 }; k < nxy; ++k )
+      for ( integer k = 0; k < nxy; ++k )
       {
         integer         i, j;
         real_type const v{ gc_z.get_number_at( k ) };
@@ -943,7 +943,7 @@ namespace Splines
           where,
           NC,
           data.size() );
-        for ( integer j{ 0 }; j < NC; ++j )
+        for ( integer j = 0; j < NC; ++j )
         {
           GenericContainer const & col{ data[j] };
           string const             msg1{ fmt::format( "{}, reading row {}\n", where, j ) };
@@ -955,7 +955,7 @@ namespace Splines
             j,
             tmp.size(),
             NR );
-          for ( integer i{ 0 }; i < NC; ++i ) z_node_ref( i, j ) = tmp[i];
+          for ( integer i = 0; i < NC; ++i ) z_node_ref( i, j ) = tmp[i];
         }
       }
       else
@@ -966,7 +966,7 @@ namespace Splines
           where,
           NR,
           data.size() );
-        for ( integer i{ 0 }; i < NR; ++i )
+        for ( integer i = 0; i < NR; ++i )
         {
           GenericContainer const & row{ data[i] };
           string const             msg1{ fmt::format( "{}, reading row {}\n", where, i ) };
@@ -978,7 +978,7 @@ namespace Splines
             i,
             tmp.size(),
             NC );
-          for ( integer j{ 0 }; j < NC; ++j ) z_node_ref( i, j ) = tmp[j];
+          for ( integer j = 0; j < NC; ++j ) z_node_ref( i, j ) = tmp[j];
         }
       }
     }

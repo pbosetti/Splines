@@ -29,6 +29,7 @@
 #include "Splines.hh"
 #include "PolynomialRoots.hh"
 #include "Utils_fmt.hh"
+#include "Utils_AlgoHNewton.hh"
 
 #include <limits>
 #include <cmath>
@@ -106,7 +107,7 @@ namespace Splines
   {
     string res{ fmt::format( "SplineSet[{}] n.points={} n.splines={}", name(), m_npts, m_nspl ) };
 
-    for ( integer i{ 0 }; i < m_nspl; ++i )
+    for ( integer i = 0; i < m_nspl; ++i )
     {
       res += fmt::format( "\nSpline n.{} ", i );
       switch ( m_is_monotone[i] )
@@ -128,7 +129,7 @@ namespace Splines
   {
     names.clear();
     names.reserve( m_nspl );
-    for ( integer i{ 0 }; i < m_nspl; ++i ) names.emplace_back( m_splines[i]->name() );
+    for ( integer i = 0; i < m_nspl; ++i ) names.emplace_back( m_splines[i]->name() );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -136,7 +137,7 @@ namespace Splines
   string SplineSet::name_list() const
   {
     string tmp{ "[ " };
-    for ( integer i{ 0 }; i < m_nspl; ++i ) tmp += fmt::format( "'{}' ", m_splines[i]->name() );
+    for ( integer i = 0; i < m_nspl; ++i ) tmp += fmt::format( "'{}' ", m_splines[i]->name() );
     tmp += "]";
     return tmp;
   }
@@ -175,15 +176,15 @@ namespace Splines
     mem.allocate( m_nspl );
     real_type * vals{ mem( m_nspl ) };
     stream << 's';
-    for ( integer i{ 0 }; i < m_nspl; ++i ) stream << '\t' << header( i );
+    for ( integer i = 0; i < m_nspl; ++i ) stream << '\t' << header( i );
     stream << '\n';
 
-    for ( integer j{ 0 }; j < num_points; ++j )
+    for ( integer j = 0; j < num_points; ++j )
     {
       real_type const s{ x_min() + ( ( x_max() - x_min() ) * j ) / ( num_points - 1 ) };
       this->eval( s, vals, 1 );
       stream << s;
-      for ( integer i{ 0 }; i < m_nspl; ++i ) stream << '\t' << vals[i];
+      for ( integer i = 0; i < m_nspl; ++i ) stream << '\t' << vals[i];
       stream << '\n';
     }
   }
@@ -210,7 +211,7 @@ namespace Splines
     std::vector<char const *> headers( m_nspl );
     std::vector<SplineType1D> stype( m_nspl );
 
-    for ( integer i{ 0 }; i < m_nspl; ++i )
+    for ( integer i = 0; i < m_nspl; ++i )
     {
       headers[i] = m_splines[i]->name().data();
       stype[i]   = m_splines[i]->type();
@@ -219,7 +220,7 @@ namespace Splines
     S.build( m_nspl, m_npts, headers.data(), stype.data(), m_X, m_Y, m_Yp );
 
     // propagate flags
-    for ( integer i{ 0 }; i < m_nspl; ++i ) S.m_splines[i]->copy_flags( *m_splines[i] );
+    for ( integer i = 0; i < m_nspl; ++i ) S.m_splines[i]->copy_flags( *m_splines[i] );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -458,7 +459,7 @@ namespace Splines
   void SplineSet::eval( real_type const x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    for ( integer i{ 0 }; i < m_nspl; ++i ) vals[i] = m_splines[i]->eval( x );
+    for ( integer i = 0; i < m_nspl; ++i ) vals[i] = m_splines[i]->eval( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -466,7 +467,7 @@ namespace Splines
   void SplineSet::eval( real_type const x, real_type vals[], integer const incy ) const
   {
     integer ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->eval( x );
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->eval( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -474,7 +475,7 @@ namespace Splines
   void SplineSet::eval_D( real_type const x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    for ( integer i{ 0 }; i < m_nspl; ++i ) vals[i] = m_splines[i]->D( x );
+    for ( integer i = 0; i < m_nspl; ++i ) vals[i] = m_splines[i]->D( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -482,7 +483,7 @@ namespace Splines
   void SplineSet::eval_D( real_type const x, real_type vals[], integer const incy ) const
   {
     size_t ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->D( x );
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->D( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -490,7 +491,7 @@ namespace Splines
   void SplineSet::eval_DD( real_type const x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    for ( integer i{ 0 }; i < m_nspl; ++i ) vals[i] = m_splines[i]->DD( x );
+    for ( integer i = 0; i < m_nspl; ++i ) vals[i] = m_splines[i]->DD( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -498,7 +499,7 @@ namespace Splines
   void SplineSet::eval_DD( real_type const x, real_type vals[], integer const incy ) const
   {
     size_t ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DD( x );
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DD( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -506,7 +507,7 @@ namespace Splines
   void SplineSet::eval_DDD( real_type const x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    for ( integer i{ 0 }; i < m_nspl; ++i ) vals[i] = m_splines[i]->DDD( x );
+    for ( integer i = 0; i < m_nspl; ++i ) vals[i] = m_splines[i]->DDD( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -514,7 +515,7 @@ namespace Splines
   void SplineSet::eval_DDD( real_type const x, real_type vals[], integer const incy ) const
   {
     size_t ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DDD( x );
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DDD( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -529,143 +530,139 @@ namespace Splines
       "{}\nSpline n.{} is not monotone and can't be used as independent",
       msg,
       spl );
-    auto & S{ m_splines[spl] };
+    Spline * S = m_splines[spl].get();
     // cerco intervallo intersezione
-    real_type const * X{ m_Y[spl] };
+    real_type const * Y{ m_Y[spl] };
     UTILS_ASSERT(
-      zeta >= X[0] && zeta <= X[m_npts - 1],
+      zeta >= Y[0] && zeta <= Y[m_npts - 1],
       "{} evaluation at zeta = {} is out of range: [{},{}]\n",
       msg,
       zeta,
-      X[0],
-      X[m_npts - 1] );
+      Y[0],
+      Y[m_npts - 1] );
 
-    integer interval{ static_cast<integer>( lower_bound( X, X + m_npts, zeta ) - X ) };
+    integer interval{ static_cast<integer>( lower_bound( Y, Y + m_npts, zeta ) - Y ) };
     if ( interval > 0 ) --interval;
-    if ( Utils::is_zero( X[interval] - X[interval + 1] ) ) ++interval;  // degenerate interval for duplicated nodes
+    if ( Utils::is_zero( Y[interval] - Y[interval + 1] ) ) ++interval;  // degenerate interval for duplicated nodes
     if ( interval >= m_npts - 1 ) interval = m_npts - 2;
 
-    // compute intersection
-    real_type const a{ m_X[interval] };
-    real_type const b{ m_X[interval + 1] };
-    real_type const ya{ X[interval] };
-    real_type const yb{ X[interval + 1] };
-    real_type const DX{ b - a };
-    real_type const DY{ yb - ya };
-    UTILS_ASSERT( zeta >= ya && zeta <= yb, "{} Bad interval [{},{}] for zeta = {}\n", msg, ya, yb, zeta );
-    UTILS_ASSERT( a < b, "{} Bad x interval [{},{}]\n", msg, a, b );
-    if ( S->type() == SplineType1D::LINEAR ) { x = a + ( b - a ) * ( zeta - ya ) / ( yb - ya ); }
-    else
+    Utils::AlgoHNewton<real_type> HN;
+    class HNfun : public Utils::AlgoHNewton_base_fun<real_type>
     {
-      real_type const *            dX  = m_Yp[spl];
-      real_type const              dya = dX[interval];
-      real_type const              dyb = dX[interval + 1];
-      PolynomialRoots::Cubic const cubic(
-        ( dyb + dya - 2 * DY / DX ) / ( DX * DX ),  // A
-        ( 3 * DY / DX - 2 * dya - dyb ) / DX,       // B
-        dya,                                        // C
-        ya - zeta                                   // D
-      );
-      real_type     r[3];
-      integer const npr{ cubic.getRealRoots( r ) };
-      // cerca radice buona
-      bool ok{ false };
-      for ( integer i{ 0 }; i < npr && !ok; ++i )
-      {
-        ok = r[i] >= 0 && r[i] <= DX;
-        if ( ok ) x = a + r[i];
-      }
-      UTILS_ASSERT( ok, "{}\nfailed to find intersection with independent spline at zeta = {}\n", msg, zeta );
-    }
-    return S.get();
+      Spline *  m_S;
+      real_type m_zeta;
+
+    public:
+      explicit HNfun( Spline * S, real_type zeta ) : m_S( S ), m_zeta( zeta ) {}
+      real_type eval( real_type x ) const { return m_S->eval( x ) - m_zeta; }
+      real_type D( real_type x ) const { return m_S->D( x ); }
+    };
+
+    HNfun fun( S, zeta );
+
+    // compute intersection
+    x = HN.eval( m_X[interval], m_X[interval + 1], &fun );
+    return S;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2( integer const indep, real_type const zeta, real_type vals[], integer const incy ) const
+  void SplineSet::eval2(
+    integer const   indep,
+    real_type const zeta,
+    real_type &     x,
+    real_type       vals[],
+    integer const   incy ) const
   {
-    real_type x;
     intersect( indep, zeta, x );
     size_t ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->eval( x );
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->eval( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2( integer const indep, real_type const zeta, vector<real_type> & vals ) const
+  void SplineSet::eval2( integer const indep, real_type const zeta, real_type & x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    this->eval2( indep, zeta, vals.data(), 1 );
+    this->eval2( indep, zeta, x, vals.data(), 1 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2( real_type const zeta, integer const indep, integer const spl ) const
+  real_type SplineSet::eval2( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
   {
-    real_type x;
     intersect( indep, zeta, x );
     return m_splines[spl]->eval( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2( real_type const zeta, string_view const indep, string_view const name ) const
+  real_type SplineSet::eval2( real_type const zeta, string_view const indep, real_type & x, string_view const name )
+    const
   {
-    return this->eval2( zeta, this->get_position( indep ), this->get_position( name ) );
+    return this->eval2( zeta, this->get_position( indep ), x, this->get_position( name ) );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2_D( integer const indep, real_type const zeta, real_type vals[], integer const incy ) const
+  void SplineSet::eval2_D(
+    integer const   indep,
+    real_type const zeta,
+    real_type &     x,
+    real_type       vals[],
+    integer const   incy ) const
   {
-    real_type       x;
     Spline const *  S{ intersect( indep, zeta, x ) };
     real_type const ds{ S->D( x ) };
     size_t          ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->D( x ) / ds;
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->D( x ) / ds;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2_D( integer const spl, real_type const zeta, vector<real_type> & vals ) const
+  void SplineSet::eval2_D( integer const spl, real_type const zeta, real_type & x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    this->eval2_D( spl, zeta, vals.data(), 1 );
+    this->eval2_D( spl, zeta, x, vals.data(), 1 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2_D( real_type const zeta, integer const indep, integer const spl ) const
+  real_type SplineSet::eval2_D( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
   {
-    real_type      x;
     Spline const * S{ intersect( indep, zeta, x ) };
     return m_splines[spl]->D( x ) / S->D( x );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2_D( real_type const zeta, string_view const indep, string_view const name ) const
+  real_type SplineSet::eval2_D( real_type const zeta, string_view const indep, real_type & x, string_view const name )
+    const
   {
-    return this->eval2_D( zeta, this->get_position( indep ), this->get_position( name ) );
+    return this->eval2_D( zeta, this->get_position( indep ), x, this->get_position( name ) );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2_DD( integer const indep, real_type const zeta, real_type vals[], integer const incy ) const
+  void SplineSet::eval2_DD(
+    integer const   indep,
+    real_type const zeta,
+    real_type &     x,
+    real_type       vals[],
+    integer const   incy ) const
   {
-    real_type       x;
     Spline const *  S{ intersect( indep, zeta, x ) };
     real_type const dt{ 1 / S->D( x ) };
     real_type const dt2{ dt * dt };
     real_type const ddt{ -S->DD( x ) * ( dt * dt2 ) };
     size_t          ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy )
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy )
     {
       auto & Si{ m_splines[i] };
       vals[ii] = Si->DD( x ) * dt2 + Si->D( x ) * ddt;
@@ -674,17 +671,16 @@ namespace Splines
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2_DD( integer const indep, real_type const zeta, vector<real_type> & vals ) const
+  void SplineSet::eval2_DD( integer const indep, real_type const zeta, real_type & x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    this->eval2_DD( indep, zeta, vals.data(), 1 );
+    this->eval2_DD( indep, zeta, x, vals.data(), 1 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2_DD( real_type const zeta, integer const indep, integer const spl ) const
+  real_type SplineSet::eval2_DD( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
   {
-    real_type       x;
     Spline const *  S{ intersect( indep, zeta, x ) };
     real_type const dt{ 1 / S->D( x ) };
     real_type const dt2{ dt * dt };
@@ -695,25 +691,30 @@ namespace Splines
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2_DD( real_type const zeta, string_view const indep, string_view const name ) const
+  real_type SplineSet::eval2_DD( real_type const zeta, string_view const indep, real_type & x, string_view const name )
+    const
   {
-    return this->eval2_DD( zeta, this->get_position( indep ), this->get_position( name ) );
+    return this->eval2_DD( zeta, this->get_position( indep ), x, this->get_position( name ) );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2_DDD( integer const indep, real_type const zeta, real_type vals[], integer const incy ) const
+  void SplineSet::eval2_DDD(
+    integer const   indep,
+    real_type const zeta,
+    real_type &     x,
+    real_type       vals[],
+    integer const   incy ) const
   {
-    real_type       x;
     Spline const *  S{ intersect( indep, zeta, x ) };
     real_type const dt{ 1 / S->D( x ) };
     real_type const dt3{ dt * dt * dt };
     real_type const ddt{ -S->DD( x ) * dt3 };
     real_type const dddt{ 3 * ( ddt * ddt ) / dt - S->DDD( x ) * ( dt * dt3 ) };
     size_t          ii{ 0 };
-    for ( integer i{ 0 }; i < m_nspl; ++i, ii += incy )
+    for ( integer i = 0; i < m_nspl; ++i, ii += incy )
     {
       auto & Si{ m_splines[i] };
       vals[ii] = Si->DDD( x ) * dt3 + 3 * Si->DD( x ) * dt * ddt + Si->D( x ) * dddt;
@@ -722,17 +723,16 @@ namespace Splines
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void SplineSet::eval2_DDD( integer const spl, real_type const zeta, vector<real_type> & vals ) const
+  void SplineSet::eval2_DDD( integer const spl, real_type const zeta, real_type & x, vector<real_type> & vals ) const
   {
     vals.resize( m_nspl );
-    this->eval2_DDD( spl, zeta, vals.data(), 1 );
+    this->eval2_DDD( spl, zeta, x, vals.data(), 1 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2_DDD( real_type const zeta, integer const indep, integer const spl ) const
+  real_type SplineSet::eval2_DDD( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
   {
-    real_type       x;
     Spline const *  S{ intersect( indep, zeta, x ) };
     real_type const dt{ 1 / S->D( x ) };
     real_type const dt3{ dt * dt * dt };
@@ -745,8 +745,9 @@ namespace Splines
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type SplineSet::eval2_DDD( real_type const zeta, string_view const indep, string_view const name ) const
+  real_type SplineSet::eval2_DDD( real_type const zeta, string_view const indep, real_type & x, string_view const name )
+    const
   {
-    return this->eval2_DDD( zeta, this->get_position( indep ), this->get_position( name ) );
+    return this->eval2_DDD( zeta, this->get_position( indep ), x, this->get_position( name ) );
   }
 }  // namespace Splines

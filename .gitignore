@@ -87,3 +87,4 @@ toolbox/cmake-build-debug
 
 /Xcode
 toolbox/bin
+.cache
