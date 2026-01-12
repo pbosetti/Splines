@@ -29,31 +29,35 @@
 #include "Utils_fmt.hh"
 
 #include <cmath>
-#include <limits> // std::numeric_limits
+#include <limits>  // std::numeric_limits
 #include <set>
 
 #ifdef SPLINES_OS_OSX
-  #define UNW_LOCAL_ONLY
-  #include <cxxabi.h>
-  #include <libunwind.h>
+#define UNW_LOCAL_ONLY
+#include <cxxabi.h>
+#include <libunwind.h>
 #endif
 
-namespace Splines {
+namespace Splines
+{
 
   using std::abs;
   using std::max;
   using std::min;
 
-  // cbrt is not available on WINDOWS? or C++ < C++11?
-  #ifdef _MSC_VER
-    using std::sqrt;
-    using std::pow;
-    static inline real_type cbrt( real_type x ) { return pow( x, 1.0/3.0 ); }
-  #else
-    using std::sqrt;
-    using std::pow;
-    using std::cbrt;
-  #endif
+// cbrt is not available on WINDOWS? or C++ < C++11?
+#ifdef _MSC_VER
+  using std::pow;
+  using std::sqrt;
+  static inline real_type cbrt( real_type x )
+  {
+    return pow( x, 1.0 / 3.0 );
+  }
+#else
+  using std::cbrt;
+  using std::pow;
+  using std::sqrt;
+#endif
 
   using std::copy_n;
 
@@ -66,74 +70,69 @@ namespace Splines {
    |
   \*/
 
-  void
-  uniform(
-    integer               /* dim */,
-    integer   const npts,
-    real_type const [] /* pnts    */,
-    integer            /* ld_pnts */,
-    real_type       t[]
-  ) {
-    t[0]      = 0;
-    t[npts-1] = 1;
-    for ( integer k{1}; k < npts-1; ++k )
-      t[k] = static_cast<real_type>(k)/static_cast<real_type>(npts);
+  void uniform(
+    integer /* dim */,
+    integer const npts,
+    real_type const[] /* pnts    */,
+    integer /* ld_pnts */,
+    real_type t[] )
+  {
+    t[0]        = 0;
+    t[npts - 1] = 1;
+    for ( integer k{ 1 }; k < npts - 1; ++k ) t[k] = static_cast<real_type>( k ) / static_cast<real_type>( npts );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  chordal(
-    integer   const dim,
-    integer   const npts,
-    real_type const pnts[],
-    integer   const ld_pnts,
-    real_type       t[]
-  ) {
+  void chordal( integer const dim, integer const npts, real_type const pnts[], integer const ld_pnts, real_type t[] )
+  {
     t[0] = 0;
-    real_type const * p0{pnts};
-    for ( integer k{1}; k < npts; ++k ) {
-      real_type const * p1{p0 + ld_pnts};
-      real_type dst = 0;
-      for ( integer j{0}; j < dim; ++j ) {
-        real_type const c{p1[j] - p0[j]};
-        dst += c*c;
+    real_type const * p0{ pnts };
+    for ( integer k{ 1 }; k < npts; ++k )
+    {
+      real_type const * p1{ p0 + ld_pnts };
+      real_type         dst = 0;
+      for ( integer j{ 0 }; j < dim; ++j )
+      {
+        real_type const c{ p1[j] - p0[j] };
+        dst += c * c;
       }
-      t[k] = t[k-1] + sqrt(dst);
+      t[k] = t[k - 1] + sqrt( dst );
     }
-    for ( integer k{1}; k < npts-1; ++k ) t[k] /= t[npts-1];
-    t[npts-1] = 1;
+    for ( integer k{ 1 }; k < npts - 1; ++k ) t[k] /= t[npts - 1];
+    t[npts - 1] = 1;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  centripetal(
-    integer   const dim,
-    integer   const npts,
+  void centripetal(
+    integer const   dim,
+    integer const   npts,
     real_type const pnts[],
-    integer   const ld_pnts,
+    integer const   ld_pnts,
     real_type const alpha,
-    real_type       t[]
-  ) {
+    real_type       t[] )
+  {
     t[0] = 0;
-    real_type const * p0{pnts};
-    for ( integer k{1}; k < npts; ++k ) {
-      real_type const * p1{p0 + ld_pnts};
-      real_type dst{0};
-      for ( integer j{0}; j < dim; ++j ) {
-        real_type const c{p1[j] - p0[j]};
-        dst += c*c;
+    real_type const * p0{ pnts };
+    for ( integer k{ 1 }; k < npts; ++k )
+    {
+      real_type const * p1{ p0 + ld_pnts };
+      real_type         dst{ 0 };
+      for ( integer j{ 0 }; j < dim; ++j )
+      {
+        real_type const c{ p1[j] - p0[j] };
+        dst += c * c;
       }
-      t[k] = t[k-1] + pow(dst,alpha/2);
+      t[k] = t[k - 1] + pow( dst, alpha / 2 );
     }
-    for ( integer k{1}; k < npts-1; ++k ) t[k] /= t[npts-1];
-    t[npts-1] = 1;
+    for ( integer k{ 1 }; k < npts - 1; ++k ) t[k] /= t[npts - 1];
+    t[npts - 1] = 1;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  #if 0
+#if 0
 
   void
   universal(
@@ -166,62 +165,64 @@ namespace Splines {
     real_type       t[]
   ); // to be done
 
-  #endif
+#endif
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  SplineType1D
-  string_to_splineType1D( string_view nin ) {
-    string n{nin};
-    std::transform(n.begin(), n.end(), n.begin(), ::tolower);
-    if ( n == "constant" )   return SplineType1D::CONSTANT;
-    if ( n == "linear" )     return SplineType1D::LINEAR;
-    if ( n == "cubic" )      return SplineType1D::CUBIC;
-    if ( n == "akima" )      return SplineType1D::AKIMA;
-    if ( n == "bessel" )     return SplineType1D::BESSEL;
-    if ( n == "pchip" )      return SplineType1D::PCHIP;
-    if ( n == "quintic" )    return SplineType1D::QUINTIC;
-    if ( n == "hermite" )    return SplineType1D::HERMITE;
+  SplineType1D string_to_splineType1D( string_view nin )
+  {
+    string n{ nin };
+    std::transform( n.begin(), n.end(), n.begin(), ::tolower );
+    if ( n == "constant" ) return SplineType1D::CONSTANT;
+    if ( n == "linear" ) return SplineType1D::LINEAR;
+    if ( n == "cubic" ) return SplineType1D::CUBIC;
+    if ( n == "akima" ) return SplineType1D::AKIMA;
+    if ( n == "bessel" ) return SplineType1D::BESSEL;
+    if ( n == "pchip" ) return SplineType1D::PCHIP;
+    if ( n == "quintic" ) return SplineType1D::QUINTIC;
+    if ( n == "hermite" ) return SplineType1D::HERMITE;
     if ( n == "spline_set" ) return SplineType1D::SPLINE_SET;
     if ( n == "spline_vec" ) return SplineType1D::SPLINE_VEC;
-    throw std::runtime_error(fmt::format( "string_to_splineType1D({}) unknown type\n", n ));
+    throw std::runtime_error( fmt::format( "string_to_splineType1D({}) unknown type\n", n ) );
   }
 
-  SplineType2D
-  string_to_splineType2D( string_view nin ) {
-    string n{nin};
-    std::transform(n.begin(), n.end(), n.begin(), ::tolower);
-    if ( n == "bilinear"  ) return SplineType2D::BILINEAR;
-    if ( n == "bicubic"   ) return SplineType2D::BICUBIC;
+  SplineType2D string_to_splineType2D( string_view nin )
+  {
+    string n{ nin };
+    std::transform( n.begin(), n.end(), n.begin(), ::tolower );
+    if ( n == "bilinear" ) return SplineType2D::BILINEAR;
+    if ( n == "bicubic" ) return SplineType2D::BICUBIC;
     if ( n == "biquintic" ) return SplineType2D::BIQUINTIC;
-    if ( n == "akima"     ) return SplineType2D::AKIMA2D;
-    throw std::runtime_error(fmt::format( "string_to_splineType2D({}) unknown type\n", n ));
+    if ( n == "akima" ) return SplineType2D::AKIMA2D;
+    throw std::runtime_error( fmt::format( "string_to_splineType2D({}) unknown type\n", n ) );
   }
 
-  char const *
-  to_string( SplineType1D const t ) {
-    switch( t ) {
-      case SplineType1D::CONSTANT:   return "SPLINE_CONSTANT";
-      case SplineType1D::LINEAR:     return "SPLINE_LINEAR";
-      case SplineType1D::CUBIC:      return "SPLINE_CUBIC";
-      case SplineType1D::AKIMA:      return "SPLINE_AKIMA";
-      case SplineType1D::BESSEL:     return "SPLINE_BESSEL";
-      case SplineType1D::PCHIP:      return "SPLINE_PCHIP";
-      case SplineType1D::QUINTIC:    return "SPLINE_QUINTIC";
-      case SplineType1D::HERMITE:    return "SPLINE_HERMITE";
+  char const * to_string( SplineType1D const t )
+  {
+    switch ( t )
+    {
+      case SplineType1D::CONSTANT: return "SPLINE_CONSTANT";
+      case SplineType1D::LINEAR: return "SPLINE_LINEAR";
+      case SplineType1D::CUBIC: return "SPLINE_CUBIC";
+      case SplineType1D::AKIMA: return "SPLINE_AKIMA";
+      case SplineType1D::BESSEL: return "SPLINE_BESSEL";
+      case SplineType1D::PCHIP: return "SPLINE_PCHIP";
+      case SplineType1D::QUINTIC: return "SPLINE_QUINTIC";
+      case SplineType1D::HERMITE: return "SPLINE_HERMITE";
       case SplineType1D::SPLINE_SET: return "SPLINE_SPLINE_SET";
       case SplineType1D::SPLINE_VEC: return "SPLINE_SPLINE_VEC";
     }
     return "NO_TYPE";
   }
 
-  char const *
-  to_string( SplineType2D const t ) {
-    switch( t ) {
-      case SplineType2D::BILINEAR:  return "SPLINE2D_BILINEAR";
-      case SplineType2D::BICUBIC:   return "SPLINE2D_BICUBIC";
+  char const * to_string( SplineType2D const t )
+  {
+    switch ( t )
+    {
+      case SplineType2D::BILINEAR: return "SPLINE2D_BILINEAR";
+      case SplineType2D::BICUBIC: return "SPLINE2D_BICUBIC";
       case SplineType2D::BIQUINTIC: return "SPLINE2D_BIQUINTIC";
-      case SplineType2D::AKIMA2D:   return "SPLINE2D_AKIMA2D";
+      case SplineType2D::AKIMA2D: return "SPLINE2D_AKIMA2D";
     }
     return "NO_TYPE";
   }
@@ -234,68 +235,87 @@ namespace Splines {
    |  |____/ \___|\__,_|_|  \___|_| |_|___|_| |_|\__\___|_|    \_/ \__,_|_|
   \*/
 
-  void
-  SearchInterval::find( std::pair<integer,real_type> & res ) const {
-
+  void SearchInterval::find( std::pair<integer, real_type> & res ) const
+  {
     {
-      std::lock_guard<std::mutex> lock(m_mutex);
+      std::lock_guard<std::mutex> lock( m_mutex );
       if ( m_must_reset ) this->reset();
     }
 
-    integer   const & n    { *p_npts };
-    string    const & name { *p_name };
-    real_type const * X    { *p_X    };
+    integer const &   n{ *p_npts };
+    string const &    name{ *p_name };
+    real_type const * X{ *p_X };
     UTILS_ASSERT( n > 0, "in SearchInterval::find({}), n⁰points == 0!", name );
 
-    integer   & pos { res.first  };
-    real_type & x   { res.second };
+    integer &   pos{ res.first };
+    real_type & x{ res.second };
 
-    #if 1
+#if 1
     // casi out of bound
-    if ( x > m_x_max ) {
-      if ( *p_curve_is_closed ) { x -= m_x_range * std::floor( (x - m_x_min) / m_x_range ); }
-      else                      { pos = n-2; return; }
-    } else if ( x < m_x_min ) {
-      if ( *p_curve_is_closed ) { x -= m_x_range * std::floor( (x - m_x_min) / m_x_range ); }
-      else                      { pos = 0; return; }
+    if ( x > m_x_max )
+    {
+      if ( *p_curve_is_closed ) { x -= m_x_range * std::floor( ( x - m_x_min ) / m_x_range ); }
+      else
+      {
+        pos = n - 2;
+        return;
+      }
+    }
+    else if ( x < m_x_min )
+    {
+      if ( *p_curve_is_closed ) { x -= m_x_range * std::floor( ( x - m_x_min ) / m_x_range ); }
+      else
+      {
+        pos = 0;
+        return;
+      }
     }
 
     // uso table
-    integer i_cell { static_cast<integer>( std::floor( (x - m_x_min) / m_dx) ) };
-    integer k_LO   { m_LO[i_cell]   };
-    integer k_HI   { m_HI[i_cell+1] };
+    integer i_cell{ static_cast<integer>( std::floor( ( x - m_x_min ) / m_dx ) ) };
+    integer k_LO{ m_LO[i_cell] };
+    integer k_HI{ m_HI[i_cell + 1] };
 
     UTILS_ASSERT(
       x >= X[k_LO] && x <= X[k_HI],
       "Spline::SearchInterval, x={}, ipos={}, dx={}, X[{}]={}, X[{}]={}, range=[{},{}]\n",
-      x, i_cell, m_dx, k_LO, X[k_LO], k_HI, X[k_HI], m_x_min, m_x_max
-    );
-    #else
+      x,
+      i_cell,
+      m_dx,
+      k_LO,
+      X[k_LO],
+      k_HI,
+      X[k_HI],
+      m_x_min,
+      m_x_max );
+#else
     integer k_LO = 0;
     integer k_HI = n;
-    #endif
+#endif
 
     // binary search
-    while ( k_HI > k_LO+1 ) {
-      integer k_M{ k_LO + (k_HI-k_LO)/2 };
-      if ( x < X[k_M] ) k_HI = k_M;
-      else              k_LO = k_M;
+    while ( k_HI > k_LO + 1 )
+    {
+      integer k_M{ k_LO + ( k_HI - k_LO ) / 2 };
+      if ( x < X[k_M] )
+        k_HI = k_M;
+      else
+        k_LO = k_M;
     }
 
     pos = k_LO;
-    if ( Utils::is_zero(X[pos]-X[pos+1]) ) --pos; // caso nodi ripetuti
-
+    if ( Utils::is_zero( X[pos] - X[pos + 1] ) ) --pos;  // caso nodi ripetuti
   }
 
-  void
-  SearchInterval::reset() const {
+  void SearchInterval::reset() const
+  {
     integer           n{ *p_npts };
-    real_type const * X{ *p_X    };
+    real_type const * X{ *p_X };
 
     m_x_min   = X[0];
-    m_x_max   = X[n-1];
+    m_x_max   = X[n - 1];
     m_x_range = m_x_max - m_x_min;
-    m_dx      = m_x_range/m_table_size;
+    m_dx      = m_x_range / m_table_size;
 
     //
     //
@@ -314,26 +334,30 @@ namespace Splines {
     //                                        +----------------+     [6..7]
     //                                        +--------------------+ [6..8]
     //
-    std::fill_n( m_LO, m_table_size+1, -1 );
-    std::fill_n( m_HI, m_table_size+1, -1 );
-    for ( integer k{0}; k < n; ++k ) {
-      real_type pos  { (X[k] - m_x_min) / m_dx };
-      integer   i_LO { static_cast<integer>( std::ceil(pos+1e-6) )  };
-      m_LO[i_LO] = std::min(k,n-1);
+    std::fill_n( m_LO, m_table_size + 1, -1 );
+    std::fill_n( m_HI, m_table_size + 1, -1 );
+    for ( integer k{ 0 }; k < n; ++k )
+    {
+      real_type pos{ ( X[k] - m_x_min ) / m_dx };
+      integer   i_LO{ static_cast<integer>( std::ceil( pos + 1e-6 ) ) };
+      m_LO[i_LO] = std::min( k, n - 1 );
     }
     m_LO[0] = 0;
-    for ( integer k{n-1}; k >= 0; --k ) {
-      real_type pos  { (X[k] - m_x_min) / m_dx };
-      integer   i_HI { static_cast<integer>( std::floor(pos-1e-6) ) };
+    for ( integer k{ n - 1 }; k >= 0; --k )
+    {
+      real_type pos{ ( X[k] - m_x_min ) / m_dx };
+      integer   i_HI{ static_cast<integer>( std::floor( pos - 1e-6 ) ) };
       if ( i_HI < 0 ) i_HI = 0;
       if ( m_HI[i_HI] == -1 ) m_HI[i_HI] = k;
     }
-    m_HI[m_table_size] = n-1;
+    m_HI[m_table_size] = n - 1;
 
-    for ( integer i{0};            i < m_table_size; ++i ) if ( m_LO[i+1] == -1 ) m_LO[i+1] = m_LO[i];
-    for ( integer i{m_table_size}; i > 0;            --i ) if ( m_HI[i-1] == -1 ) m_HI[i-1] = m_HI[i];
-    m_LO[m_table_size+1] = m_LO[m_table_size]; // replica ultimo nodo
-    m_HI[m_table_size+1] = m_HI[m_table_size]; // replica ultimo nodo
+    for ( integer i{ 0 }; i < m_table_size; ++i )
+      if ( m_LO[i + 1] == -1 ) m_LO[i + 1] = m_LO[i];
+    for ( integer i{ m_table_size }; i > 0; --i )
+      if ( m_HI[i - 1] == -1 ) m_HI[i - 1] = m_HI[i];
+    m_LO[m_table_size + 1] = m_LO[m_table_size];  // replica ultimo nodo
+    m_HI[m_table_size + 1] = m_HI[m_table_size];  // replica ultimo nodo
 
     m_must_reset = false;
   }
@@ -348,65 +372,71 @@ namespace Splines {
   \*/
 
   //! Check if cubic spline with this data is monotone, return -1 no, 0 yes, 1 strictly monotone
-  integer
-  check_cubic_spline_monotonicity(
+  integer check_cubic_spline_monotonicity(
     real_type const X[],
     real_type const Y[],
     real_type const Yp[],
-    integer   const npts
-  ) {
+    integer const   npts )
+  {
     // check monotonicity of data: (assuming X monotone)
-    integer flag{1};
-    for ( integer i{1}; i < npts; ++i ) {
-      if ( Y[i-1] > Y[i] ) return -2; // non monotone data
-      if ( Utils::is_zero(Y[i-1]-Y[i]) && X[i-1] < X[i] ) flag = 0; // non strict monotone
+    integer flag{ 1 };
+    for ( integer i{ 1 }; i < npts; ++i )
+    {
+      if ( Y[i - 1] > Y[i] ) return -2;                                      // non monotone data
+      if ( Utils::is_zero( Y[i - 1] - Y[i] ) && X[i - 1] < X[i] ) flag = 0;  // non strict monotone
     }
     // pag 146 Methods of Shape-Preserving Spline Approximation, K
-    for ( integer i{1}; i < npts; ++i ) {
-      if ( X[i] <= X[i-1] ) continue; // skip duplicate points
-      real_type const dd = (Y[i]-Y[i-1])/(X[i]-X[i-1]);
-      real_type const m0 = Yp[i-1]/dd;
-      real_type const m1 = Yp[i]/dd;
-      if ( m0 < 0 || m1 < 0 ) return -1; // non monotone
-      if ( m0 <= 3 && m1 <= 3 ) {
-        if ( flag > 0 && i > 1 &&
-             (Utils::is_zero(m0) || Utils::is_zero(m0-3) ) ) flag = 0;
-        if ( flag > 0 && i < npts-1 &&
-             (Utils::is_zero(m1) || Utils::is_zero(m1-3) ) ) flag = 0;
-      } else {
-        real_type const tmp1 = 2*m0+m1-3;
-        real_type const tmp2 = 2*(m0+m1-2);
-        real_type const tmp3 = m0*tmp2-(tmp1*tmp1);
-        if ( tmp2 >= 0 ) {
-          if ( tmp3 < 0 ) return -1; // non monotone spline
-        } else {
+    for ( integer i{ 1 }; i < npts; ++i )
+    {
+      if ( X[i] <= X[i - 1] ) continue;  // skip duplicate points
+      real_type const dd = ( Y[i] - Y[i - 1] ) / ( X[i] - X[i - 1] );
+      real_type const m0 = Yp[i - 1] / dd;
+      real_type const m1 = Yp[i] / dd;
+      if ( m0 < 0 || m1 < 0 ) return -1;  // non monotone
+      if ( m0 <= 3 && m1 <= 3 )
+      {
+        if ( flag > 0 && i > 1 && ( Utils::is_zero( m0 ) || Utils::is_zero( m0 - 3 ) ) ) flag = 0;
+        if ( flag > 0 && i < npts - 1 && ( Utils::is_zero( m1 ) || Utils::is_zero( m1 - 3 ) ) ) flag = 0;
+      }
+      else
+      {
+        real_type const tmp1 = 2 * m0 + m1 - 3;
+        real_type const tmp2 = 2 * ( m0 + m1 - 2 );
+        real_type const tmp3 = m0 * tmp2 - ( tmp1 * tmp1 );
+        if ( tmp2 >= 0 )
+        {
+          if ( tmp3 < 0 ) return -1;  // non monotone spline
+        }
+        else
+        {
           if ( tmp3 > 0 ) return -1;
         }
-        if ( Utils::is_zero(tmp3) ) flag = 0;
+        if ( Utils::is_zero( tmp3 ) ) flag = 0;
       }
     }
-    return flag; // passed all check
+    return flag;  // passed all check
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::build(
-    real_type const x[], integer const incx,
-    real_type const y[], integer const incy,
-    integer const n
-  ) {
+  void Spline::build(
+    real_type const x[],
+    integer const   incx,
+    real_type const y[],
+    integer const   incy,
+    integer const   n )
+  {
     reserve( n );
-    for ( integer i{0}; i < n; ++i ) m_X[i] = x[i*incx];
-    for ( integer i{0}; i < n; ++i ) m_Y[i] = y[i*incy];
+    for ( integer i{ 0 }; i < n; ++i ) m_X[i] = x[i * incx];
+    for ( integer i{ 0 }; i < n; ++i ) m_Y[i] = y[i * incy];
     m_npts = n;
     build();
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::setup( string const & file_name ) {
+  void Spline::setup( string const & file_name )
+  {
     GenericContainer gc;
     UTILS_ASSERT( gc.from_file( file_name ), "Spline::setup( '{}' ) failed to read\n", file_name );
     setup( gc );
@@ -414,42 +444,44 @@ namespace Splines {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  string
-  Spline::info() const {
-    string res { fmt::format( "Spline `{}` of type: {} of order: {}", m_name, type_name(), order() ) };
+  string Spline::info() const
+  {
+    string res{ fmt::format( "Spline `{}` of type: {} of order: {}", m_name, type_name(), order() ) };
     if ( m_npts > 0 )
-      res += fmt::format(
-        "\nx_min={:.5} x_max={:.5} y_min={:.5} y_max={:.5}",
-        x_min(), x_max(), y_min(), y_max()
-      );
+      res += fmt::format( "\nx_min={:.5} x_max={:.5} y_min={:.5} y_max={:.5}", x_min(), x_max(), y_min(), y_max() );
     return res;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::push_back( real_type const x, real_type const y ) {
-    if ( m_npts > 0 ) {
+  void Spline::push_back( real_type const x, real_type const y )
+  {
+    if ( m_npts > 0 )
+    {
       UTILS_ASSERT(
-        x >= m_X[m_npts-1], // ammetto punti doppi
+        x >= m_X[m_npts - 1],  // ammetto punti doppi
         "Spline[{}]::push_back, non monotone insert at insert N.{}"
         "\nX[{}] = {:.5}\nX[{}] = {:>5}\n",
-        m_name, m_npts, m_npts-1, m_X[m_npts-1], m_npts, x
-      );
+        m_name,
+        m_npts,
+        m_npts - 1,
+        m_X[m_npts - 1],
+        m_npts,
+        x );
     }
-    if ( m_npts_reserved == 0 ) {
-      reserve( 2 );
-    } else if ( m_npts >= m_npts_reserved ) {
+    if ( m_npts_reserved == 0 ) { reserve( 2 ); }
+    else if ( m_npts >= m_npts_reserved )
+    {
       // riallocazione & copia
-      integer const saved_npts{m_npts}; // salvo npts perche reserve lo azzera
-      Malloc_real mem("Spline::push_back");
-      mem.allocate( 2*m_npts );
+      integer const saved_npts{ m_npts };  // salvo npts perche reserve lo azzera
+      Malloc_real   mem( "Spline::push_back" );
+      mem.allocate( 2 * m_npts );
       real_type * Xsaved{ mem( m_npts ) };
       real_type * Ysaved{ mem( m_npts ) };
 
       copy_n( m_X, m_npts, Xsaved );
       copy_n( m_Y, m_npts, Ysaved );
-      reserve( (m_npts+1) * 2 );
+      reserve( ( m_npts + 1 ) * 2 );
       m_npts = saved_npts;
       copy_n( Xsaved, m_npts, m_X );
       copy_n( Ysaved, m_npts, m_Y );
@@ -462,160 +494,141 @@ namespace Splines {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::set_origin( real_type const x0 ) const {
-    real_type const Tx{x0 - m_X[0]};
-    real_type * ix{m_X};
-    while ( ix < m_X+m_npts ) *ix++ += Tx;
+  void Spline::set_origin( real_type const x0 ) const
+  {
+    real_type const Tx{ x0 - m_X[0] };
+    real_type *     ix{ m_X };
+    while ( ix < m_X + m_npts ) *ix++ += Tx;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::set_range( real_type xmin, real_type xmax ) {
-    UTILS_ASSERT(
-      xmax > xmin,
-      "Spline[{}]::set_range({},{}) bad range ", m_name, xmin, xmax
-    );
-    real_type const S  = (xmax - xmin) / ( m_X[m_npts-1] - m_X[0] );
+  void Spline::set_range( real_type xmin, real_type xmax )
+  {
+    UTILS_ASSERT( xmax > xmin, "Spline[{}]::set_range({},{}) bad range ", m_name, xmin, xmax );
+    real_type const S  = ( xmax - xmin ) / ( m_X[m_npts - 1] - m_X[0] );
     real_type const Tx = xmin - S * m_X[0];
-    for( real_type *ix = m_X; ix < m_X+m_npts; ++ix ) *ix = *ix * S + Tx;
+    for ( real_type * ix = m_X; ix < m_X + m_npts; ++ix ) *ix = *ix * S + Tx;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::dump(
-    ostream_type &    s,
-    integer     const nintervals,
-    string_view const header
-  ) const {
+  void Spline::dump( ostream_type & s, integer const nintervals, string_view const header ) const
+  {
     s << header << '\n';
-    real_type const dx{ (x_max()-x_min())/nintervals };
-    for ( integer i{0}; i <= nintervals; ++i ) {
-      real_type x{ x_min() + i*dx };
-      fmt::print( s, "{}\t{}\n", x, this->eval(x) );
+    real_type const dx{ ( x_max() - x_min() ) / nintervals };
+    for ( integer i{ 0 }; i <= nintervals; ++i )
+    {
+      real_type x{ x_min() + i * dx };
+      fmt::print( s, "{}\t{}\n", x, this->eval( x ) );
     }
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::y_min_max(
-    integer   & i_min_pos,
+  void Spline::y_min_max(
+    integer &   i_min_pos,
     real_type & x_min_pos,
     real_type & y_min,
-    integer   & i_max_pos,
+    integer &   i_max_pos,
     real_type & x_max_pos,
-    real_type & y_max
-  ) const {
+    real_type & y_max ) const
+  {
     i_min_pos = i_max_pos = 0;
     x_min_pos = y_min = x_max_pos = y_max = 0;
-    UTILS_ERROR(
-      "In spline: {} y_min_max not implemented\n",
-      info()
-    );
+    UTILS_ERROR( "In spline: {} y_min_max not implemented\n", info() );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::y_min_max(
-    vector<integer>   & i_min_pos,
+  void Spline::y_min_max(
+    vector<integer> &   i_min_pos,
     vector<real_type> & x_min_pos,
     vector<real_type> & y_min,
-    vector<integer>   & i_max_pos,
+    vector<integer> &   i_max_pos,
     vector<real_type> & x_max_pos,
-    vector<real_type> & y_max
-  ) const {
+    vector<real_type> & y_max ) const
+  {
     i_min_pos.clear();
     i_max_pos.clear();
     x_min_pos.clear();
     x_max_pos.clear();
     y_min.clear();
     y_max.clear();
-    UTILS_ERROR(
-      "In spline: {} y_min_max not implemented\n",
-      info()
-    );
+    UTILS_ERROR( "In spline: {} y_min_max not implemented\n", info() );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type
-  curvature( real_type const s, Spline const & X, Spline const & Y ) {
-    real_type const x_1 { X.D(s)    };
-    real_type const x_2 { X.DD(s)   };
-    real_type const y_1 { Y.D(s)    };
-    real_type const y_2 { Y.DD(s)   };
-    real_type const t4  { x_1 * x_1 };
-    real_type const t5  { y_1 * y_1 };
-    real_type const t6  { t4 + t5   };
-    real_type const t7  { sqrt(t6)  };
-    return (x_1 * y_2 - y_1 * x_2) / ( t6 * t7 );
+  real_type curvature( real_type const s, Spline const & X, Spline const & Y )
+  {
+    real_type const x_1{ X.D( s ) };
+    real_type const x_2{ X.DD( s ) };
+    real_type const y_1{ Y.D( s ) };
+    real_type const y_2{ Y.DD( s ) };
+    real_type const t4{ x_1 * x_1 };
+    real_type const t5{ y_1 * y_1 };
+    real_type const t6{ t4 + t5 };
+    real_type const t7{ sqrt( t6 ) };
+    return ( x_1 * y_2 - y_1 * x_2 ) / ( t6 * t7 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type
-  curvature_D( real_type const s, Spline const & X, Spline const & Y ) {
-    real_type const x_1 { X.D(s)    };
-    real_type const x_2 { X.DD(s)   };
-    real_type const x_3 { X.DDD(s)  };
-    real_type const y_1 { Y.D(s)    };
-    real_type const y_2 { Y.DD(s)   };
-    real_type const y_3 { Y.DDD(s)  };
-    real_type const t1  { x_1 * x_1 };
-    real_type const t9  { x_2 * x_2 };
-    real_type const t13 { y_1 * y_1 };
-    real_type const t17 { y_2 * y_2 };
-    real_type const t26 { t1 + t13  };
-    real_type const t27 { t26 * t26 };
-    real_type const t28 { sqrt(t26) };
-    real_type const aa  { y_3 * x_1 - y_1 * x_3 };
-    real_type const bb  { 3 * y_2 * x_2 };
-    return ( t1 * ( aa - bb ) + t13 * ( aa + bb )
-             + 3 * x_1 * y_1 * ( t9 - t17 ) ) / ( t28 * t27 );
+  real_type curvature_D( real_type const s, Spline const & X, Spline const & Y )
+  {
+    real_type const x_1{ X.D( s ) };
+    real_type const x_2{ X.DD( s ) };
+    real_type const x_3{ X.DDD( s ) };
+    real_type const y_1{ Y.D( s ) };
+    real_type const y_2{ Y.DD( s ) };
+    real_type const y_3{ Y.DDD( s ) };
+    real_type const t1{ x_1 * x_1 };
+    real_type const t9{ x_2 * x_2 };
+    real_type const t13{ y_1 * y_1 };
+    real_type const t17{ y_2 * y_2 };
+    real_type const t26{ t1 + t13 };
+    real_type const t27{ t26 * t26 };
+    real_type const t28{ sqrt( t26 ) };
+    real_type const aa{ y_3 * x_1 - y_1 * x_3 };
+    real_type const bb{ 3 * y_2 * x_2 };
+    return ( t1 * ( aa - bb ) + t13 * ( aa + bb ) + 3 * x_1 * y_1 * ( t9 - t17 ) ) / ( t28 * t27 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  real_type
-  curvature_DD( real_type const s, Spline const & X, Spline const & Y ) {
-    real_type const x_1 { X.D(s)    };
-    real_type const x_2 { X.DD(s)   };
-    real_type const x_3 { X.DDD(s)  };
-    real_type const x_4 { X.DDDD(s) };
-    real_type const y_1 { Y.D(s)    };
-    real_type const y_2 { Y.DD(s)   };
-    real_type const y_3 { Y.DDD(s)  };
-    real_type const y_4 { Y.DDDD(s) };
+  real_type curvature_DD( real_type const s, Spline const & X, Spline const & Y )
+  {
+    real_type const x_1{ X.D( s ) };
+    real_type const x_2{ X.DD( s ) };
+    real_type const x_3{ X.DDD( s ) };
+    real_type const x_4{ X.DDDD( s ) };
+    real_type const y_1{ Y.D( s ) };
+    real_type const y_2{ Y.DD( s ) };
+    real_type const y_3{ Y.DDD( s ) };
+    real_type const y_4{ Y.DDDD( s ) };
 
-    real_type const t1  { y_1 * y_1 };
-    real_type const t2  { t1 * t1   };
-    real_type const t12 { x_2 * x_2 };
-    real_type const t13 { t12 * x_2 };
-    real_type const t15 { x_1 * x_3 };
-    real_type const t16 { 9 * t15   };
-    real_type const t17 { y_2 * y_2 };
-    real_type const t21 { x_1 * x_1 };
-    real_type const t22 { x_4 * t21 };
-    real_type const t26 { 9 * x_1 * y_2 * y_3 };
-    real_type const t30 { t21 * x_1 };
-    real_type const t40 { t17 * y_2 };
-    real_type const t64 { t21 + t1  };
-    real_type const t65 { t64 * t64 };
-    real_type const t67 { sqrt(t64) };
-    return (
-      t2 * (x_1 * y_4 + 4 * x_2 * y_3 + 5 * x_3 * y_2 - y_1 * x_4)
-      + t1 * y_1 * (3 * t13 + x_2 * (t16 - 12 * t17) - 2 * t22 - t26)
-      + t1 * ( x_1 * ( 12 * t40 - 33 * y_2 * t12 )
-               + t21 * ( y_2 * x_3 - y_3 * x_2)
-               + 2 * y_4 * t30 )
-      - y_1 * t21 * ( 12 * t13 - x_2 * (t16+33*t17) + t22 + t26 )
-      + t30 * ( y_2 * (12 * t12 - 4 * t15) + y_4 * t21
-                -5 * x_1 * x_2 * y_3 - 3 * t40)
-    ) / (t67*t65*t64);
+    real_type const t1{ y_1 * y_1 };
+    real_type const t2{ t1 * t1 };
+    real_type const t12{ x_2 * x_2 };
+    real_type const t13{ t12 * x_2 };
+    real_type const t15{ x_1 * x_3 };
+    real_type const t16{ 9 * t15 };
+    real_type const t17{ y_2 * y_2 };
+    real_type const t21{ x_1 * x_1 };
+    real_type const t22{ x_4 * t21 };
+    real_type const t26{ 9 * x_1 * y_2 * y_3 };
+    real_type const t30{ t21 * x_1 };
+    real_type const t40{ t17 * y_2 };
+    real_type const t64{ t21 + t1 };
+    real_type const t65{ t64 * t64 };
+    real_type const t67{ sqrt( t64 ) };
+    return ( t2 * ( x_1 * y_4 + 4 * x_2 * y_3 + 5 * x_3 * y_2 - y_1 * x_4 ) +
+             t1 * y_1 * ( 3 * t13 + x_2 * ( t16 - 12 * t17 ) - 2 * t22 - t26 ) +
+             t1 * ( x_1 * ( 12 * t40 - 33 * y_2 * t12 ) + t21 * ( y_2 * x_3 - y_3 * x_2 ) + 2 * y_4 * t30 ) -
+             y_1 * t21 * ( 12 * t13 - x_2 * ( t16 + 33 * t17 ) + t22 + t26 ) +
+             t30 * ( y_2 * ( 12 * t12 - 4 * t15 ) + y_4 * t21 - 5 * x_1 * x_2 * y_3 - 3 * t40 ) ) /
+           ( t67 * t65 * t64 );
   }
 
   /*
@@ -632,21 +645,23 @@ namespace Splines {
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  void
-  Spline::setup( GenericContainer const & gc ) {
+  void Spline::setup( GenericContainer const & gc )
+  {
     /*
     // gc["xdata"]
     // gc["ydata"]
     //
     */
-    string const where{ fmt::format("Spline[{}]::setup( gc ):", m_name ) };
+    string const where{ fmt::format( "Spline[{}]::setup( gc ):", m_name ) };
 
     std::set<std::string> keywords;
-    for ( auto const & pair : gc.get_map(where) ) { keywords.insert(pair.first); }
+    for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
 
-    GenericContainer const & gc_x{ gc("xdata",where) }; keywords.erase("xdata");
-    GenericContainer const & gc_y{ gc("ydata",where) }; keywords.erase("ydata");
-    keywords.erase("spline_type");
+    GenericContainer const & gc_x{ gc( "xdata", where ) };
+    keywords.erase( "xdata" );
+    GenericContainer const & gc_y{ gc( "ydata", where ) };
+    keywords.erase( "ydata" );
+    keywords.erase( "spline_type" );
 
     vec_real_type x, y;
     {
@@ -655,18 +670,24 @@ namespace Splines {
     }
     {
       string const ff{ fmt::format( "{}, field `ydata'", where ) };
-      gc_y.copyto_vec_real ( y, ff );
+      gc_y.copyto_vec_real( y, ff );
     }
 
     UTILS_WARNING(
-      keywords.empty(), "{}: unused keys\n{}\n", where,
-      [&keywords]()->string {
+      keywords.empty(),
+      "{}: unused keys\n{}\n",
+      where,
+      [&keywords]() -> string
+      {
         string res;
-        for ( auto const & it : keywords ) { res += it; res += ' '; };
+        for ( auto const & it : keywords )
+        {
+          res += it;
+          res += ' ';
+        };
         return res;
-      }()
-    );
+      }() );
     build( x, y );
   }
 
-}
+}  // namespace Splines

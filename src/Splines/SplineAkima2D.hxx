@@ -26,7 +26,8 @@
  |                                                 |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   //!
   //! Smooth Curve Fitting Based on Local Procedures
@@ -37,31 +38,26 @@ namespace Splines {
   //!   Smooth Surface Fitting for Irregularly Distributed Data Points.
   //!   ACM Transactions on Mathematical Software, Vol.4, 148-164, 1978.
   //!
-  class Akima2Dspline : public BiCubicSplineBase {
+  class Akima2Dspline : public BiCubicSplineBase
+  {
     void make_spline() override;
 
   public:
-
     //!
     //! Build an empty spline of `Akima2Dspline` type
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    Akima2Dspline( string_view name = "Spline" )
-    : BiCubicSplineBase( name )
-    {}
+    explicit Akima2Dspline( string_view name = "Spline" ) : BiCubicSplineBase( name ) {}
 
     //!
     //! Spline destructor.
     //!
     ~Akima2Dspline() override {}
 
-    void write_to_stream( ostream_type & s ) const override;
+    void         write_to_stream( ostream_type & s ) const override;
     char const * type_name() const override;
-
   };
-}
+}  // namespace Splines
 
 // EOF: SplineAkima2D.hxx
-

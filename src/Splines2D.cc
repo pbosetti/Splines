@@ -29,30 +29,35 @@
 #include "Splines.hh"
 #include "Utils_fmt.hh"
 
-namespace Splines {
+namespace Splines
+{
 
-  void
-  Spline2D::new_spline( SplineType2D const tp ) {
-    if ( m_spline_2D == nullptr ) {
+  void Spline2D::new_spline( SplineType2D const tp )
+  {
+    if ( m_spline_2D == nullptr )
+    {
       delete m_spline_2D;
       m_spline_2D = nullptr;
     }
-    switch ( tp ) {
-    case SplineType2D::BILINEAR:  m_spline_2D = new BilinearSpline(m_name);  break;
-    case SplineType2D::BICUBIC:   m_spline_2D = new BiCubicSpline(m_name);   break;
-    case SplineType2D::BIQUINTIC: m_spline_2D = new BiQuinticSpline(m_name); break;
-    case SplineType2D::AKIMA2D:   m_spline_2D = new Akima2Dspline(m_name);   break;
-//    default:
-//      UTILS_ERROR( "new_spline, type `{}` unknown\n", tp );
+    switch ( tp )
+    {
+      case SplineType2D::BILINEAR: m_spline_2D = new BilinearSpline( m_name ); break;
+      case SplineType2D::BICUBIC: m_spline_2D = new BiCubicSpline( m_name ); break;
+      case SplineType2D::BIQUINTIC: m_spline_2D = new BiQuinticSpline( m_name ); break;
+      case SplineType2D::AKIMA2D:
+        m_spline_2D = new Akima2Dspline( m_name );
+        break;
+        //    default:
+        //      UTILS_ERROR( "new_spline, type `{}` unknown\n", tp );
     }
   }
 
-  void
-  Spline2D::setup( GenericContainer const & gc ) {
-    string const   where{ fmt::format("Spline2D[{}]::setup( gc ):", m_name ) };
-    string const & type{ gc.get_map_string("spline_type",where) };
+  void Spline2D::setup( GenericContainer const & gc )
+  {
+    string const   where{ fmt::format( "Spline2D[{}]::setup( gc ):", m_name ) };
+    string const & type{ gc.get_map_string( "spline_type", where ) };
     new_spline( string_to_splineType2D( type ) );
     m_spline_2D->setup( gc );
   }
 
-}
+}  // namespace Splines

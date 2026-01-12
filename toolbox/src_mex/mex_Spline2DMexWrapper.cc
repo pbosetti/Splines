@@ -30,133 +30,142 @@ either expressed or implied, of the FreeBSD Project.
 #include "Splines.hh"
 #include "Utils_mex.hh"
 
-#define ASSERT(COND,MSG)                          \
-  if ( !(COND) ) {                                \
+#define ASSERT( COND, MSG )                       \
+  if ( !( COND ) )                                \
+  {                                               \
     std::ostringstream ost;                       \
     ost << "Spline2DMexWrapper: " << MSG << '\n'; \
-    mexErrMsgTxt(ost.str().c_str());              \
+    mexErrMsgTxt( ost.str().c_str() );            \
   }
 
 #ifdef __clang__
-  #pragma clang diagnostic ignored "-Wexit-time-destructors"
-  #pragma clang diagnostic ignored "-Wsign-conversion"
+#pragma clang diagnostic ignored "-Wexit-time-destructors"
+#pragma clang diagnostic ignored "-Wsign-conversion"
 #endif
 
 #include <unordered_map>
 
-namespace Splines {
+namespace Splines
+{
 
   using namespace std;
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_new( int nlhs, mxArray       *plhs[],
-          int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_1 "Spline2DMexWrapper( 'new', kind )"
-    #define CMD MEX_ERROR_MESSAGE_1
+  static void do_new( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_1 "Spline2DMexWrapper( 'new', kind )"
+#define CMD MEX_ERROR_MESSAGE_1
 
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 inputs, nrhs = {}\n", nrhs );
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
 
     UTILS_MEX_ASSERT(
-      mxIsChar(arg_in_1),
+      mxIsChar( arg_in_1 ),
       CMD ": second argument must be a string, found ``{}''\n",
-      mxGetClassName(arg_in_1)
-    );
+      mxGetClassName( arg_in_1 ) );
 
-    string tname = mxArrayToString(arg_in_1);
+    string tname = mxArrayToString( arg_in_1 );
 
     SplineSurf * v{ nullptr };
 
-    if      ( tname == "bilinear"  ) v = new Splines::BilinearSpline();
-    else if ( tname == "bicubic"   ) v = new Splines::BiCubicSpline();
-    else if ( tname == "akima"     ) v = new Splines::Akima2Dspline();
-    else if ( tname == "biquintic" ) v = new Splines::BiQuinticSpline();
-    else {
+    if ( tname == "bilinear" )
+      v = new Splines::BilinearSpline();
+    else if ( tname == "bicubic" )
+      v = new Splines::BiCubicSpline();
+    else if ( tname == "akima" )
+      v = new Splines::Akima2Dspline();
+    else if ( tname == "biquintic" )
+      v = new Splines::BiQuinticSpline();
+    else
+    {
       UTILS_MEX_ASSERT0(
         false,
-        CMD ": second argument must be one of the strings:\n"
-        "'bilinear', 'bicubic', 'akima', 'biquintic'"
-      );
+        CMD
+        ": second argument must be one of the strings:\n"
+        "'bilinear', 'bicubic', 'akima', 'biquintic'" );
     }
 
     arg_out_0 = Utils::mex_convert_ptr_to_mx<SplineSurf>( v );
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_delete( int nlhs, mxArray       *[],
-             int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_2 "Spline2DMexWrapper( 'delete', OBJ )"
-    #define CMD MEX_ERROR_MESSAGE_2
+  static void do_delete( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_2 "Spline2DMexWrapper( 'delete', OBJ )"
+#define CMD MEX_ERROR_MESSAGE_2
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 inputs, nrhs = {}\n", nrhs );
 
     // Destroy the C++ object
-    Utils::mex_destroy_object<SplineSurf>(arg_in_1);
-    #undef CMD
+    Utils::mex_destroy_object<SplineSurf>( arg_in_1 );
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_build( int nlhs, mxArray       *[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_3 "Spline2DMexWrapper('build',OBJ,[x,y,z or filename])"
-    #define CMD MEX_ERROR_MESSAGE_3
+  static void do_build( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_3 "Spline2DMexWrapper('build',OBJ,[x,y,z or filename])"
+#define CMD MEX_ERROR_MESSAGE_3
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected no output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 5 || nrhs == 3, CMD ": expected 5 or 3 input, nrhs = {}\n", nrhs );
-    
+
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
 
-    if ( nrhs == 3 ) {
-      UTILS_MEX_ASSERT0( mxIsChar(arg_in_2), ": expected string for filename" );
-      string file_name{ mxArrayToString(arg_in_2) };
+    if ( nrhs == 3 )
+    {
+      UTILS_MEX_ASSERT0( mxIsChar( arg_in_2 ), ": expected string for filename" );
+      string file_name{ mxArrayToString( arg_in_2 ) };
       ptr->build( file_name );
-    } else {
-
-      mwSize nx, ny, nr, nc;
-      real_type const * x{ Utils::mex_vector_pointer( arg_in_2, nx,     CMD ": error in reading 'x'" ) };
-      real_type const * y{ Utils::mex_vector_pointer( arg_in_3, ny,     CMD ": error in reading 'y'" ) };
+    }
+    else
+    {
+      mwSize            nx, ny, nr, nc;
+      real_type const * x{ Utils::mex_vector_pointer( arg_in_2, nx, CMD ": error in reading 'x'" ) };
+      real_type const * y{ Utils::mex_vector_pointer( arg_in_3, ny, CMD ": error in reading 'y'" ) };
       real_type const * z{ Utils::mex_matrix_pointer( arg_in_4, nr, nc, CMD ": error in reading 'z'" ) };
 
-      UTILS_MEX_ASSERT( nx == nr, CMD ": lenght of 'x' ({}) must be the number of row of 'z' ({} x {})\n",    nx, nr, nc );
-      UTILS_MEX_ASSERT( ny == nc, CMD ": lenght of 'y' ({}) must be the number of column of 'z' ({} x {})\n", ny, nr, nc );
+      UTILS_MEX_ASSERT( nx == nr, CMD ": lenght of 'x' ({}) must be the number of row of 'z' ({} x {})\n", nx, nr, nc );
+      UTILS_MEX_ASSERT(
+        ny == nc,
+        CMD ": lenght of 'y' ({}) must be the number of column of 'z' ({} x {})\n",
+        ny,
+        nr,
+        nc );
 
-      bool fortran_storage { true };
-      bool transposed      { true };
+      bool fortran_storage{ true };
+      bool transposed{ true };
 
-      integer ldZ{ static_cast<integer>(nr) };
+      integer ldZ{ static_cast<integer>( nr ) };
 
-      ptr->build ( x, 1, y, 1, z,
-                   ldZ, static_cast<integer>(nr), static_cast<integer>(nc),
-                   fortran_storage, transposed );
+      ptr->build(
+        x,
+        1,
+        y,
+        1,
+        z,
+        ldZ,
+        static_cast<integer>( nr ),
+        static_cast<integer>( nc ),
+        fortran_storage,
+        transposed );
     }
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_nx( int nlhs, mxArray       *plhs[],
-         int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_4 "Spline2DMexWrapper('nx',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_4
+  static void do_nx( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_4 "Spline2DMexWrapper('nx',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_4
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -165,18 +174,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_int32( arg_out_0, ptr->num_point_x() );
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_ny( int nlhs, mxArray       *plhs[],
-         int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_5 "Spline2DMexWrapper('nx',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_5
+  static void do_ny( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_5 "Spline2DMexWrapper('nx',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_5
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -185,19 +191,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_int32( arg_out_0, ptr->num_point_y() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_x_min( int nlhs, mxArray       *plhs[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_6 "Spline2DMexWrapper('x_min',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_6
+  static void do_x_min( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_6 "Spline2DMexWrapper('x_min',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_6
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -206,19 +208,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_value( arg_out_0, ptr->x_min() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_x_max( int nlhs, mxArray       *plhs[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_7 "Spline2DMexWrapper('x_max',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_7
+  static void do_x_max( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_7 "Spline2DMexWrapper('x_max',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_7
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -227,19 +225,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_value( arg_out_0, ptr->x_max() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_y_min( int nlhs, mxArray       *plhs[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_8 "Spline2DMexWrapper('y_min',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_8
+  static void do_y_min( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_8 "Spline2DMexWrapper('y_min',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_8
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -248,19 +242,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_value( arg_out_0, ptr->y_min() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_y_max( int nlhs, mxArray       *plhs[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_9 "Spline2DMexWrapper('y_max',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_9
+  static void do_y_max( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_9 "Spline2DMexWrapper('y_max',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_9
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -269,19 +259,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_value( arg_out_0, ptr->y_max() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_z_min( int nlhs, mxArray       *plhs[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_10 "Spline2DMexWrapper('z_min',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_10
+  static void do_z_min( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_10 "Spline2DMexWrapper('z_min',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_10
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -290,19 +276,15 @@ namespace Splines {
 
     Utils::mex_set_scalar_value( arg_out_0, ptr->z_min() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_z_max( int nlhs, mxArray       *plhs[],
-            int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_11 "Spline2DMexWrapper('z_max',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_11
+  static void do_z_max( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_11 "Spline2DMexWrapper('z_max',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_11
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -311,99 +293,85 @@ namespace Splines {
 
     Utils::mex_set_scalar_value( arg_out_0, ptr->z_max() );
 
-    #undef CMD
-
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  
-  #define EVALUATE_LOOP( CMD, OP ) \
-    UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs ); \
-    UTILS_MEX_ASSERT( nrhs == 4, CMD ": expected 4 input, nrhs = {}\n", nrhs );  \
-    \
-    SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) }; \
-    \
-    mwSize nx, mx, ny, my; \
-    real_type const * x{ Utils::mex_matrix_pointer( arg_in_2, nx, mx, CMD ": error in reading `x`" ) }; \
-    real_type const * y{ Utils::mex_matrix_pointer( arg_in_3, ny, my, CMD ": error in reading `y`" ) }; \
-    UTILS_MEX_ASSERT( \
-      nx == ny && mx == my, \
-      CMD ": size(x) = {} x {} must be equal to size(y) = {} x {}", \
-      nx, ny, mx, my \
-    ); \
-    real_type * z{ Utils::mex_create_matrix_value( arg_out_0, nx, mx ) }; \
-    mwSize nnn{ nx * mx }; \
-    for ( mwSize j{0}; j < nnn; ++j ) z[j] = OP( x[j], y[j] )
+
+#define EVALUATE_LOOP( CMD, OP )                                                                      \
+  UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );                        \
+  UTILS_MEX_ASSERT( nrhs == 4, CMD ": expected 4 input, nrhs = {}\n", nrhs );                         \
+                                                                                                      \
+  SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };                           \
+                                                                                                      \
+  mwSize            nx, mx, ny, my;                                                                   \
+  real_type const * x{ Utils::mex_matrix_pointer( arg_in_2, nx, mx, CMD ": error in reading `x`" ) }; \
+  real_type const * y{ Utils::mex_matrix_pointer( arg_in_3, ny, my, CMD ": error in reading `y`" ) }; \
+  UTILS_MEX_ASSERT(                                                                                   \
+    nx == ny && mx == my,                                                                             \
+    CMD ": size(x) = {} x {} must be equal to size(y) = {} x {}",                                     \
+    nx,                                                                                               \
+    ny,                                                                                               \
+    mx,                                                                                               \
+    my );                                                                                             \
+  real_type * z{ Utils::mex_create_matrix_value( arg_out_0, nx, mx ) };                               \
+  mwSize      nnn{ nx * mx };                                                                         \
+  for ( mwSize j{ 0 }; j < nnn; ++j ) z[j] = OP( x[j], y[j] )
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_eval( int nlhs, mxArray       *plhs[],
-           int nrhs, mxArray const *prhs[] ) {
-    #define MEX_ERROR_MESSAGE_12 "Spline2DMexWrapper('eval',OBJ,x,y)"
+  static void do_eval( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_12 "Spline2DMexWrapper('eval',OBJ,x,y)"
     EVALUATE_LOOP( MEX_ERROR_MESSAGE_12, ptr->eval );
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_eval_Dx( int nlhs, mxArray       *plhs[],
-              int nrhs, mxArray const *prhs[] ) {
-    #define MEX_ERROR_MESSAGE_13 "Spline2DMexWrapper('eval_Dx',OBJ,x,y)"
+  static void do_eval_Dx( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_13 "Spline2DMexWrapper('eval_Dx',OBJ,x,y)"
     EVALUATE_LOOP( MEX_ERROR_MESSAGE_13, ptr->Dx );
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_eval_Dy( int nlhs, mxArray       *plhs[],
-              int nrhs, mxArray const *prhs[] ) {
-    #define MEX_ERROR_MESSAGE_14 "Spline2DMexWrapper('eval_Dy',OBJ,x,y)"
+  static void do_eval_Dy( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_14 "Spline2DMexWrapper('eval_Dy',OBJ,x,y)"
     EVALUATE_LOOP( MEX_ERROR_MESSAGE_14, ptr->Dy );
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_eval_Dxx( int nlhs, mxArray       *plhs[],
-               int nrhs, mxArray const *prhs[] ) {
-    #define MEX_ERROR_MESSAGE_15 "Spline2DMexWrapper('eval_Dxx',OBJ,x,y)"
+  static void do_eval_Dxx( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_15 "Spline2DMexWrapper('eval_Dxx',OBJ,x,y)"
     EVALUATE_LOOP( MEX_ERROR_MESSAGE_15, ptr->Dxx );
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_eval_Dxy( int nlhs, mxArray       *plhs[],
-               int nrhs, mxArray const *prhs[] ) {
-    #define MEX_ERROR_MESSAGE_16 "Spline2DMexWrapper('eval_Dxy',OBJ,x,y)"
+  static void do_eval_Dxy( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_16 "Spline2DMexWrapper('eval_Dxy',OBJ,x,y)"
     EVALUATE_LOOP( MEX_ERROR_MESSAGE_16, ptr->Dxy );
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_eval_Dyy( int nlhs, mxArray       *plhs[],
-               int nrhs, mxArray const *prhs[] ) {
-    #define MEX_ERROR_MESSAGE_17 "Spline2DMexWrapper('eval_Dyy',OBJ,x,y)"
+  static void do_eval_Dyy( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_17 "Spline2DMexWrapper('eval_Dyy',OBJ,x,y)"
     EVALUATE_LOOP( MEX_ERROR_MESSAGE_17, ptr->Dyy );
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_x_closed( int nlhs, mxArray       *[],
-                    int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_18 "Spline2DMexWrapper('make_x_closed',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_18
+  static void do_make_x_closed( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_18 "Spline2DMexWrapper('make_x_closed',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_18
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -411,18 +379,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_x_closed();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_x_opened( int nlhs, mxArray       *[],
-                    int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_19 "Spline2DMexWrapper('make_x_opened',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_19
+  static void do_make_x_opened( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_19 "Spline2DMexWrapper('make_x_opened',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_19
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -430,18 +395,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_x_opened();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_is_x_closed( int nlhs, mxArray       *plhs[],
-                  int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_20 "Spline2DMexWrapper('is_x_closed',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_20
+  static void do_is_x_closed( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_20 "Spline2DMexWrapper('is_x_closed',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_20
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -449,18 +411,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     Utils::mex_set_scalar_bool( arg_out_0, ptr->is_x_closed() );
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_x_bounded( int nlhs, mxArray       *[],
-                     int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_21 "Spline2DMexWrapper('make_x_bounded',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_21
+  static void do_make_x_bounded( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_21 "Spline2DMexWrapper('make_x_bounded',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_21
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -468,18 +427,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_y_bounded();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_x_unbounded( int nlhs, mxArray       *[],
-                       int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_22 "Spline2DMexWrapper('make_x_unbounded',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_22
+  static void do_make_x_unbounded( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_22 "Spline2DMexWrapper('make_x_unbounded',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_22
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -487,18 +443,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_x_unbounded();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_is_x_bounded( int nlhs, mxArray       *plhs[],
-                   int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_23 "Spline2DMexWrapper('is_x_bounded',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_23
+  static void do_is_x_bounded( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_23 "Spline2DMexWrapper('is_x_bounded',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_23
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -506,18 +459,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     Utils::mex_set_scalar_bool( arg_out_0, ptr->is_x_bounded() );
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_y_closed( int nlhs, mxArray       *[],
-                    int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_24 "Spline2DMexWrapper('make_y_closed',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_24
+  static void do_make_y_closed( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_24 "Spline2DMexWrapper('make_y_closed',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_24
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -525,18 +475,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_y_closed();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_y_opened( int nlhs, mxArray       *[],
-                    int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_25 "Spline2DMexWrapper('make_y_opened',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_25
+  static void do_make_y_opened( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_25 "Spline2DMexWrapper('make_y_opened',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_25
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -544,18 +491,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_y_opened();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_is_y_closed( int nlhs, mxArray       *plhs[],
-                  int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_26 "Spline2DMexWrapper('is_y_closed',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_26
+  static void do_is_y_closed( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_26 "Spline2DMexWrapper('is_y_closed',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_26
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -563,18 +507,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     Utils::mex_set_scalar_bool( arg_out_0, ptr->is_y_closed() );
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_y_bounded( int nlhs, mxArray       *[],
-                     int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_27 "Spline2DMexWrapper('make_y_bounded',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_27
+  static void do_make_y_bounded( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_27 "Spline2DMexWrapper('make_y_bounded',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_27
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -582,18 +523,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_y_bounded();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_make_y_unbounded( int nlhs, mxArray       *[],
-                       int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_28 "Spline2DMexWrapper('make_y_unbounded',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_28
+  static void do_make_y_unbounded( int nlhs, mxArray *[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_28 "Spline2DMexWrapper('make_y_unbounded',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_28
 
     UTILS_MEX_ASSERT( nlhs == 0, CMD ": expected 0 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -601,18 +539,15 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     ptr->make_y_unbounded();
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  static
-  void
-  do_is_y_bounded( int nlhs, mxArray       *plhs[],
-                   int nrhs, mxArray const *prhs[] ) {
-
-    #define MEX_ERROR_MESSAGE_29 "Spline2DMexWrapper('is_y_bounded',OBJ)"
-    #define CMD MEX_ERROR_MESSAGE_29
+  static void do_is_y_bounded( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
+#define MEX_ERROR_MESSAGE_29 "Spline2DMexWrapper('is_y_bounded',OBJ)"
+#define CMD MEX_ERROR_MESSAGE_29
 
     UTILS_MEX_ASSERT( nlhs == 1, CMD ": expected 1 output, nlhs = {}\n", nlhs );
     UTILS_MEX_ASSERT( nrhs == 2, CMD ": expected 2 input, nrhs = {}\n", nrhs );
@@ -620,112 +555,94 @@ namespace Splines {
     SplineSurf * ptr{ Utils::mex_convert_mx_to_ptr<SplineSurf>( arg_in_1 ) };
     Utils::mex_set_scalar_bool( arg_out_0, ptr->is_y_bounded() );
 
-    #undef CMD
+#undef CMD
   }
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-  typedef void (*DO_CMD)( int nlhs, mxArray *plhs[], int nrhs, mxArray const *prhs[] );
+  typedef void ( *DO_CMD )( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] );
 
-  static unordered_map<string,DO_CMD> cmd_to_fun = {
-    {"new",do_new},
-    {"delete",do_delete},
-    {"build",do_build},
-    {"nx",do_nx},
-    {"ny",do_ny},
-    {"x_min",do_x_min},
-    {"x_max",do_x_max},
-    {"y_min",do_y_min},
-    {"y_max",do_y_max},
-    {"z_min",do_z_min},
-    {"z_max",do_z_max},
-    {"eval",do_eval},
-    {"eval_Dx",do_eval_Dx},
-    {"eval_Dy",do_eval_Dy},
-    {"eval_Dxx",do_eval_Dxx},
-    {"eval_Dxy",do_eval_Dxy},
-    {"eval_Dyy",do_eval_Dyy},
-    {"is_x_closed",do_is_x_closed},
-    {"is_y_closed",do_is_y_closed},
-    {"make_x_closed",do_make_x_closed},
-    {"make_y_closed",do_make_y_closed},
-    {"make_x_opened",do_make_x_opened},
-    {"make_y_opened",do_make_y_opened},
-    {"is_x_bounded",do_is_x_bounded},
-    {"is_y_bounded",do_is_y_bounded},
-    {"make_x_bounded",do_make_x_bounded},
-    {"make_y_bounded",do_make_y_bounded},
-    {"make_x_unbounded",do_make_x_unbounded},
-    {"make_y_unbounded",do_make_y_unbounded}
-  };
+  static unordered_map<string, DO_CMD> cmd_to_fun = { { "new", do_new },
+                                                      { "delete", do_delete },
+                                                      { "build", do_build },
+                                                      { "nx", do_nx },
+                                                      { "ny", do_ny },
+                                                      { "x_min", do_x_min },
+                                                      { "x_max", do_x_max },
+                                                      { "y_min", do_y_min },
+                                                      { "y_max", do_y_max },
+                                                      { "z_min", do_z_min },
+                                                      { "z_max", do_z_max },
+                                                      { "eval", do_eval },
+                                                      { "eval_Dx", do_eval_Dx },
+                                                      { "eval_Dy", do_eval_Dy },
+                                                      { "eval_Dxx", do_eval_Dxx },
+                                                      { "eval_Dxy", do_eval_Dxy },
+                                                      { "eval_Dyy", do_eval_Dyy },
+                                                      { "is_x_closed", do_is_x_closed },
+                                                      { "is_y_closed", do_is_y_closed },
+                                                      { "make_x_closed", do_make_x_closed },
+                                                      { "make_y_closed", do_make_y_closed },
+                                                      { "make_x_opened", do_make_x_opened },
+                                                      { "make_y_opened", do_make_y_opened },
+                                                      { "is_x_bounded", do_is_x_bounded },
+                                                      { "is_y_bounded", do_is_y_bounded },
+                                                      { "make_x_bounded", do_make_x_bounded },
+                                                      { "make_y_bounded", do_make_y_bounded },
+                                                      { "make_x_unbounded", do_make_x_unbounded },
+                                                      { "make_y_unbounded", do_make_y_unbounded } };
 
   // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-#define MEX_ERROR_MESSAGE \
-"%======================================================================%\n" \
-"Spline2DMexWrapper:  Compute spline surface\n" \
-"\n" \
-"USAGE:\n" \
-"\n" \
-MEX_ERROR_MESSAGE_1 "\n" \
-MEX_ERROR_MESSAGE_2 "\n" \
-MEX_ERROR_MESSAGE_3 "\n" \
-MEX_ERROR_MESSAGE_4 "\n" \
-MEX_ERROR_MESSAGE_5 "\n" \
-MEX_ERROR_MESSAGE_6 "\n" \
-MEX_ERROR_MESSAGE_7 "\n" \
-MEX_ERROR_MESSAGE_9 "\n" \
-MEX_ERROR_MESSAGE_10 "\n" \
-MEX_ERROR_MESSAGE_11 "\n" \
-MEX_ERROR_MESSAGE_12 "\n" \
-MEX_ERROR_MESSAGE_13 "\n" \
-MEX_ERROR_MESSAGE_14 "\n" \
-MEX_ERROR_MESSAGE_15 "\n" \
-MEX_ERROR_MESSAGE_16 "\n" \
-MEX_ERROR_MESSAGE_17 "\n" \
-MEX_ERROR_MESSAGE_18 "\n" \
-MEX_ERROR_MESSAGE_19 "\n" \
-MEX_ERROR_MESSAGE_20 "\n" \
-MEX_ERROR_MESSAGE_21 "\n" \
-MEX_ERROR_MESSAGE_22 "\n" \
-MEX_ERROR_MESSAGE_23 "\n" \
-MEX_ERROR_MESSAGE_24 "\n" \
-MEX_ERROR_MESSAGE_25 "\n" \
-MEX_ERROR_MESSAGE_26 "\n" \
-MEX_ERROR_MESSAGE_27 "\n" \
-MEX_ERROR_MESSAGE_28 "\n" \
-MEX_ERROR_MESSAGE_29 "\n" \
-"\n" \
-"%======================================================================%\n" \
-"%                                                                      %\n" \
-"%  Autor: Enrico Bertolazzi                                            %\n" \
-"%         Department of Industrial Engineering                         %\n" \
-"%         University of Trento                                         %\n" \
-"%         enrico.bertolazzi@unitn.it                                   %\n" \
-"%                                                                      %\n" \
-"%======================================================================%\n"
+#define MEX_ERROR_MESSAGE                                                                                 \
+  "%======================================================================%\n"                            \
+  "Spline2DMexWrapper:  Compute spline surface\n"                                                         \
+  "\n"                                                                                                    \
+  "USAGE:\n"                                                                                              \
+  "\n" MEX_ERROR_MESSAGE_1 "\n" MEX_ERROR_MESSAGE_2 "\n" MEX_ERROR_MESSAGE_3 "\n" MEX_ERROR_MESSAGE_4     \
+  "\n" MEX_ERROR_MESSAGE_5 "\n" MEX_ERROR_MESSAGE_6 "\n" MEX_ERROR_MESSAGE_7 "\n" MEX_ERROR_MESSAGE_9     \
+  "\n" MEX_ERROR_MESSAGE_10 "\n" MEX_ERROR_MESSAGE_11 "\n" MEX_ERROR_MESSAGE_12 "\n" MEX_ERROR_MESSAGE_13 \
+  "\n" MEX_ERROR_MESSAGE_14 "\n" MEX_ERROR_MESSAGE_15 "\n" MEX_ERROR_MESSAGE_16 "\n" MEX_ERROR_MESSAGE_17 \
+  "\n" MEX_ERROR_MESSAGE_18 "\n" MEX_ERROR_MESSAGE_19 "\n" MEX_ERROR_MESSAGE_20 "\n" MEX_ERROR_MESSAGE_21 \
+  "\n" MEX_ERROR_MESSAGE_22 "\n" MEX_ERROR_MESSAGE_23 "\n" MEX_ERROR_MESSAGE_24 "\n" MEX_ERROR_MESSAGE_25 \
+  "\n" MEX_ERROR_MESSAGE_26 "\n" MEX_ERROR_MESSAGE_27 "\n" MEX_ERROR_MESSAGE_28 "\n" MEX_ERROR_MESSAGE_29 \
+  "\n"                                                                                                    \
+  "\n"                                                                                                    \
+  "%======================================================================%\n"                            \
+  "%                                                                      %\n"                            \
+  "%  Autor: Enrico Bertolazzi                                            %\n"                            \
+  "%         Department of Industrial Engineering                         %\n"                            \
+  "%         University of Trento                                         %\n"                            \
+  "%         enrico.bertolazzi@unitn.it                                   %\n"                            \
+  "%                                                                      %\n"                            \
+  "%======================================================================%\n"
 
-  extern "C"
-  void
-  mexFunction( int nlhs, mxArray       *plhs[],
-               int nrhs, mxArray const *prhs[] ) {
-
+  extern "C" void mexFunction( int nlhs, mxArray * plhs[], int nrhs, mxArray const * prhs[] )
+  {
     char cmd[256];
 
     // the first argument must be a string
-    if ( nrhs == 0 ) { mexErrMsgTxt(MEX_ERROR_MESSAGE); return; }
-
-    try {
-      UTILS_MEX_ASSERT0( mxIsChar(arg_in_0), "First argument must be a string" );
-      mxGetString( arg_in_0, cmd, 256 );
-      cmd_to_fun.at(cmd)( nlhs, plhs, nrhs, prhs );
-    } catch ( exception const & e ) {
-      mexErrMsgTxt( fmt::format( "Spline2DMexWrapper Error: {}", e.what() ).c_str() );
-    } catch (...) {
-      mexErrMsgTxt("Spline2DMexWrapper failed\n");
+    if ( nrhs == 0 )
+    {
+      mexErrMsgTxt( MEX_ERROR_MESSAGE );
+      return;
     }
 
+    try
+    {
+      UTILS_MEX_ASSERT0( mxIsChar( arg_in_0 ), "First argument must be a string" );
+      mxGetString( arg_in_0, cmd, 256 );
+      cmd_to_fun.at( cmd )( nlhs, plhs, nrhs, prhs );
+    }
+    catch ( exception const & e )
+    {
+      mexErrMsgTxt( fmt::format( "Spline2DMexWrapper Error: {}", e.what() ).c_str() );
+    }
+    catch ( ... )
+    {
+      mexErrMsgTxt( "Spline2DMexWrapper failed\n" );
+    }
   }
 
 
-}
+}  // namespace Splines

@@ -27,7 +27,8 @@
  |
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   using QuinticSpline_sub_type = enum class QuinticSpline_sub_type : integer {
     CUBIC  = 0,
@@ -37,10 +38,11 @@ namespace Splines {
   };
 
   //! Quintic spline class
-  class QuinticSpline : public QuinticSplineBase {
-    QuinticSpline_sub_type m_q_sub_type{QuinticSpline_sub_type::CUBIC};
-  public:
+  class QuinticSpline : public QuinticSplineBase
+  {
+    QuinticSpline_sub_type m_q_sub_type{ QuinticSpline_sub_type::CUBIC };
 
+  public:
     //!
     //! \name Constructors
     //!
@@ -54,10 +56,7 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    QuinticSpline( string_view name = "Spline" )
-    : QuinticSplineBase( name )
-    {}
+    explicit QuinticSpline( string_view name = "Spline" ) : QuinticSplineBase( name ) {}
 
     //!
     //! Spline destructor.
@@ -74,13 +73,9 @@ namespace Splines {
     //! - AKIMA
     //! - BESSEL
     //!
-    void
-    set_quintic_type( QuinticSpline_sub_type qt )
-    { m_q_sub_type = qt; }
+    void set_quintic_type( QuinticSpline_sub_type qt ) { m_q_sub_type = qt; }
 
-    void
-    setQuinticType( QuinticSpline_sub_type qt )
-    { m_q_sub_type = qt; }
+    void setQuinticType( QuinticSpline_sub_type qt ) { m_q_sub_type = qt; }
 
     // --------------------------- VIRTUALS -----------------------------------
     //! Build a Monotone quintic spline from previously inserted points
@@ -89,6 +84,6 @@ namespace Splines {
     void setup( GenericContainer const & gc ) override;
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineQuintic.hxx

@@ -26,21 +26,21 @@
  |        |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   //!
   //! Bi-quintic spline base class
   //!
-  class Spline2D {
+  class Spline2D
+  {
   protected:
-
     std::string  m_name;
-    SplineSurf * m_spline_2D{nullptr};
+    SplineSurf * m_spline_2D{ nullptr };
 
     void new_spline( SplineType2D tp );
 
   public:
-
     //! \name Constructors
     ///@{
 
@@ -49,17 +49,15 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    Spline2D( string_view name = "Spline2D" )
-    : m_name(name)
-    {}
+    explicit Spline2D( string_view name = "Spline2D" ) : m_name( name ) {}
 
     //!
     //! Spline destructor.
     //!
-    virtual
-    ~Spline2D() {
-      if ( m_spline_2D != nullptr ) {
+    virtual ~Spline2D()
+    {
+      if ( m_spline_2D != nullptr )
+      {
         delete m_spline_2D;
         m_spline_2D = nullptr;
       }
@@ -161,17 +159,17 @@ namespace Splines {
     //!
     //! Return the i-th node of the spline (x component).
     //!
-    real_type x_node( integer const i ) const { return m_spline_2D->x_node(i); }
+    real_type x_node( integer const i ) const { return m_spline_2D->x_node( i ); }
 
     //!
     //! Return the i-th node of the spline (y component).
     //!
-    real_type y_node( integer const i ) const { return m_spline_2D->y_node(i); }
+    real_type y_node( integer const i ) const { return m_spline_2D->y_node( i ); }
 
     //!
     //! Return the i-th node of the spline (y component).
     //!
-    real_type z_node( integer const i, integer const j ) const { return m_spline_2D->z_node(i,j); }
+    real_type z_node( integer const i, integer const j ) const { return m_spline_2D->z_node( i, j ); }
 
     ///@}
 
@@ -239,17 +237,19 @@ namespace Splines {
     //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
     //! \param transposed      if true matrix Z is stored transposed
     //!
-    void
-    build(
+    void build(
       SplineType2D    tp,
-      real_type const x[], integer incx,
-      real_type const y[], integer incy,
-      real_type const z[], integer ldZ,
-      integer   const nx,
-      integer   const ny,
+      real_type const x[],
+      integer         incx,
+      real_type const y[],
+      integer         incy,
+      real_type const z[],
+      integer         ldZ,
+      integer const   nx,
+      integer const   ny,
       bool            fortran_storage = false,
-      bool            transposed      = false
-    ) {
+      bool            transposed      = false )
+    {
       new_spline( tp );
       m_spline_2D->build( x, incx, y, incy, z, ldZ, nx, ny, fortran_storage, transposed );
     }
@@ -266,15 +266,14 @@ namespace Splines {
     //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
     //! \param transposed      if true matrix Z is stored transposed
     //!
-    void
-    build(
+    void build(
       SplineType2D              tp,
       vector<real_type> const & x,
       vector<real_type> const & y,
       vector<real_type> const & z,
-      bool fortran_storage = false,
-      bool transposed      = false
-    ) {
+      bool                      fortran_storage = false,
+      bool                      transposed      = false )
+    {
       new_spline( tp );
       m_spline_2D->build( x, y, z, fortran_storage, transposed );
     }
@@ -293,16 +292,15 @@ namespace Splines {
     //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
     //! \param transposed      if true matrix Z is stored transposed
     //!
-    void
-    build(
+    void build(
       SplineType2D    tp,
       real_type const z[],
-      integer   const ldZ,
-      integer   const nx,
-      integer   const ny,
+      integer const   ldZ,
+      integer const   nx,
+      integer const   ny,
       bool            fortran_storage = false,
-      bool            transposed      = false
-    ) {
+      bool            transposed      = false )
+    {
       new_spline( tp );
       m_spline_2D->build( z, ldZ, nx, ny, fortran_storage, transposed );
     }
@@ -321,15 +319,14 @@ namespace Splines {
     //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
     //! \param transposed      if true matrix Z is stored transposed
     //!
-    void
-    build(
+    void build(
       SplineType2D              tp,
       vector<real_type> const & z,
-      integer           const   nx,
-      integer           const   ny,
-      bool fortran_storage = false,
-      bool transposed      = false
-    ) {
+      integer const             nx,
+      integer const             ny,
+      bool                      fortran_storage = false,
+      bool                      transposed      = false )
+    {
       new_spline( tp );
       m_spline_2D->build( z, nx, ny, fortran_storage, transposed );
     }
@@ -344,15 +341,12 @@ namespace Splines {
     //!     - "Akima" or "akima "build a spline surface with cubic spline
     //!        using Akima algorithm to avoid obscillation
     //!
-    void
-    setup( GenericContainer const & gc );
+    void setup( GenericContainer const & gc );
 
     //!
     //! Build a spline using data in `GenericContainer`
     //!
-    void
-    build( GenericContainer const & gc )
-    { setup(gc); }
+    void build( GenericContainer const & gc ) { setup( gc ); }
 
     ///@}
 
@@ -364,28 +358,31 @@ namespace Splines {
     //!
     //! Evaluate spline value at `(x,y)`.
     //!
-    real_type
-    operator () ( real_type const x, real_type const y ) const
-    { return m_spline_2D->eval( x, y ); }
+    real_type operator()( real_type const x, real_type const y ) const { return m_spline_2D->eval( x, y ); }
 
     //!
     //! Evaluate spline value at `(x,y)`.
     //!
-    real_type
-    eval( real_type const x, real_type const y ) const
-    { return m_spline_2D->eval( x, y ); }
+    real_type eval( real_type const x, real_type const y ) const { return m_spline_2D->eval( x, y ); }
 
-    #ifdef AUTODIFF_SUPPORT
-    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const { return m_spline_2D->eval( x, y ); }
-    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const { return m_spline_2D->eval( x, y ); }
+#ifdef AUTODIFF_SUPPORT
+    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
+    {
+      return m_spline_2D->eval( x, y );
+    }
+    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
+    {
+      return m_spline_2D->eval( x, y );
+    }
 
     template <typename T1, typename T2>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1,T2>::value,real_type>
-    eval( T1 const & x, T2 const & y ) const {
-      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1,T2>::value,real_type> X{x}, Y{y};
+    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval( T1 const & x, T2 const & y )
+      const
+    {
+      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> X{ x }, Y{ y };
       return m_spline_2D->eval( X, Y );
     }
-    #endif
+#endif
 
     ///@}
 
@@ -398,41 +395,31 @@ namespace Splines {
     //! - d[1] derivative respect to \f$ x \f$ of the spline: \f$ S_x(x,y) \f$
     //! - d[2] derivative respect to \f$ y \f$ of the spline: \f$ S_y(x,y) \f$
     //!
-    void
-    D( real_type const x, real_type const y, real_type d[3] ) const
-    { return m_spline_2D->D( x, y, d ); }
+    void D( real_type const x, real_type const y, real_type d[3] ) const { return m_spline_2D->D( x, y, d ); }
 
     //!
     //! First derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_x(x,y) \f$.
     //!
-    real_type
-    Dx( real_type const x, real_type const y ) const
-    { return m_spline_2D->Dx( x, y ); }
+    real_type Dx( real_type const x, real_type const y ) const { return m_spline_2D->Dx( x, y ); }
 
     //!
     //! First derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_x(x,y) \f$.
     //!
-    real_type
-    Dy( real_type const x, real_type const y ) const
-    { return m_spline_2D->Dy( x, y ); }
+    real_type Dy( real_type const x, real_type const y ) const { return m_spline_2D->Dy( x, y ); }
 
     //!
     //! First derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_x(x,y) \f$.
     //!
-    real_type
-    eval_D_1( real_type const x, real_type const y ) const
-    { return this->Dx(x,y); }
+    real_type eval_D_1( real_type const x, real_type const y ) const { return this->Dx( x, y ); }
 
     //!
     //! First derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_x(x,y) \f$.
     //!
-    real_type
-    eval_D_2( real_type const x, real_type const y ) const
-    { return this->Dy(x,y); }
+    real_type eval_D_2( real_type const x, real_type const y ) const { return this->Dy( x, y ); }
 
     ///@}
 
@@ -450,63 +437,47 @@ namespace Splines {
     //! - dd[4] mixed second derivative: \f$ S_{xy}(x,y) \f$
     //! - dd[5] second derivative respect to \f$ y \f$ of the spline: \f$ S_{yy}(x,y) \f$
     //!
-    void
-    DD( real_type const x, real_type const y, real_type dd[6] ) const
-    { return m_spline_2D->DD( x, y, dd ); }
+    void DD( real_type const x, real_type const y, real_type dd[6] ) const { return m_spline_2D->DD( x, y, dd ); }
 
     //!
     //! Second derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
-    real_type
-    Dxx( real_type const x, real_type const y ) const
-    { return m_spline_2D->Dxx( x, y ); }
+    real_type Dxx( real_type const x, real_type const y ) const { return m_spline_2D->Dxx( x, y ); }
 
     //!
     //! Mixed second derivatives: \f$ S_{xy}(x,y) \f$.
     //!
-    real_type
-    Dxy( real_type const x, real_type const y ) const
-    { return m_spline_2D->Dxy( x, y ); }
+    real_type Dxy( real_type const x, real_type const y ) const { return m_spline_2D->Dxy( x, y ); }
 
     //!
     //! Second derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
-    real_type
-    Dyy( real_type const x, real_type const y ) const
-    { return m_spline_2D->Dyy( x, y ); }
+    real_type Dyy( real_type const x, real_type const y ) const { return m_spline_2D->Dyy( x, y ); }
 
     //!
     //! Second derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
-    real_type
-    eval_D_1_1( real_type const x, real_type const y ) const
-    { return this->Dxx(x,y); }
+    real_type eval_D_1_1( real_type const x, real_type const y ) const { return this->Dxx( x, y ); }
 
     //!
     //! Mixed second derivatives: \f$ S_{xy}(x,y) \f$.
     //!
-    real_type
-    eval_D_1_2( real_type const x, real_type const y ) const
-    { return this->Dxy(x,y); }
+    real_type eval_D_1_2( real_type const x, real_type const y ) const { return this->Dxy( x, y ); }
 
     //!
     //! Second derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
-    real_type
-    eval_D_2_2( real_type const x, real_type const y ) const
-    { return this->Dyy(x,y); }
+    real_type eval_D_2_2( real_type const x, real_type const y ) const { return this->Dyy( x, y ); }
     ///@}
 
     //!
     //! Print spline coefficients.
     //!
-    void
-    write_to_stream( ostream_type & s ) const
-    { return m_spline_2D->write_to_stream( s ); }
+    void write_to_stream( ostream_type & s ) const { return m_spline_2D->write_to_stream( s ); }
 
     //!
     //! Return spline typename
@@ -516,40 +487,33 @@ namespace Splines {
     //!
     //! String information of the kind and order of the spline
     //!
-    string
-    info() const
-    { return m_spline_2D->info(); }
+    string info() const { return m_spline_2D->info(); }
 
     //!
     //! Print information of the kind and order of the spline
     //!
-    void
-    info( ostream_type & stream ) const
-    { m_spline_2D->info( stream ); }
+    void info( ostream_type & stream ) const { m_spline_2D->info( stream ); }
 
     //!
     //! Dump spline values on the streams
     //!
-    void
-    dump_data( ostream_type & stream ) const
-    { m_spline_2D->dump_data( stream ); }
+    void dump_data( ostream_type & stream ) const { m_spline_2D->dump_data( stream ); }
 
-    #ifdef SPLINES_BACK_COMPATIBILITY
-    integer numPointX() const { return m_spline_2D->num_point_x(); }
-    integer numPointY() const { return m_spline_2D->num_point_y(); }
-    real_type xNode( integer i ) const { return this->x_node(i); }
-    real_type yNode( integer i ) const { return this->y_node(i); }
-    real_type zNode( integer i, integer j ) const { return this->z_node(i,j); }
+#ifdef SPLINES_BACK_COMPATIBILITY
+    integer   numPointX() const { return m_spline_2D->num_point_x(); }
+    integer   numPointY() const { return m_spline_2D->num_point_y(); }
+    real_type xNode( integer i ) const { return this->x_node( i ); }
+    real_type yNode( integer i ) const { return this->y_node( i ); }
+    real_type zNode( integer i, integer j ) const { return this->z_node( i, j ); }
     real_type xMin() const { return this->x_min(); }
     real_type xMax() const { return this->x_max(); }
     real_type yMin() const { return this->y_min(); }
     real_type yMax() const { return this->y_max(); }
     real_type zMin() const { return this->z_min(); }
     real_type zMax() const { return this->z_max(); }
-    #endif
-
+#endif
   };
 
-}
+}  // namespace Splines
 
 // EOF Splines2D.hxx

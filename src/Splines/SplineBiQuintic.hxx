@@ -26,24 +26,25 @@
  |                                               |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   //! Bi-quintic spline base class
-  class BiQuinticSplineBase : public SplineSurf {
+  class BiQuinticSplineBase : public SplineSurf
+  {
   protected:
+    Malloc_real m_mem_biquintic{ "BiQuinticSplineBase" };
 
-    Malloc_real m_mem_biquintic{"BiQuinticSplineBase"};
+    real_type * m_DX{ nullptr };
+    real_type * m_DY{ nullptr };
 
-    real_type * m_DX{nullptr};
-    real_type * m_DY{nullptr};
+    real_type * m_DXX{ nullptr };
+    real_type * m_DYY{ nullptr };
+    real_type * m_DXY{ nullptr };
 
-    real_type * m_DXX{nullptr};
-    real_type * m_DYY{nullptr};
-    real_type * m_DXY{nullptr};
-
-    real_type * m_DXYY{nullptr};
-    real_type * m_DXXY{nullptr};
-    real_type * m_DXXYY{nullptr};
+    real_type * m_DXYY{ nullptr };
+    real_type * m_DXXY{ nullptr };
+    real_type * m_DXXYY{ nullptr };
 
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
@@ -52,31 +53,26 @@ namespace Splines {
     using SplineSurf::m_Y;
     using SplineSurf::m_Z;
 
-    real_type & Dx_node_ref    ( integer const i, integer const j ) { return m_DX    [ ipos_C(i,j) ]; }
-    real_type & Dy_node_ref    ( integer const i, integer const j ) { return m_DY    [ ipos_C(i,j) ]; }
+    real_type & Dx_node_ref( integer const i, integer const j ) { return m_DX[ipos_C( i, j )]; }
+    real_type & Dy_node_ref( integer const i, integer const j ) { return m_DY[ipos_C( i, j )]; }
 
-    real_type & Dxx_node_ref   ( integer const i, integer const j ) { return m_DXX   [ ipos_C(i,j) ]; }
-    real_type & Dyy_node_ref   ( integer const i, integer const j ) { return m_DYY   [ ipos_C(i,j) ]; }
-    real_type & Dxy_node_ref   ( integer const i, integer const j ) { return m_DXY   [ ipos_C(i,j) ]; }
+    real_type & Dxx_node_ref( integer const i, integer const j ) { return m_DXX[ipos_C( i, j )]; }
+    real_type & Dyy_node_ref( integer const i, integer const j ) { return m_DYY[ipos_C( i, j )]; }
+    real_type & Dxy_node_ref( integer const i, integer const j ) { return m_DXY[ipos_C( i, j )]; }
 
-    real_type & Dxyy_node_ref  ( integer const i, integer const j ) { return m_DXYY  [ ipos_C(i,j) ]; }
-    real_type & Dxxy_node_ref  ( integer const i, integer const j ) { return m_DXXY  [ ipos_C(i,j) ]; }
-    real_type & Dxxyy_node_ref ( integer const i, integer const j ) { return m_DXXYY [ ipos_C(i,j) ]; }
+    real_type & Dxyy_node_ref( integer const i, integer const j ) { return m_DXYY[ipos_C( i, j )]; }
+    real_type & Dxxy_node_ref( integer const i, integer const j ) { return m_DXXY[ipos_C( i, j )]; }
+    real_type & Dxxyy_node_ref( integer const i, integer const j ) { return m_DXXYY[ipos_C( i, j )]; }
 
     void load( integer const i, integer const j, real_type bili5[6][6] ) const;
 
   public:
-
     using SplineSurf::eval;
 
     //! spline constructor
-    explicit
-    BiQuinticSplineBase( string_view name = "Spline" )
-    : SplineSurf( name )
-    {}
+    explicit BiQuinticSplineBase( string_view name = "Spline" ) : SplineSurf( name ) {}
 
-    ~BiQuinticSplineBase() override
-    { m_mem_biquintic.free(); }
+    ~BiQuinticSplineBase() override { m_mem_biquintic.free(); }
 
     //!
     //! \name Estimated derivatives at interpolation nodes
@@ -86,58 +82,42 @@ namespace Splines {
     //!
     //! Estimated `x` derivatives at node `(i,j)`
     //!
-    real_type
-    Dx_node( integer const i, integer const j ) const
-    { return m_DX[ ipos_C(i,j) ]; }
+    real_type Dx_node( integer const i, integer const j ) const { return m_DX[ipos_C( i, j )]; }
 
     //!
     //! Estimated `y` derivatives at node `(i,j)`
     //!
-    real_type
-    Dy_node( integer const i, integer const j ) const
-    { return m_DY[ ipos_C(i,j) ]; }
+    real_type Dy_node( integer const i, integer const j ) const { return m_DY[ipos_C( i, j )]; }
 
     //!
     //! Estimated second `x` second derivatives at node `(i,j)`
     //!
-    real_type
-    Dxx_node( integer const i, integer const j ) const
-    { return m_DXX[ ipos_C(i,j) ]; }
+    real_type Dxx_node( integer const i, integer const j ) const { return m_DXX[ipos_C( i, j )]; }
 
     //!
     //! Estimated second`y` derivatives at node `(i,j)`
     //!
-    real_type
-    Dyy_node( integer const i, integer const j ) const
-    { return m_DYY[ ipos_C(i,j) ]; }
+    real_type Dyy_node( integer const i, integer const j ) const { return m_DYY[ipos_C( i, j )]; }
 
     //!
     //! Estimated mixed `xy` derivatives at node `(i,j)`
     //!
-    real_type
-    Dxy_node( integer const i, integer const j ) const
-    { return m_DXY[ ipos_C(i,j) ]; }
+    real_type Dxy_node( integer const i, integer const j ) const { return m_DXY[ipos_C( i, j )]; }
 
     //!
     //! Estimated `xxy` second derivatives at node `(i,j)`
     //!
-    real_type
-    Dxxy_node( integer const i, integer const j ) const
-    { return m_DXXY[ ipos_C(i,j) ]; }
+    real_type Dxxy_node( integer const i, integer const j ) const { return m_DXXY[ipos_C( i, j )]; }
 
     //!
     //! Estimated `xyy` derivatives at node `(i,j)`
     //!
-    real_type
-    Dxyy_node( integer const i, integer const j ) const
-    { return m_DXYY[ ipos_C(i,j) ]; }
+    real_type Dxyy_node( integer const i, integer const j ) const { return m_DXYY[ipos_C( i, j )]; }
 
     //!
     //! Estimated mixed `xxyy` derivatives at node `(i,j)`
     //!
-    real_type
-    Dxxyy_node( integer const i, integer const j ) const
-    { return m_DXXYY[ ipos_C(i,j) ]; }
+    real_type Dxxyy_node( integer const i, integer const j ) const { return m_DXXYY[ipos_C( i, j )]; }
 
     ///@}
 
@@ -193,7 +173,7 @@ namespace Splines {
 
     ///@}
 
-    #ifdef AUTODIFF_SUPPORT
+#ifdef AUTODIFF_SUPPORT
     //!
     //! \name Autodiff
     //!
@@ -202,14 +182,14 @@ namespace Splines {
     autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const;
 
     template <typename T1, typename T2>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1,T2>::value,real_type>
-    eval( T1 const & x, T2 const & y ) const {
-      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1,T2>::value,real_type> X{x}, Y{y};
+    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval( T1 const & x, T2 const & y )
+      const
+    {
+      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> X{ x }, Y{ y };
       return eval( X, Y );
     }
-    ///@}
-    #endif
-
+///@}
+#endif
   };
 
   /*\
@@ -221,32 +201,27 @@ namespace Splines {
    |                                               |_|
   \*/
   //! cubic spline base class
-  class BiQuinticSpline : public BiQuinticSplineBase {
-
+  class BiQuinticSpline : public BiQuinticSplineBase
+  {
     void make_spline() override;
 
   public:
-
     //!
     //! Build an empty spline of `BiQuinticSpline` type
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    BiQuinticSpline( string_view name = "BiQuinticSpline" )
-    : BiQuinticSplineBase( name )
-    {}
+    explicit BiQuinticSpline( string_view name = "BiQuinticSpline" ) : BiQuinticSplineBase( name ) {}
 
     //!
     //! Spline destructor.
     //!
     ~BiQuinticSpline() override {}
 
-    void write_to_stream( ostream_type & s ) const override;
+    void         write_to_stream( ostream_type & s ) const override;
     char const * type_name() const override;
-
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineBiQuintic.hxx

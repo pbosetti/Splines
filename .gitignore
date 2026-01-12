@@ -86,3 +86,4 @@ toolbox/lib/cmake-build-debug
 toolbox/cmake-build-debug
 
 /Xcode
+toolbox/bin

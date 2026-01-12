@@ -26,12 +26,13 @@
  |                                             |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   //! Hermite Spline Management Class
-  class HermiteSpline : public CubicSplineBase {
+  class HermiteSpline : public CubicSplineBase
+  {
   public:
-
     using CubicSplineBase::build;
     using CubicSplineBase::reserve;
 
@@ -40,9 +41,7 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    HermiteSpline( string_view name = "HermiteSpline" )
-    : CubicSplineBase( name )
-    {}
+    HermiteSpline( string_view name = "HermiteSpline" ) : CubicSplineBase( name ) {}
 
     //!
     //! Spline destructor.
@@ -57,17 +56,11 @@ namespace Splines {
     void build() override { m_search.must_reset(); }
 
     // block method!
-    void
-    build(
-      real_type const [], integer,
-      real_type const [], integer,
-      integer
-    ) override;
+    void build( real_type const[], integer, real_type const[], integer, integer ) override;
 
     void setup( GenericContainer const & gc ) override;
-
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineHermite.hxx

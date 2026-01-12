@@ -26,7 +26,8 @@
  |                                |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   using CubicSpline_BC = enum class CubicSpline_BC : integer {
     EXTRAPOLATE      = 0,
@@ -35,18 +36,15 @@ namespace Splines {
     NOT_A_KNOT       = 3
   };
 
-  void
-  CubicSpline_build(
+  void CubicSpline_build(
     real_type const X[],
     real_type const Y[],
     real_type       Yp[],
     integer         npts,
     CubicSpline_BC  bc0,
-    CubicSpline_BC  bcn
-  );
+    CubicSpline_BC  bcn );
 
-  void
-  CubicSpline_build(
+  void CubicSpline_build(
     real_type const X[],
     real_type const Y[],
     real_type       Yp[],
@@ -56,16 +54,17 @@ namespace Splines {
     real_type       U[],
     integer         npts,
     CubicSpline_BC  bc0,
-    CubicSpline_BC  bcn
-  );
+    CubicSpline_BC  bcn );
 
   //!
   //! Cubic Spline Management Class
   //!
-  class CubicSpline : public CubicSplineBase {
+  class CubicSpline : public CubicSplineBase
+  {
   private:
-    CubicSpline_BC m_bc0{CubicSpline_BC::EXTRAPOLATE};
-    CubicSpline_BC m_bcn{CubicSpline_BC::EXTRAPOLATE};
+    CubicSpline_BC m_bc0{ CubicSpline_BC::EXTRAPOLATE };
+    CubicSpline_BC m_bcn{ CubicSpline_BC::EXTRAPOLATE };
+
   public:
     //!
     //! \name Constructors
@@ -80,10 +79,7 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    CubicSpline( string_view name = "CubicSpline" )
-    : CubicSplineBase( name )
-    {}
+    explicit CubicSpline( string_view name = "CubicSpline" ) : CubicSplineBase( name ) {}
 
     //!
     //! Spline destructor.
@@ -101,17 +97,13 @@ namespace Splines {
     //! Set the boudary consition for initial point
     //! \param[in] bc0  initial boundary condition.
     //!
-    void
-    set_initial_BC( CubicSpline_BC bc0 )
-    { m_bc0 = bc0; }
+    void set_initial_BC( CubicSpline_BC bc0 ) { m_bc0 = bc0; }
 
     //!
     //! Set the boudary consition for final point
     //! \param[in] bcn final boundary condition.
     //!
-    void
-    set_final_BC( CubicSpline_BC bcn )
-    { m_bcn = bcn; }
+    void set_final_BC( CubicSpline_BC bcn ) { m_bcn = bcn; }
 
     // --------------------------- VIRTUALS -----------------------------------
 
@@ -125,13 +117,12 @@ namespace Splines {
     //!
     SplineType1D type() const override { return SplineType1D::CUBIC; }
 
-    #ifdef SPLINES_BACK_COMPATIBILITY
+#ifdef SPLINES_BACK_COMPATIBILITY
     void setInitialBC( CubicSpline_BC bc0 ) { m_bc0 = bc0; }
     void setFinalBC( CubicSpline_BC bcn ) { m_bcn = bcn; }
-    #endif
-
+#endif
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineCubic.hxx

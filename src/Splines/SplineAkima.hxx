@@ -26,16 +26,15 @@
  |                                         |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
-  void
-  Akima_build(
+  void Akima_build(
     real_type const X[],
     real_type const Y[],
     real_type       Yp[],
-    real_type       m[],   // work vector dimension N
-    integer   const N
-  );
+    real_type       m[],  // work vector dimension N
+    integer const   N );
 
   //!
   //! Smooth Curve Fitting Based on Local Procedures
@@ -44,21 +43,18 @@ namespace Splines {
   //!
   //! - *Hiroshi Akima*, Journal of the ACM, Vol.17, No. 4, 589-602, 1970.
   //!
-  class AkimaSpline : public CubicSplineBase {
+  class AkimaSpline : public CubicSplineBase
+  {
   public:
-
-    using CubicSplineBase::reserve;
     using CubicSplineBase::build;
+    using CubicSplineBase::reserve;
 
     //!
     //! Build an empty spline of `AkimaSpline` type
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    AkimaSpline( string_view name = "AkimaSpline" )
-    : CubicSplineBase( name )
-    {}
+    explicit AkimaSpline( string_view name = "AkimaSpline" ) : CubicSplineBase( name ) {}
 
     //!
     //! Spline destructor.
@@ -74,9 +70,8 @@ namespace Splines {
 
     void build() override;
     void setup( GenericContainer const & gc ) override;
-
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineAkima.hxx

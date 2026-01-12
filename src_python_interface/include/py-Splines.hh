@@ -13,87 +13,67 @@
 #include <Splines.hh>
 #include <pybind11/pybind11.h>
 
-namespace pySpline {
-  using Splines::real_type;
+namespace pySpline
+{
   using Splines::integer;
   using Splines::ostream_type;
-
-  using Splines::Spline;
   using Splines::real_type;
+
   using Splines::integer;
+  using Splines::real_type;
+  using Splines::Spline;
 
   using pybind11::module;
 
   using GC_namespace::GenericContainer;
 
-  class PythonicSpline : public Spline {
-    public:
+  class PythonicSpline : public Spline
+  {
+  public:
+    PythonicSpline( string_view name = "Spline" ) : Spline( name ) {}
 
-    PythonicSpline( string_view name = "Spline" ) : Spline(name) {}
+    void reserve( integer npts ) override { PYBIND11_OVERLOAD_PURE( void, Spline, reserve, npts ); }
 
-    void reserve(integer npts) override {
-      PYBIND11_OVERLOAD_PURE(void, Spline, reserve, npts);
+    void build() override { PYBIND11_OVERLOAD_PURE( void, Spline, build ); }
+
+    void setup( GenericContainer const & gc ) override { PYBIND11_OVERLOAD_PURE( void, Spline, setup, gc ); }
+
+    void build( real_type const x[], integer incx, real_type const y[], integer incy, integer n ) override
+    {
+      PYBIND11_OVERLOAD_PURE( void, Spline, build, x, incx, y, incy, n );
     }
 
-    void build() override {
-      PYBIND11_OVERLOAD_PURE(void, Spline, build);
+    void clear() override { PYBIND11_OVERLOAD_PURE( void, Spline, clear ); }
+
+    unsigned type() const override { PYBIND11_OVERLOAD_PURE( unsigned, Spline, type ); }
+
+    real_type operator()( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, operator(), x ); }
+
+    real_type D( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, D, x ); }
+
+    real_type DD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DD, x ); }
+
+    real_type DDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DDD, x ); }
+
+    real_type DDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DDDD, x ); }
+
+    real_type DDDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DDDDD, x ); }
+
+    integer coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const override
+    {
+      PYBIND11_OVERLOAD_PURE( integer, Spline, coeffs, cfs, nodes, transpose );
     }
 
-    void setup(GenericContainer const & gc) override {
-      PYBIND11_OVERLOAD_PURE(void, Spline, setup, gc);
-    }
+    integer order() const override { PYBIND11_OVERLOAD_PURE( integer, Spline, order ); }
 
-    void build(real_type const x[], integer incx, real_type const y[], integer incy, integer n) override {
-      PYBIND11_OVERLOAD_PURE(void, Spline, build, x, incx, y, incy, n);
-    }
-
-    void clear() override {
-      PYBIND11_OVERLOAD_PURE(void, Spline, clear);
-    }
-
-    unsigned type() const override {
-      PYBIND11_OVERLOAD_PURE(unsigned, Spline, type);
-    }
-
-    real_type operator()(real_type x) const override {
-      PYBIND11_OVERLOAD_PURE(real_type, Spline, operator(), x);
-    }
-
-    real_type D(real_type x) const override {
-      PYBIND11_OVERLOAD_PURE(real_type, Spline, D, x);
-    }
-
-    real_type DD(real_type x) const override {
-      PYBIND11_OVERLOAD_PURE(real_type, Spline, DD, x);
-    }
-
-    real_type DDD(real_type x) const override {
-      PYBIND11_OVERLOAD_PURE(real_type, Spline, DDD, x);
-    }
-
-    real_type DDDD(real_type x) const override {
-      PYBIND11_OVERLOAD_PURE(real_type, Spline, DDDD, x);
-    }
-
-    real_type DDDDD(real_type x) const override {
-      PYBIND11_OVERLOAD_PURE(real_type, Spline, DDDDD, x);
-    }
-
-    integer coeffs(real_type cfs[], real_type nodes[], bool transpose = false) const override {
-      PYBIND11_OVERLOAD_PURE(integer, Spline, coeffs, cfs, nodes, transpose);
-    }
-
-    integer order() const override {
-      PYBIND11_OVERLOAD_PURE(integer, Spline, order);
-    }
-
-    void write_to_stream(ostream_type & s) const override {
-      PYBIND11_OVERLOAD_PURE(void, Spline, write_to_stream, s);
+    void write_to_stream( ostream_type & s ) const override
+    {
+      PYBIND11_OVERLOAD_PURE( void, Spline, write_to_stream, s );
     }
   };
 
-  void python_register_splines_class(module & m);
-  void python_register_hermite_functions(module & m);
-}
+  void python_register_splines_class( module & m );
+  void python_register_hermite_functions( module & m );
+}  // namespace pySpline
 
 #endif /* PY_SPLINES_HH */

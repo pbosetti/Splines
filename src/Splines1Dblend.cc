@@ -30,7 +30,8 @@
 #include "Utils_fmt.hh"
 #include <set>
 
-namespace Splines {
+namespace Splines
+{
 
   /*
   //    ____  ____   ____                               _
@@ -58,34 +59,36 @@ namespace Splines {
   //!   - "pchip"
   //!   - "quintic"
   //!
-  void
-  Spline1Dblend::setup( GenericContainer const & gc ) {
+  void Spline1Dblend::setup( GenericContainer const & gc )
+  {
     /*
     // gc["xdata"]
     // gc["ydata"]
     //
     */
-    string const where{ "Spline1Dblend[{}]::setup( gc )" };
-    GenericContainer const & gc_spline0{ gc("spline0",where) };
-    GenericContainer const & gc_spline1{ gc("spline1",where) };
+    string const             where{ "Spline1Dblend[{}]::setup( gc )" };
+    GenericContainer const & gc_spline0{ gc( "spline0", where ) };
+    GenericContainer const & gc_spline1{ gc( "spline1", where ) };
     m_spline0.setup( gc_spline0 );
     m_spline1.setup( gc_spline1 );
     check_compatibility();
   }
 
-  void
-  Spline1Dblend::check_compatibility() const {
+  void Spline1Dblend::check_compatibility() const
+  {
     // check compatibility
     UTILS_ASSERT(
       m_spline0.x_min() == m_spline1.x_min(),
       "Spline1Dblend must have the same initial-x, x_min0={}, x_min1={}, difference={}\n",
-      m_spline0.x_min(), m_spline1.x_min(), m_spline0.x_min()-m_spline1.x_min()
-    );
+      m_spline0.x_min(),
+      m_spline1.x_min(),
+      m_spline0.x_min() - m_spline1.x_min() );
     UTILS_ASSERT(
       m_spline0.x_max() == m_spline1.x_max(),
       "Spline1Dblend must have the same final-x, x_max0={}, x_max1={}, difference={}\n",
-      m_spline0.x_max(), m_spline1.x_max(), m_spline0.x_max()-m_spline1.x_max()
-    );
+      m_spline0.x_max(),
+      m_spline1.x_max(),
+      m_spline0.x_max() - m_spline1.x_max() );
   }
 
-}
+}  // namespace Splines

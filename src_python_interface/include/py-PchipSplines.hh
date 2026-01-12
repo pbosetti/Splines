@@ -1,6 +1,6 @@
 /**
  * PYTHON Wrapper for Splines
- * 
+ *
  * License MIT - See LICENSE file
  * 2019 Matteo Ragni, Claudio Kerov Ghiglianovich, Enrico Bertolazzi
  */
@@ -10,10 +10,11 @@
 
 #include <pybind11/pybind11.h>
 
-namespace pySpline {
+namespace pySpline
+{
   using pybind11::module;
 
-  void python_register_pchip_splines_class(module & m);  
-}
+  void python_register_pchip_splines_class( module & m );
+}  // namespace pySpline
 
 #endif /* PY_PCHIP_SPLINES_HH */

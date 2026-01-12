@@ -30,7 +30,8 @@
 #include "Utils_fmt.hh"
 #include <set>
 
-namespace Splines {
+namespace Splines
+{
 
   /*
   //    ____  ____   ____                               _
@@ -58,45 +59,49 @@ namespace Splines {
   //!   - "pchip"
   //!   - "quintic"
   //!
-  void
-  Spline2Dblend::setup( GenericContainer const & gc ) {
+  void Spline2Dblend::setup( GenericContainer const & gc )
+  {
     /*
     // gc["xdata"]
     // gc["ydata"]
     //
     */
-    string const where{ "Spline2Dblend[{}]::setup( gc )" };
-    GenericContainer const & gc_surf0{ gc("surf0",where) };
-    GenericContainer const & gc_surf1{ gc("surf1",where) };
+    string const             where{ "Spline2Dblend[{}]::setup( gc )" };
+    GenericContainer const & gc_surf0{ gc( "surf0", where ) };
+    GenericContainer const & gc_surf1{ gc( "surf1", where ) };
     m_surf0.setup( gc_surf0 );
     m_surf1.setup( gc_surf1 );
     check_compatibility();
   }
 
-  void
-  Spline2Dblend::check_compatibility() const {
+  void Spline2Dblend::check_compatibility() const
+  {
     // check compatibility
     UTILS_ASSERT(
       m_surf0.x_min() == m_surf1.x_min(),
       "Spline2Dblend must have the same initial-x, x_min0={}, x_min1={}, difference={}\n",
-      m_surf0.x_min(), m_surf1.x_min(), m_surf0.x_min()-m_surf1.x_min()
-    );
+      m_surf0.x_min(),
+      m_surf1.x_min(),
+      m_surf0.x_min() - m_surf1.x_min() );
     UTILS_ASSERT(
       m_surf0.x_max() == m_surf1.x_max(),
       "Spline2Dblend must have the same final-x, x_max0={}, x_max1={}, difference={}\n",
-      m_surf0.x_max(), m_surf1.x_max(), m_surf0.x_max()-m_surf1.x_max()
-    );
+      m_surf0.x_max(),
+      m_surf1.x_max(),
+      m_surf0.x_max() - m_surf1.x_max() );
     // check compatibility
     UTILS_ASSERT(
       m_surf0.y_min() == m_surf1.y_min(),
       "Spline2Dblend must have the same initial-y, y_min0={}, y_min1={}, difference={}\n",
-      m_surf0.y_min(), m_surf1.y_min(), m_surf0.y_min()-m_surf1.y_min()
-    );
+      m_surf0.y_min(),
+      m_surf1.y_min(),
+      m_surf0.y_min() - m_surf1.y_min() );
     UTILS_ASSERT(
       m_surf0.y_max() == m_surf1.y_max(),
       "Spline2Dblend must have the same final-y, y_max0={}, y_max1={}, difference={}\n",
-      m_surf0.y_max(), m_surf1.y_max(), m_surf0.y_max()-m_surf1.y_max()
-    );
+      m_surf0.y_max(),
+      m_surf1.y_max(),
+      m_surf0.y_max() - m_surf1.y_max() );
   }
 
-}
+}  // namespace Splines

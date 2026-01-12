@@ -30,61 +30,63 @@
 #include "Utils_fmt.hh"
 #include <set>
 
-namespace Splines {
+namespace Splines
+{
 
-  static
-  std::unique_ptr<Spline>
-  new_Spline1D( string_view const _name, SplineType1D const tp ) {
-    switch ( tp ) {
-    case SplineType1D::CONSTANT:   return std::make_unique<ConstantSpline>(_name);
-    case SplineType1D::LINEAR:     return std::make_unique<LinearSpline>(_name);
-    case SplineType1D::CUBIC:      return std::make_unique<CubicSpline>(_name);
-    case SplineType1D::AKIMA:      return std::make_unique<AkimaSpline>(_name);
-    case SplineType1D::BESSEL:     return std::make_unique<BesselSpline>(_name);
-    case SplineType1D::PCHIP:      return std::make_unique<PchipSpline>(_name);
-    case SplineType1D::QUINTIC:    return std::make_unique<QuinticSpline>(_name);
-    case SplineType1D::HERMITE:    break;
-    case SplineType1D::SPLINE_SET: break;
-    case SplineType1D::SPLINE_VEC: break;
+  static std::unique_ptr<Spline> new_Spline1D( string_view const _name, SplineType1D const tp )
+  {
+    switch ( tp )
+    {
+      case SplineType1D::CONSTANT: return std::make_unique<ConstantSpline>( _name );
+      case SplineType1D::LINEAR: return std::make_unique<LinearSpline>( _name );
+      case SplineType1D::CUBIC: return std::make_unique<CubicSpline>( _name );
+      case SplineType1D::AKIMA: return std::make_unique<AkimaSpline>( _name );
+      case SplineType1D::BESSEL: return std::make_unique<BesselSpline>( _name );
+      case SplineType1D::PCHIP: return std::make_unique<PchipSpline>( _name );
+      case SplineType1D::QUINTIC: return std::make_unique<QuinticSpline>( _name );
+      case SplineType1D::HERMITE: break;
+      case SplineType1D::SPLINE_SET: break;
+      case SplineType1D::SPLINE_VEC: break;
     }
     return nullptr;
   }
 
-  void
-  Spline1D::build(
+  void Spline1D::build(
     SplineType1D const tp,
-    real_type const x[], integer const incx,
-    real_type const y[], integer const incy,
-    integer const n
-  ) {
-    m_spline = new_Spline1D(m_name,tp);
+    real_type const    x[],
+    integer const      incx,
+    real_type const    y[],
+    integer const      incy,
+    integer const      n )
+  {
+    m_spline = new_Spline1D( m_name, tp );
     m_spline->build( x, incx, y, incy, n );
   }
 
-  #ifdef AUTODIFF_SUPPORT
-  autodiff::dual1st
-  Spline1D::eval( autodiff::dual1st const & x ) const {
+#ifdef AUTODIFF_SUPPORT
+  autodiff::dual1st Spline1D::eval( autodiff::dual1st const & x ) const
+  {
     using autodiff::dual1st;
     using autodiff::detail::val;
     real_type dd[2];
-    D( val(x), dd );
-    dual1st res { dd[0] };
+    D( val( x ), dd );
+    dual1st res{ dd[0] };
     res.grad = dd[1] * x.grad;
     return res;
   }
 
-  autodiff::dual2nd
-  Spline1D::eval( autodiff::dual2nd const & x ) const {
+  autodiff::dual2nd Spline1D::eval( autodiff::dual2nd const & x ) const
+  {
     using autodiff::dual2nd;
     using autodiff::detail::val;
-    real_type dd[3], xg{ val(x.grad) };
-    DD( val(x), dd );
-    dual2nd res { dd[0] };
+    real_type dd[3], xg{ val( x.grad ) };
+    DD( val( x ), dd );
+    dual2nd res{ dd[0] };
     res.grad      = dd[1] * xg;
-    res.grad.grad = dd[1] * x.grad.grad + dd[2] * (xg*xg);
+    res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
     return res;
   }
-  #endif
+#endif
 
   /*
   //    ____  ____   ____                               _
@@ -112,33 +114,41 @@ namespace Splines {
   //!   - "pchip"
   //!   - "quintic"
   //!
-  void
-  Spline1D::setup( GenericContainer const & gc ) {
+  void Spline1D::setup( GenericContainer const & gc )
+  {
     /*
     // gc["xdata"]
     // gc["ydata"]
     //
     */
-    string const where{ fmt::format("Spline1D[{}]::setup( gc ):", m_name ) };
+    string const where{ fmt::format( "Spline1D[{}]::setup( gc ):", m_name ) };
 
-    string_view spl_type{ gc.get_map_string("spline_type",where) };
+    string_view spl_type{ gc.get_map_string( "spline_type", where ) };
 
     SplineType1D tp;
-    if      ( spl_type == "constant" ) tp = SplineType1D::CONSTANT;
-    else if ( spl_type == "linear"   ) tp = SplineType1D::LINEAR;
-    else if ( spl_type == "cubic"    ) tp = SplineType1D::CUBIC;
-    else if ( spl_type == "akima"    ) tp = SplineType1D::AKIMA;
-    else if ( spl_type == "bessel"   ) tp = SplineType1D::BESSEL;
-    else if ( spl_type == "pchip"    ) tp = SplineType1D::PCHIP;
-    else if ( spl_type == "quintic"  ) tp = SplineType1D::QUINTIC;
-    else {
+    if ( spl_type == "constant" )
+      tp = SplineType1D::CONSTANT;
+    else if ( spl_type == "linear" )
+      tp = SplineType1D::LINEAR;
+    else if ( spl_type == "cubic" )
+      tp = SplineType1D::CUBIC;
+    else if ( spl_type == "akima" )
+      tp = SplineType1D::AKIMA;
+    else if ( spl_type == "bessel" )
+      tp = SplineType1D::BESSEL;
+    else if ( spl_type == "pchip" )
+      tp = SplineType1D::PCHIP;
+    else if ( spl_type == "quintic" )
+      tp = SplineType1D::QUINTIC;
+    else
+    {
       UTILS_ERROR(
-       "Spline1D::setup[{}] unknown type {}, not in "
-       "[constant,linear,cubic,akima,bessel,pchip,quintic]\n",
-       m_name, spl_type
-      );
+        "Spline1D::setup[{}] unknown type {}, not in "
+        "[constant,linear,cubic,akima,bessel,pchip,quintic]\n",
+        m_name,
+        spl_type );
     }
     m_spline = new_Spline1D( m_name, tp );
     m_spline->build( gc );
   }
-}
+}  // namespace Splines

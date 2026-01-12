@@ -17,7 +17,8 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
-namespace Splines {
+namespace Splines
+{
 
   /*\
    |   ____  _  ____      _     _      ____        _ _            ____
@@ -31,14 +32,14 @@ namespace Splines {
   //!
   //! Bi-cubic spline base class
   //!
-  class BiCubicSplineBase : public SplineSurf {
+  class BiCubicSplineBase : public SplineSurf
+  {
   protected:
-
     Malloc_real m_mem_bicubic;
 
-    real_type * m_DX{nullptr};
-    real_type * m_DY{nullptr};
-    real_type * m_DXY{nullptr};
+    real_type * m_DX{ nullptr };
+    real_type * m_DY{ nullptr };
+    real_type * m_DXY{ nullptr };
 
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
@@ -49,17 +50,15 @@ namespace Splines {
 
     void load( integer const i, integer const j, real_type bili3[4][4] ) const;
 
-    real_type & Dx_node_ref  ( integer const i, integer const j ) { return m_DX  [ this->ipos_C(i,j) ]; }
-    real_type & Dy_node_ref  ( integer const i, integer const j ) { return m_DY  [ this->ipos_C(i,j) ]; }
-    real_type & Dxy_node_ref ( integer const i, integer const j ) { return m_DXY [ this->ipos_C(i,j) ]; }
+    real_type & Dx_node_ref( integer const i, integer const j ) { return m_DX[this->ipos_C( i, j )]; }
+    real_type & Dy_node_ref( integer const i, integer const j ) { return m_DY[this->ipos_C( i, j )]; }
+    real_type & Dxy_node_ref( integer const i, integer const j ) { return m_DXY[this->ipos_C( i, j )]; }
 
   public:
-
     using SplineSurf::eval;
 
     //! spline constructor
-    explicit
-    BiCubicSplineBase( string_view name = "BiCubicSplineBase" );
+    explicit BiCubicSplineBase( string_view name = "BiCubicSplineBase" );
 
     ~BiCubicSplineBase() override {}
 
@@ -71,23 +70,17 @@ namespace Splines {
     //!
     //! Estimated `x` derivatives at node `(i,j)`
     //!
-    real_type
-    Dx_node( integer const i, integer const j ) const
-    { return m_DX[ this->ipos_C(i,j) ]; }
+    real_type Dx_node( integer const i, integer const j ) const { return m_DX[this->ipos_C( i, j )]; }
 
     //!
     //! Estimated `y` derivatives at node `(i,j)`
     //!
-    real_type
-    Dy_node( integer const i, integer const j ) const
-    { return m_DY[ this->ipos_C(i,j) ]; }
+    real_type Dy_node( integer const i, integer const j ) const { return m_DY[this->ipos_C( i, j )]; }
 
     //!
     //! Estimated mixed `xy` derivatives at node `(i,j)`
     //!
-    real_type
-    Dxy_node( integer const i, integer const j ) const
-    { return m_DXY[ this->ipos_C(i,j) ]; }
+    real_type Dxy_node( integer const i, integer const j ) const { return m_DXY[this->ipos_C( i, j )]; }
 
     ///@}
 
@@ -154,17 +147,16 @@ namespace Splines {
   //!
   //! Cubic spline base class
   //!
-  class BiCubicSpline : public BiCubicSplineBase {
-
+  class BiCubicSpline : public BiCubicSplineBase
+  {
     void make_spline() override;
 
-    using BiCubicSplineBase::m_mem_bicubic;
     using BiCubicSplineBase::m_DX;
-    using BiCubicSplineBase::m_DY;
     using BiCubicSplineBase::m_DXY;
+    using BiCubicSplineBase::m_DY;
+    using BiCubicSplineBase::m_mem_bicubic;
 
   public:
-
     using BiCubicSplineBase::eval;
 
     //!
@@ -172,21 +164,17 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    BiCubicSpline( string_view name = "BiCubicSpline" )
-    : BiCubicSplineBase( name )
-    {}
+    explicit BiCubicSpline( string_view name = "BiCubicSpline" ) : BiCubicSplineBase( name ) {}
 
     //!
     //! Spline destructor.
     //!
     ~BiCubicSpline() override {}
 
-    void write_to_stream( ostream_type & s ) const override;
+    void         write_to_stream( ostream_type & s ) const override;
     char const * type_name() const override;
-
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineBiCubic.hxx

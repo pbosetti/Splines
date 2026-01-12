@@ -26,20 +26,15 @@
  |                    |_|        |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
-  void
-  Pchip_build(
-    real_type const X[],
-    real_type const Y[],
-    real_type       Yp[],
-    integer   const npts
-  );
+  void Pchip_build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts );
 
   //! Pchip (Piecewise Cubic Hermite Interpolating Polynomial) spline class
-  class PchipSpline : public CubicSplineBase {
+  class PchipSpline : public CubicSplineBase
+  {
   public:
-
     using CubicSplineBase::build;
     using CubicSplineBase::reserve;
 
@@ -48,10 +43,7 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    PchipSpline( string_view name = "PchipSpline" )
-    : CubicSplineBase( name )
-    {}
+    explicit PchipSpline( string_view name = "PchipSpline" ) : CubicSplineBase( name ) {}
 
     //!
     //! Spline destructor.
@@ -66,9 +58,8 @@ namespace Splines {
     //! Build a Monotone spline from previously inserted points
     void build() override;
     void setup( GenericContainer const & gc ) override;
-
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplinePchip.hxx

@@ -24,7 +24,8 @@
 
 #include "Splines.hh"
 
-namespace Splines {
+namespace Splines
+{
 
   using std::fpclassify;
 
@@ -42,14 +43,9 @@ namespace Splines {
    |  DR = (y[k+1]-y[k])/hR; hR = x[k+1]-x[k];
    |  approximate the first derivative at x[k]
   \*/
-  static
-  inline
-  real_type
-  first_deriv3p_C(
-    real_type DL, real_type hL,
-    real_type DR, real_type hR
-  ) {
-    return (DL*hR+DR*hL)/(hR+hL);
+  static inline real_type first_deriv3p_C( real_type DL, real_type hL, real_type DR, real_type hR )
+  {
+    return ( DL * hR + DR * hL ) / ( hR + hL );
   }
 
   /*\
@@ -58,14 +54,9 @@ namespace Splines {
    |  DR = (y[k+1]-y[k])/hR; hR = x[k+1]-x[k];
    |  approximate the first derivative at x[k-1]
   \*/
-  static
-  inline
-  real_type
-  first_deriv3p_L(
-    real_type DL, real_type hL,
-    real_type DR, real_type hR
-  ) {
-    return ((2*DL-DR)*hL+DL*hR)/(hR+hL);
+  static inline real_type first_deriv3p_L( real_type DL, real_type hL, real_type DR, real_type hR )
+  {
+    return ( ( 2 * DL - DR ) * hL + DL * hR ) / ( hR + hL );
   }
 
   /*\
@@ -74,14 +65,9 @@ namespace Splines {
    |  DR = (y[k+1]-y[k])/hR; hR = x[k+1]-x[k];
    |  approximate the first derivative at x[k+1]
   \*/
-  static
-  inline
-  real_type
-  first_deriv3p_R(
-    real_type DL, real_type hL,
-    real_type DR, real_type hR
-  ) {
-    return ((2*DR-DL)*hR+DR*hL)/(hR+hL);
+  static inline real_type first_deriv3p_R( real_type DL, real_type hL, real_type DR, real_type hR )
+  {
+    return ( ( 2 * DR - DL ) * hR + DR * hL ) / ( hR + hL );
   }
 
   /*\
@@ -91,12 +77,7 @@ namespace Splines {
    |  DL   = (y[k]-y[k-1])/hL;     hL   = x[k]-x[k-1];
    |  approximate the first derivative at x[k]
   \*/
-  real_type
-  first_deriv4p_R(
-    real_type DLLL, real_type hLLL,
-    real_type DLL,  real_type hLL,
-    real_type DL,   real_type hL
-  );
+  real_type first_deriv4p_R( real_type DLLL, real_type hLLL, real_type DLL, real_type hLL, real_type DL, real_type hL );
 
   /*\
    |  Given
@@ -105,12 +86,7 @@ namespace Splines {
    |  DRRR = (y[k+3]-y[k+2])/hRRR; hRRR = x[k+3]-x[k+2];
    |  approximate the first derivative at x[k]
   \*/
-  real_type
-  first_deriv4p_L(
-    real_type DR,   real_type hR,
-    real_type DRR,  real_type hRR,
-    real_type DRRR, real_type hRRR
-  );
+  real_type first_deriv4p_L( real_type DR, real_type hR, real_type DRR, real_type hRR, real_type DRRR, real_type hRRR );
 
   /*\
    |  Given
@@ -120,13 +96,15 @@ namespace Splines {
    |  DRR = (y[k+2]-y[k-1])/hRR; hRR = x[k+2]-x[k+1];
    |  approximate the first derivative at x[k]
   \*/
-  real_type
-  first_deriv5p_C(
-    real_type DLL, real_type hLL,
-    real_type DL,  real_type hL,
-    real_type DR,  real_type hR,
-    real_type DRR, real_type hRR
-  );
+  real_type first_deriv5p_C(
+    real_type DLL,
+    real_type hLL,
+    real_type DL,
+    real_type hL,
+    real_type DR,
+    real_type hR,
+    real_type DRR,
+    real_type hRR );
 
   /*\
    |  Given
@@ -136,13 +114,15 @@ namespace Splines {
    |  DRR = (y[k+2]-y[k-1])/hRR; hRR = x[k+2]-x[k+1];
    |  approximate the first derivative at x[k-1]
   \*/
-  real_type
-  first_deriv5p_L(
-    real_type DLL, real_type hLL,
-    real_type DL,  real_type hL,
-    real_type DR,  real_type hR,
-    real_type DRR, real_type hRR
-  );
+  real_type first_deriv5p_L(
+    real_type DLL,
+    real_type hLL,
+    real_type DL,
+    real_type hL,
+    real_type DR,
+    real_type hR,
+    real_type DRR,
+    real_type hRR );
 
   /*\
    |  Given
@@ -152,91 +132,58 @@ namespace Splines {
    |  DRR = (y[k+2]-y[k-1])/hRR; hRR = x[k+2]-x[k+1];
    |  approximate the first derivative at x[k+1]
   \*/
-  real_type
-  first_deriv5p_R(
-    real_type DLL, real_type hLL,
-    real_type DL,  real_type hL,
-    real_type DR,  real_type hR,
-    real_type DRR, real_type hRR
-  );
+  real_type first_deriv5p_R(
+    real_type DLL,
+    real_type hLL,
+    real_type DL,
+    real_type hL,
+    real_type DR,
+    real_type hR,
+    real_type DRR,
+    real_type hRR );
 
-  real_type
-  second_deriv3p_C(
+  real_type second_deriv3p_C(
     real_type SL,
     real_type hL,
     real_type SR,
     real_type hR,
     real_type dpL,
     real_type dp0,
-    real_type dpR
-  );
+    real_type dpR );
 
-  real_type
-  second_deriv3p_C(
-    real_type SL,
-    real_type hL,
-    real_type SR,
-    real_type hR,
-    real_type dp0
-  );
+  real_type second_deriv3p_C( real_type SL, real_type hL, real_type SR, real_type hR, real_type dp0 );
 
-  real_type
-  second_deriv3p_L(
+  real_type second_deriv3p_L(
     real_type SL,
     real_type hL,
     real_type SR,
     real_type hR,
     real_type dpL,
     real_type dp0,
-    real_type dpR
-  );
+    real_type dpR );
 
-  real_type
-  second_deriv3p_L(
-    real_type SL,
-    real_type hL,
-    real_type SR,
-    real_type hR,
-    real_type dpL
-  );
+  real_type second_deriv3p_L( real_type SL, real_type hL, real_type SR, real_type hR, real_type dpL );
 
-  real_type
-  second_deriv3p_R(
+  real_type second_deriv3p_R(
     real_type SL,
     real_type hL,
     real_type SR,
     real_type hR,
     real_type dpL,
     real_type dp0,
-    real_type dpR
-  );
+    real_type dpR );
 
-  real_type
-  second_deriv3p_R(
-    real_type SL,
-    real_type hL,
-    real_type SR,
-    real_type hR,
-    real_type dpR
-  );
+  real_type second_deriv3p_R( real_type SL, real_type hL, real_type SR, real_type hR, real_type dpR );
 
-  void
-  first_derivative_build(
-    real_type const X[],
-    real_type const Y[],
-    real_type       Yp[],
-    integer         npts
-  );
+  void first_derivative_build( real_type const X[], real_type const Y[], real_type Yp[], integer npts );
 
-  void
-  second_derivative_build(
+  void second_derivative_build(
     real_type const X[],
     real_type const Y[],
     real_type const Yp[],
     real_type       Ypp[],
-    integer         npts
-  );
+    integer         npts );
 
-}
+}  // namespace Splines
 
 #endif

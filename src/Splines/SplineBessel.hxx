@@ -26,22 +26,17 @@
  |                                   |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
-  void
-  Bessel_build(
-    real_type const X[],
-    real_type const Y[],
-    real_type       Yp[],
-    integer   const npts
-  );
+  void Bessel_build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts );
 
   //!
   //! Bessel spline class
   //!
-  class BesselSpline : public CubicSplineBase {
+  class BesselSpline : public CubicSplineBase
+  {
   public:
-
     using CubicSplineBase::build;
     using CubicSplineBase::reserve;
 
@@ -50,10 +45,7 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    BesselSpline( string_view name = "BesselSpline" )
-    : CubicSplineBase( name )
-    {}
+    explicit BesselSpline( string_view name = "BesselSpline" ) : CubicSplineBase( name ) {}
 
     //!
     //! spline destructor
@@ -71,4 +63,4 @@ namespace Splines {
     void setup( GenericContainer const & gc ) override;
   };
 
-}
+}  // namespace Splines

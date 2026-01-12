@@ -26,21 +26,21 @@
  |                                       |_|
 \*/
 
-namespace Splines {
+namespace Splines
+{
 
   //!
   //! Quintic spline base class
   //!
-  class QuinticSplineBase : public Spline {
+  class QuinticSplineBase : public Spline
+  {
   protected:
-
     Malloc_real m_base_quintic;
-    real_type * m_Yp{nullptr};
-    real_type * m_Ypp{nullptr};
-    bool        m_external_alloc{false};
+    real_type * m_Yp{ nullptr };
+    real_type * m_Ypp{ nullptr };
+    bool        m_external_alloc{ false };
 
   public:
-
     //!
     //! \name Constructors
     //!
@@ -53,8 +53,7 @@ namespace Splines {
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    QuinticSplineBase( string_view name = "QuinticSplineBase" );
+    explicit QuinticSplineBase( string_view name = "QuinticSplineBase" );
 
     //!
     //! Spline destructor.
@@ -93,25 +92,21 @@ namespace Splines {
     //!
     real_type ypp_node( integer const i ) const { return m_Ypp[i]; }
 
-    void
-    y_min_max(
-      integer   & i_min_pos,
+    void y_min_max(
+      integer &   i_min_pos,
       real_type & x_min_pos,
       real_type & y_min,
-      integer   & i_max_pos,
+      integer &   i_max_pos,
       real_type & x_max_pos,
-      real_type & y_max
-    ) const override;
+      real_type & y_max ) const override;
 
-    void
-    y_min_max(
-      vector<integer>   & i_min_pos,
+    void y_min_max(
+      vector<integer> &   i_min_pos,
       vector<real_type> & x_min_pos,
       vector<real_type> & y_min,
-      vector<integer>   & i_max_pos,
+      vector<integer> &   i_max_pos,
       vector<real_type> & x_max_pos,
-      vector<real_type> & y_max
-    ) const override;
+      vector<real_type> & y_max ) const override;
 
     void write_to_stream( ostream_type & s ) const override;
 
@@ -127,14 +122,7 @@ namespace Splines {
     //!
     //! Use externally allocated memory for `npts` points
     //!
-    void
-    reserve_external(
-      integer const n,
-      real_type * & p_x,
-      real_type * & p_y,
-      real_type * & p_Yp,
-      real_type * & p_Ypp
-    );
+    void reserve_external( integer const n, real_type *& p_x, real_type *& p_y, real_type *& p_Yp, real_type *& p_Ypp );
 
     // --------------------------- VIRTUALS -----------------------------------
 
@@ -142,38 +130,42 @@ namespace Splines {
     //! \name Evaluation Aliases
     //!
     ///@{
-    real_type eval  ( real_type const x ) const override;
-    real_type D     ( real_type const x ) const override;
-    real_type DD    ( real_type const x ) const override;
-    real_type DDD   ( real_type const x ) const override;
-    real_type DDDD  ( real_type const x ) const override;
-    real_type DDDDD ( real_type const x ) const override;
-    void D  ( real_type const x, real_type dd[2] ) const override;
-    void DD ( real_type const x, real_type dd[3] ) const override;
+    real_type eval( real_type const x ) const override;
+    real_type D( real_type const x ) const override;
+    real_type DD( real_type const x ) const override;
+    real_type DDD( real_type const x ) const override;
+    real_type DDDD( real_type const x ) const override;
+    real_type DDDDD( real_type const x ) const override;
+    void      D( real_type const x, real_type dd[2] ) const override;
+    void      DD( real_type const x, real_type dd[3] ) const override;
     ///@}
 
-    #ifdef AUTODIFF_SUPPORT
+#ifdef AUTODIFF_SUPPORT
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override;
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override;
 
     template <typename T>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value,real_type>
-    eval( T const & x ) const { return eval( autodiff::detail::to_dual(x) ); }
+    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> eval( T const & x ) const
+    {
+      return eval( autodiff::detail::to_dual( x ) );
+    }
 
     template <typename T>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value,real_type>
-    operator () ( T const & x ) const { return eval( autodiff::detail::to_dual(x) ); }
-    #endif
+    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> operator()( T const & x ) const
+    {
+      return eval( autodiff::detail::to_dual( x ) );
+    }
+#endif
 
     //!
     //! \name Evaluation when segment is known
     ///@{
-    real_type id_eval  ( integer const ni, real_type const x ) const override;
-    real_type id_D     ( integer const ni, real_type const x ) const override;
-    real_type id_DD    ( integer const ni, real_type const x ) const override;
-    real_type id_DDD   ( integer const ni, real_type const x ) const override;
-    real_type id_DDDD  ( integer const ni, real_type const x ) const override;
-    real_type id_DDDDD ( integer const ni, real_type const x ) const override;
+    real_type id_eval( integer const ni, real_type const x ) const override;
+    real_type id_D( integer const ni, real_type const x ) const override;
+    real_type id_DD( integer const ni, real_type const x ) const override;
+    real_type id_DDD( integer const ni, real_type const x ) const override;
+    real_type id_DDDD( integer const ni, real_type const x ) const override;
+    real_type id_DDDDD( integer const ni, real_type const x ) const override;
     ///@}
 
     void reserve( integer npts ) override;
@@ -182,23 +174,19 @@ namespace Splines {
     //!
     //! Get the piecewise polinomials of the spline
     //!
-    integer // order
-    coeffs(
-      real_type cfs[],
-      real_type nodes[],
-      bool      transpose = false
-    ) const override;
+    integer  // order
+    coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const override;
 
     integer order() const override;
 
-    #ifdef SPLINES_BACK_COMPATIBILITY
-    void copySpline( QuinticSplineBase const & S ) { this->copy_spline(S); }
-    real_type ypNode( integer i ) const { return this->yp_node(i); }
-    real_type yppNode( integer i ) const { return this->ypp_node(i); }
-    void setRange( real_type xmin, real_type xmax ) { this->set_range( xmin, xmax ); }
-    #endif
+#ifdef SPLINES_BACK_COMPATIBILITY
+    void      copySpline( QuinticSplineBase const & S ) { this->copy_spline( S ); }
+    real_type ypNode( integer i ) const { return this->yp_node( i ); }
+    real_type yppNode( integer i ) const { return this->ypp_node( i ); }
+    void      setRange( real_type xmin, real_type xmax ) { this->set_range( xmin, xmax ); }
+#endif
   };
 
-}
+}  // namespace Splines
 
 // EOF: SplineQuinticBase.hxx
