@@ -639,19 +639,20 @@ int main()
       "└────────────────────────────────────────────────────────────┘\n\n" );
 
     // Test basic spline types
-    vector<pair<string, function<void()>>> tests = { { "Constant Spline", test_constant_spline },
-                                                     { "Linear Spline", test_linear_spline },
-                                                     { "Cubic Spline", test_cubic_spline },
-                                                     { "Akima Spline", test_akima_spline },
-                                                     { "Bessel Spline", test_bessel_spline },
-                                                     { "Pchip Spline", test_pchip_spline },
-                                                     { "Hermite Spline", test_hermite_spline },
-                                                     { "Quintic Spline", test_quintic_spline },
-                                                     { "Spline1D Base", test_spline1d },
-                                                     { "Spline Set", test_spline_set },
-                                                     { "Spline Vector", test_spline_vec },
-                                                     { "Spline Blend", test_spline1dblend },
-                                                     { "Utility Functions", test_utility_functions } };
+    using DATA_type         = pair<string, function<void()>>;
+    vector<DATA_type> tests = { { "Constant Spline", test_constant_spline },
+                                { "Linear Spline", test_linear_spline },
+                                { "Cubic Spline", test_cubic_spline },
+                                { "Akima Spline", test_akima_spline },
+                                { "Bessel Spline", test_bessel_spline },
+                                { "Pchip Spline", test_pchip_spline },
+                                { "Hermite Spline", test_hermite_spline },
+                                { "Quintic Spline", test_quintic_spline },
+                                { "Spline1D Base", test_spline1d },
+                                { "Spline Set", test_spline_set },
+                                { "Spline Vector", test_spline_vec },
+                                { "Spline Blend", test_spline1dblend },
+                                { "Utility Functions", test_utility_functions } };
 
     int test_count   = 0;
     int passed_count = 0;

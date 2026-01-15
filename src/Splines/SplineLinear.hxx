@@ -80,8 +80,7 @@ namespace Splines
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override;
 
     // Template unificato per tutti i tipi
-    template <typename T>
-    auto eval( T const & x ) const
+    template <typename T> auto eval( T const & x ) const
     {
       if constexpr ( std::is_arithmetic<T>::value )
       {
@@ -95,11 +94,7 @@ namespace Splines
       }
     }
 
-    template <typename T>
-    auto operator()( T const & x ) const -> decltype( eval( x ) )
-    {
-      return eval( x );
-    }
+    template <typename T> auto operator()( T const & x ) const -> decltype( eval( x ) ) { return eval( x ); }
 #endif  // AUTODIFF_SUPPORT
 
     void reserve( integer const npts ) override;

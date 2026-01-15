@@ -17,17 +17,25 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
-/*\
- |   ____        _ _            ____  ____
- |  / ___| _ __ | (_)_ __   ___|___ \|  _ \
- |  \___ \| '_ \| | | '_ \ / _ \ __) | | | |
- |   ___) | |_) | | | | | |  __// __/| |_| |
- |  |____/| .__/|_|_|_| |_|\___|_____|____/
- |        |_|
-\*/
+#pragma once
+
+#ifndef SPLINES2D_HXX
+#define SPLINES2D_HXX
+
+#include "Splines.hh"
+#include "Utils_fmt.hh"
 
 namespace Splines
 {
+
+  /*\
+   |   ____        _ _            ____  ____
+   |  / ___| _ __ | (_)_ __   ___|___ \|  _ \
+   |  \___ \| '_ \| | | '_ \ / _ \ __) | | | |
+   |   ___) | |_) | | | | | |  __// __/| |_| |
+   |  |____/| .__/|_|_|_| |_|\___|_____|____/
+   |        |_|
+  \*/
 
   //!
   //! Bi-quintic spline base class
@@ -38,7 +46,25 @@ namespace Splines
     std::string  m_name;
     SplineSurf * m_spline_2D{ nullptr };
 
-    void new_spline( SplineType2D tp );
+    void new_spline( SplineType2D tp )
+    {
+      if ( m_spline_2D != nullptr )
+      {
+        delete m_spline_2D;
+        m_spline_2D = nullptr;
+      }
+      switch ( tp )
+      {
+        case SplineType2D::BILINEAR: m_spline_2D = new BilinearSpline( m_name ); break;
+        case SplineType2D::BICUBIC: m_spline_2D = new BiCubicSpline( m_name ); break;
+        case SplineType2D::BIQUINTIC: m_spline_2D = new BiQuinticSpline( m_name ); break;
+        case SplineType2D::AKIMA2D:
+          m_spline_2D = new Akima2Dspline( m_name );
+          break;
+          //    default:
+          //      UTILS_ERROR( "new_spline, type `{}` unknown\n", tp );
+      }
+    }
 
   public:
     //! \name Constructors
@@ -341,7 +367,13 @@ namespace Splines
     //!     - "Akima" or "akima "build a spline surface with cubic spline
     //!        using Akima algorithm to avoid obscillation
     //!
-    void setup( GenericContainer const & gc );
+    void setup( GenericContainer const & gc )
+    {
+      string const   where{ fmt::format( "Spline2D[{}]::setup( gc ):", m_name ) };
+      string const & type{ gc.get_map_string( "spline_type", where ) };
+      new_spline( string_to_splineType2D( type ) );
+      m_spline_2D->setup( gc );
+    }
 
     //!
     //! Build a spline using data in `GenericContainer`
@@ -517,3 +549,4 @@ namespace Splines
 }  // namespace Splines
 
 // EOF Splines2D.hxx
+#endif

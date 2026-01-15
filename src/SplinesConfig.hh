@@ -43,6 +43,7 @@
 
 #include <thread>
 #include <mutex>
+#include <set>
 
 #define AUTODIFF_SUPPORT
 

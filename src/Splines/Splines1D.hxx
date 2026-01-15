@@ -17,17 +17,26 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
-/*\
- |   ____        _ _            _ ____
- |  / ___| _ __ | (_)_ __   ___/ |  _ \
- |  \___ \| '_ \| | | '_ \ / _ \ | | | |
- |   ___) | |_) | | | | | |  __/ | |_| |
- |  |____/| .__/|_|_|_| |_|\___|_|____/
- |        |_|
-\*/
+#pragma once
+
+#ifndef SPLINES1D_HXX
+#define SPLINES1D_HXX
+
+#include "Splines.hh"
+#include "Utils_fmt.hh"
+#include <set>
 
 namespace Splines
 {
+
+  /*\
+   |   ____        _ _            _ ____
+   |  / ___| _ __ | (_)_ __   ___/ |  _ \
+   |  \___ \| '_ \| | | '_ \ / _ \ | | | |
+   |   ___) | |_) | | | | | |  __/ | |_| |
+   |  |____/| .__/|_|_|_| |_|\___|_|____/
+   |        |_|
+  \*/
 
   //! Spline Management Class
   class Spline1D
@@ -35,6 +44,25 @@ namespace Splines
   protected:
     std::string             m_name;
     std::unique_ptr<Spline> m_spline;
+
+    //! Helper function to create a spline of the specified type
+    static std::unique_ptr<Spline> new_Spline1D( string_view const _name, SplineType1D const tp )
+    {
+      switch ( tp )
+      {
+        case SplineType1D::CONSTANT: return std::make_unique<ConstantSpline>( _name );
+        case SplineType1D::LINEAR: return std::make_unique<LinearSpline>( _name );
+        case SplineType1D::CUBIC: return std::make_unique<CubicSpline>( _name );
+        case SplineType1D::AKIMA: return std::make_unique<AkimaSpline>( _name );
+        case SplineType1D::BESSEL: return std::make_unique<BesselSpline>( _name );
+        case SplineType1D::PCHIP: return std::make_unique<PchipSpline>( _name );
+        case SplineType1D::QUINTIC: return std::make_unique<QuinticSpline>( _name );
+        case SplineType1D::HERMITE: break;
+        case SplineType1D::SPLINE_SET: break;
+        case SplineType1D::SPLINE_VEC: break;
+      }
+      return nullptr;
+    }
 
   public:
     Spline1D( Spline1D const & )                   = delete;
@@ -56,7 +84,6 @@ namespace Splines
     ~Spline1D() {}
 
     ///@}
-
 
     //!
     //! \name Open/Close
@@ -180,7 +207,44 @@ namespace Splines
     //!
     //! Build a spline using data in `GenericContainer`
     //!
-    void setup( GenericContainer const & gc );
+    void setup( GenericContainer const & gc )
+    {
+      /*
+      // gc["xdata"]
+      // gc["ydata"]
+      //
+      */
+      string const where{ fmt::format( "Spline1D[{}]::setup( gc ):", m_name ) };
+
+      string_view spl_type{ gc.get_map_string( "spline_type", where ) };
+
+      SplineType1D tp;
+      if ( spl_type == "constant" )
+        tp = SplineType1D::CONSTANT;
+      else if ( spl_type == "linear" )
+        tp = SplineType1D::LINEAR;
+      else if ( spl_type == "cubic" )
+        tp = SplineType1D::CUBIC;
+      else if ( spl_type == "akima" )
+        tp = SplineType1D::AKIMA;
+      else if ( spl_type == "bessel" )
+        tp = SplineType1D::BESSEL;
+      else if ( spl_type == "pchip" )
+        tp = SplineType1D::PCHIP;
+      else if ( spl_type == "quintic" )
+        tp = SplineType1D::QUINTIC;
+      else
+      {
+        UTILS_ERROR(
+          "Spline1D::setup[{}] unknown type {}, not in "
+          "[constant,linear,cubic,akima,bessel,pchip,quintic]\n",
+          m_name,
+          spl_type );
+      }
+      m_spline = new_Spline1D( m_name, tp );
+      m_spline->build( gc );
+    }
+
     //!
     //! Build a spline using data in `GenericContainer`
     //!
@@ -196,14 +260,17 @@ namespace Splines
     //! \param incy access elements as `y[0]`, `y[incy]`, `x[2*incy]`,...
     //! \param n    total number of points
     //!
-    // must be defined in derived classes
     void build(
-      SplineType1D    tp,
-      real_type const x[],
-      integer         incx,
-      real_type const y[],
-      integer         incy,
-      integer const   n );
+      SplineType1D const tp,
+      real_type const    x[],
+      integer const      incx,
+      real_type const    y[],
+      integer const      incy,
+      integer const      n )
+    {
+      m_spline = new_Spline1D( m_name, tp );
+      m_spline->build( x, incx, y, incy, n );
+    }
 
     //!
     //! Build a spline.
@@ -328,15 +395,45 @@ namespace Splines
     //! \name Autodiff
     //!
     ///@{
-    autodiff::dual1st eval( autodiff::dual1st const & x ) const;
-    autodiff::dual2nd eval( autodiff::dual2nd const & x ) const;
-
-    template <typename T>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> eval( T const & x ) const
+    autodiff::dual1st eval( autodiff::dual1st const & x ) const
     {
-      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> X{ x };
-      return eval( X );
+      using autodiff::dual1st;
+      using autodiff::detail::val;
+      real_type dd[2];
+      D( val( x ), dd );
+      dual1st res{ dd[0] };
+      res.grad = dd[1] * x.grad;
+      return res;
     }
+
+    autodiff::dual2nd eval( autodiff::dual2nd const & x ) const
+    {
+      using autodiff::dual2nd;
+      using autodiff::detail::val;
+      real_type dd[3], xg{ val( x.grad ) };
+      DD( val( x ), dd );
+      dual2nd res{ dd[0] };
+      res.grad      = dd[1] * xg;
+      res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
+      return res;
+    }
+
+    // Template unificato per tutti i tipi
+    template <typename T> auto eval( T const & x ) const
+    {
+      if constexpr ( std::is_arithmetic<T>::value )
+      {
+        // Se T è un tipo numerico (int, float, double, etc.), promuovi a real_type
+        return eval( static_cast<real_type>( x ) );
+      }
+      else
+      {
+        // Altrimenti deduce automaticamente il tipo duale appropriato
+        return eval( autodiff::detail::to_dual( x ) );
+      }
+    }
+
+    template <typename T> auto operator()( T const & x ) const -> decltype( eval( x ) ) { return eval( x ); }
 ///@}
 #endif
 
@@ -470,5 +567,7 @@ namespace Splines
   };
 
 }  // namespace Splines
+
+#endif
 
 // EOF: Spline1D.hxx

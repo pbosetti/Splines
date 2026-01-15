@@ -17,17 +17,26 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
-/*\
- |   ____        _ _            ____  ____
- |  / ___| _ __ | (_)_ __   ___|___ \|  _ \
- |  \___ \| '_ \| | | '_ \ / _ \ __) | | | |
- |   ___) | |_) | | | | | |  __// __/| |_| |
- |  |____/| .__/|_|_|_| |_|\___|_____|____/
- |        |_|
-\*/
+#pragma once
+
+#ifndef SPLINES2DBLEND_HXX
+#define SPLINES2DBLEND_HXX
+
+#include "Splines.hh"
+#include "Utils_fmt.hh"
+#include <set>
 
 namespace Splines
 {
+
+  /*\
+   |   ____        _ _            ____  ____
+   |  / ___| _ __ | (_)_ __   ___|___ \|  _ \
+   |  \___ \| '_ \| | | '_ \ / _ \ __) | | | |
+   |   ___) | |_) | | | | | |  __// __/| |_| |
+   |  |____/| .__/|_|_|_| |_|\___|_____|____/
+   |        |_|
+  \*/
 
   //!
   //! Bi-quintic spline base class
@@ -38,7 +47,38 @@ namespace Splines
     Spline2D m_surf0;
     Spline2D m_surf1;
 
-    void check_compatibility() const;
+    //!
+    //! Check compatibility between the two surfaces
+    //!
+    void check_compatibility() const
+    {
+      // check compatibility
+      UTILS_ASSERT(
+        m_surf0.x_min() == m_surf1.x_min(),
+        "Spline2Dblend must have the same initial-x, x_min0={}, x_min1={}, difference={}\n",
+        m_surf0.x_min(),
+        m_surf1.x_min(),
+        m_surf0.x_min() - m_surf1.x_min() );
+      UTILS_ASSERT(
+        m_surf0.x_max() == m_surf1.x_max(),
+        "Spline2Dblend must have the same final-x, x_max0={}, x_max1={}, difference={}\n",
+        m_surf0.x_max(),
+        m_surf1.x_max(),
+        m_surf0.x_max() - m_surf1.x_max() );
+      // check compatibility
+      UTILS_ASSERT(
+        m_surf0.y_min() == m_surf1.y_min(),
+        "Spline2Dblend must have the same initial-y, y_min0={}, y_min1={}, difference={}\n",
+        m_surf0.y_min(),
+        m_surf1.y_min(),
+        m_surf0.y_min() - m_surf1.y_min() );
+      UTILS_ASSERT(
+        m_surf0.y_max() == m_surf1.y_max(),
+        "Spline2Dblend must have the same final-y, y_max0={}, y_max1={}, difference={}\n",
+        m_surf0.y_max(),
+        m_surf1.y_max(),
+        m_surf0.y_max() - m_surf1.y_max() );
+    }
 
   public:
     //! \name Constructors
@@ -268,7 +308,20 @@ namespace Splines
     //!     - "Akima" or "akima "build a spline surface with cubic spline
     //!        using Akima algorithm to avoid obscillation
     //!
-    void setup( GenericContainer const & gc );
+    void setup( GenericContainer const & gc )
+    {
+      /*
+      // gc["xdata"]
+      // gc["ydata"]
+      //
+      */
+      string const             where{ "Spline2Dblend[{}]::setup( gc )" };
+      GenericContainer const & gc_surf0{ gc( "surf0", where ) };
+      GenericContainer const & gc_surf1{ gc( "surf1", where ) };
+      m_surf0.setup( gc_surf0 );
+      m_surf1.setup( gc_surf1 );
+      check_compatibility();
+    }
 
     //!
     //! Build a spline using data in `GenericContainer`
@@ -456,3 +509,4 @@ namespace Splines
 }  // namespace Splines
 
 // EOF Splines2D.hxx
+#endif

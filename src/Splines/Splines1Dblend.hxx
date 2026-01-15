@@ -17,17 +17,26 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
-/*\
- |   ____        _ _            _ ____
- |  / ___| _ __ | (_)_ __   ___/ |  _ \
- |  \___ \| '_ \| | | '_ \ / _ \ | | | |
- |   ___) | |_) | | | | | |  __/ | |_| |
- |  |____/| .__/|_|_|_| |_|\___|_|____/
- |        |_|
-\*/
+#pragma once
+
+#ifndef SPLINES1DBLEND_HXX
+#define SPLINES1DBLEND_HXX
+
+#include "Splines.hh"
+#include "Utils_fmt.hh"
+#include <set>
 
 namespace Splines
 {
+
+  /*\
+   |   ____        _ _            _ ____
+   |  / ___| _ __ | (_)_ __   ___/ |  _ \
+   |  \___ \| '_ \| | | '_ \ / _ \ | | | |
+   |   ___) | |_) | | | | | |  __/ | |_| |
+   |  |____/| .__/|_|_|_| |_|\___|_|____/
+   |        |_|
+  \*/
 
   //! Spline Management Class
   class Spline1Dblend
@@ -36,7 +45,22 @@ namespace Splines
     Spline1D m_spline0;
     Spline1D m_spline1;
 
-    void check_compatibility() const;
+    void check_compatibility() const
+    {
+      // check compatibility
+      UTILS_ASSERT(
+        m_spline0.x_min() == m_spline1.x_min(),
+        "Spline1Dblend must have the same initial-x, x_min0={}, x_min1={}, difference={}\n",
+        m_spline0.x_min(),
+        m_spline1.x_min(),
+        m_spline0.x_min() - m_spline1.x_min() );
+      UTILS_ASSERT(
+        m_spline0.x_max() == m_spline1.x_max(),
+        "Spline1Dblend must have the same final-x, x_max0={}, x_max1={}, difference={}\n",
+        m_spline0.x_max(),
+        m_spline1.x_max(),
+        m_spline0.x_max() - m_spline1.x_max() );
+    }
 
   public:
     Spline1Dblend( Spline1Dblend const & )                   = delete;
@@ -71,7 +95,21 @@ namespace Splines
     //!
     //! Build a spline using data in `GenericContainer`
     //!
-    void setup( GenericContainer const & gc );
+    void setup( GenericContainer const & gc )
+    {
+      /*
+      // gc["xdata"]
+      // gc["ydata"]
+      //
+      */
+      string const             where{ "Spline1Dblend[{}]::setup( gc )" };
+      GenericContainer const & gc_spline0{ gc( "spline0", where ) };
+      GenericContainer const & gc_spline1{ gc( "spline1", where ) };
+      m_spline0.setup( gc_spline0 );
+      m_spline1.setup( gc_spline1 );
+      check_compatibility();
+    }
+
     //!
     //! Build a spline using data in `GenericContainer`
     //!
@@ -285,17 +323,44 @@ namespace Splines
     //! \name Autodiff
     //!
     ///@{
-    autodiff::dual1st eval( autodiff::dual1st const & x, real_type const s ) const;
-    autodiff::dual2nd eval( autodiff::dual2nd const & x, real_type const s ) const;
-
-    template <typename T> autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> eval(
-      T const &       x,
-      real_type const s ) const
+    autodiff::dual1st eval( autodiff::dual1st const & x, real_type const s ) const
     {
-      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T>::value, real_type> X{ x };
-      return eval( X, s );
+      using autodiff::dual1st;
+      using autodiff::detail::val;
+      real_type dd[2];
+      D( val( x ), s, dd );
+      dual1st res = dd[0];
+      res.grad    = dd[1] * x.grad;
+      return res;
     }
-///@}
+
+    autodiff::dual2nd eval( autodiff::dual2nd const & x, real_type const s ) const
+    {
+      using autodiff::dual2nd;
+      using autodiff::detail::val;
+      real_type dd[3], xg{ val( x.grad ) };
+      DD( val( x ), s, dd );
+      dual2nd res   = dd[0];
+      res.grad      = dd[1] * xg;
+      res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
+      return res;
+    }
+
+    // Template unificato per tutti i tipi
+    template <typename T> auto eval( T const & x, real_type const s ) const
+    {
+      if constexpr ( std::is_arithmetic<T>::value )
+      {
+        // Se T è un tipo numerico (int, float, double, etc.), promuovi a real_type
+        return eval( static_cast<real_type>( x ), s );
+      }
+      else
+      {
+        // Altrimenti deduce automaticamente il tipo duale appropriato
+        return eval( autodiff::detail::to_dual( x ), s );
+      }
+    }
+    ///@}
 #endif
 
     //!
@@ -361,3 +426,4 @@ namespace Splines
 }  // namespace Splines
 
 // EOF: Spline1Dblend.hxx
+#endif
