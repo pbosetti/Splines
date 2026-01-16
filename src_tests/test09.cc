@@ -7,6 +7,7 @@
 
 using namespace Splines;
 using namespace std;
+using Utils::m_pi;
 
 // Funzione per stampare intestazioni
 void print_header( const string & title )
@@ -269,7 +270,7 @@ void test_akima_spline()
 
 void test_bessel_spline()
 {
-  print_header( "⚪ Testing BesselSpline" );
+  print_header( "⚙️ Testing BesselSpline" );
 
   BesselSpline bs( "Bessel" );
 
@@ -330,7 +331,7 @@ void test_hermite_spline()
 
 void test_quintic_spline()
 {
-  print_header( "⭐ Testing QuinticSpline" );
+  print_header( "⚙️ Testing QuinticSpline" );
 
   QuinticSpline qs( "Quintic" );
 
@@ -500,16 +501,18 @@ void test_spline_vec()
 
   SplineVec sv( "VectorSpline" );
 
-  integer dim  = 3;
-  integer npts = 5;
+  constexpr integer dim  = 2;
+  constexpr integer npts = 20;
 
-  // real_type X[] = {0, 1, 2, 3, 4};
+  real_type Y0[npts];
+  real_type Y1[npts];
+  for ( integer k = 0; k < npts; ++k )
+  {
+    Y0[k] = cos( k * 0.1 * m_pi );
+    Y1[k] = sin( k * 0.1 * m_pi );
+  }
 
-  real_type Y0[] = { 0, 1, 2, 3, 4 };
-  real_type Y1[] = { 0, 2, 1, 2, 0 };
-  real_type Y2[] = { 0, 1, 0, 1, 0 };
-
-  real_type * Y[] = { Y0, Y1, Y2 };
+  real_type * Y[] = { Y0, Y1 };
 
   sv.setup( dim, npts, Y );
   sv.set_knots_chord_length();
@@ -525,17 +528,20 @@ void test_spline_vec()
   fmt::print( fg( fmt::color::light_blue ), "\n🔍 Evaluating along curve:\n" );
 
   vector<vector<real_type>> eval_data;
-  for ( real_type t = 0; t <= 4; t += 0.5 )
+  for ( real_type t = sv.x_min(); t <= sv.x_max(); t += 0.1 )
   {
     vector<real_type> vals;
     sv.eval( t, vals );
-    eval_data.push_back( { t, vals[0], vals[1], vals[2] } );
+    eval_data.push_back( { t, vals[0], vals[1] } );
 
-    fmt::print( "  t = {:.1f}: ({:.4f}, {:.4f}, {:.4f})\n", t, vals[0], vals[1], vals[2] );
+    fmt::print( "  t = {:.1f}: ({:.4f}, {:.4f})\n", t, vals[0], vals[1] );
   }
 
   fmt::print( fg( fmt::color::light_blue ), "\n📊 Curvature Analysis:\n" );
-  for ( real_type t = 0.5; t < 4; t += 0.5 ) { fmt::print( "  t = {:.1f}: κ = {:.6f}\n", t, sv.curvature( t ) ); }
+  for ( real_type t = sv.x_min(); t <= sv.x_max(); t += 0.1 )
+  {
+    fmt::print( "  t = {:.1f}: κ = {:.6f}\n", t, sv.curvature( t ) );
+  }
 }
 
 void test_spline1dblend()

@@ -92,7 +92,7 @@ namespace Splines
     epsi *= 1E-8;
 
     // 3. Calcola le derivate nei punti interni (i = 1..N-2)
-    for ( integer i{ 1 }; i < N - 1; ++i )
+    for ( integer i = 1; i < N - 1; ++i )
     {
       // Estrapola le pendenze se necessario (ai bordi)
       real_type const m_im2{ ( i >= 2 ) ? m[i - 2] : 2 * m[i - 1] - m[i] };     // m_{i-2}

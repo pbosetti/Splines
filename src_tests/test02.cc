@@ -912,5 +912,7 @@ int main()
   fmt::print( fg( fmt::color::gray ), "       • Interior: max < 1e-3, avg < 1e-4\n" );
   fmt::print( fg( fmt::color::gray ), "       • Boundary: max < 1e-2, avg < 1e-3\n" );
 
+  print_header( "ALL DONE FOLKS" );
+
   return 0;
 }

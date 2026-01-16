@@ -74,13 +74,13 @@ static real_type yy6[] = { 0, 1, 1.1, 2.0, 2.1 };
 
 static integer nn[] = { 11, 11, 11, 9, 12, 4, 5 };
 
-// Funzione per differenze finite centrali
+// Function for central finite differences
 real_type finite_diff_central( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
 {
   return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h );
 }
 
-// Funzione per differenze finite avanti/indietro
+// Function for forward/backward finite differences
 real_type finite_diff_forward( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
 {
   return ( ss( x + h, i ) - ss( x, i ) ) / h;
@@ -91,20 +91,20 @@ real_type finite_diff_backward( SplineSet const & ss, real_type x, integer i, re
   return ( ss( x, i ) - ss( x - h, i ) ) / h;
 }
 
-// Stampa tabella con bordi Unicode e colori
+// Print table with Unicode borders and colors
 void print_table_header( vector<string> const & headers )
 {
-  // Linea superiore
+  // Top line
   fmt::print( "┌{}", fmt::format( "{:─^{}}", "", 12 ) );
   for ( size_t i = 1; i < headers.size(); ++i ) { fmt::print( "┬{}", fmt::format( "{:─^{}}", "", 20 ) ); }
   fmt::print( "┐\n" );
 
-  // Intestazioni
+  // Headers
   fmt::print( "│{:^12}", headers[0] );
   for ( size_t i = 1; i < headers.size(); ++i ) { fmt::print( "│{:^20}", headers[i] ); }
   fmt::print( "│\n" );
 
-  // Separatore
+  // Separator
   fmt::print( "├{}", fmt::format( "{:─^{}}", "", 12 ) );
   for ( size_t i = 1; i < headers.size(); ++i ) { fmt::print( "┼{}", fmt::format( "{:─^{}}", "", 20 ) ); }
   fmt::print( "┤\n" );
@@ -132,7 +132,7 @@ int main()
     fg( fmt::color::cyan ) | fmt::emphasis::bold,
     "\n"
     "╔══════════════════════════════════════════════════════════╗\n"
-    "║                         TEST N.3                         ║\n"
+    "║                        TEST No.3                         ║\n"
     "╚══════════════════════════════════════════════════════════╝\n\n" );
 
   SplineSet ss;
@@ -215,7 +215,7 @@ int main()
     ss.build( nspl, npts, headers, stype, xx, Y );
     // ss.info( cout );
 
-    // Scrittura file (mantenuta per compatibilità)
+    // Write files (maintained for compatibility)
     file << "x";
     file_D << "x";
     for ( integer i = 0; i < nspl; ++i )
@@ -240,32 +240,32 @@ int main()
     file.close();
     file_D.close();
 
-    // ========== NUOVO: CONTROLLO DERIVATE CON DIFFERENZE FINITE ==========
+    // ========== NEW: DERIVATIVE CHECK WITH FINITE DIFFERENCES ==========
 
-    // Punti di test: punti di transizione (nodi) + punti interni
+    // Test points: transition points (knots) + internal points
     vector<real_type> test_points;
 
-    // Aggiungi tutti i nodi
+    // Add all knots
     for ( integer i = 0; i < npts; ++i ) { test_points.push_back( xx[i] ); }
 
-    // Aggiungi punti intermedi tra i nodi (evitando i nodi stessi)
+    // Add intermediate points between knots (avoiding the knots themselves)
     for ( integer i = 0; i < npts - 1; ++i )
     {
       real_type x1 = xx[i];
       real_type x2 = xx[i + 1];
-      // Aggiungi 2 punti interni per ogni intervallo
+      // Add 2 internal points for each interval
       test_points.push_back( x1 + 0.25 * ( x2 - x1 ) );
       test_points.push_back( x1 + 0.75 * ( x2 - x1 ) );
     }
 
-    // Ordina e rimuovi duplicati (nel caso i punti interni coincidano con i nodi)
+    // Sort and remove duplicates (in case internal points coincide with knots)
     sort( test_points.begin(), test_points.end() );
     test_points.erase( unique( test_points.begin(), test_points.end() ), test_points.end() );
 
-    // Tabella per il controllo delle derivate
-    fmt::print( fg( fmt::color::green ), "\nControllo derivate - Dataset {}\n", k );
+    // Table for derivative check
+    fmt::print( fg( fmt::color::green ), "\nDerivative check - Dataset {}\n", k );
 
-    vector<string> table_headers = { "x", "Spline", "D(x)", "FinDiff", "Err. Rel%" };
+    vector<string> table_headers = { "x", "Spline", "D(x)", "FinDiff", "Rel Err%" };
     print_table_header( table_headers );
 
     real_type const h   = 1e-6;
@@ -274,16 +274,16 @@ int main()
     for ( integer spline_idx = 0; spline_idx < nspl; ++spline_idx )
     {
       string spline_name = string(
-        ss.header( spline_idx ) );  // CORRETTO: conversione esplicita da string_view a string
+        ss.header( spline_idx ) );  // CORRECT: explicit conversion from string_view to string
 
       for ( size_t pt_idx = 0; pt_idx < test_points.size(); ++pt_idx )
       {
         real_type x = test_points[pt_idx];
 
-        // Calcola derivata spline
+        // Calculate spline derivative
         real_type D_spline = ss.D( x, spline_idx );
 
-        // Calcola differenza finita appropriata
+        // Calculate appropriate finite difference
         real_type D_fd;
         if ( x <= xmin + h ) { D_fd = finite_diff_forward( ss, x, spline_idx, h ); }
         else if ( x >= xmax - h ) { D_fd = finite_diff_backward( ss, x, spline_idx, h ); }
@@ -292,14 +292,14 @@ int main()
           D_fd = finite_diff_central( ss, x, spline_idx, h );
         }
 
-        // Calcola errore relativo
+        // Calculate relative error
         real_type abs_err = abs( D_spline - D_fd );
         real_type rel_err = 0.0;
         if ( abs( D_spline ) > 1e-10 ) { rel_err = 100.0 * abs_err / abs( D_spline ); }
         else if ( abs( D_fd ) > 1e-10 ) { rel_err = 100.0 * abs_err / abs( D_fd ); }
 
-        // Determina colore in base all'errore
-        // Stampa solo se punto interessante (nodo o errore significativo)
+        // Determine color based on error
+        // Print only for interesting points (knot or significant error)
         bool is_knot = ( find( xx, xx + npts, x ) != xx + npts );
         if ( is_knot || rel_err > tol )
         {
@@ -314,7 +314,7 @@ int main()
         }
       }
 
-      // Separatore tra spline diverse
+      // Separator between different splines
       if ( spline_idx < nspl - 1 )
       {
         fmt::print(
@@ -329,11 +329,11 @@ int main()
 
     print_table_footer( table_headers.size() );
 
-    // Statistiche
+    // Statistics
     integer internal_points = static_cast<integer>( test_points.size() ) - npts;
     fmt::print(
       fg( fmt::color::blue ),
-      "\nPunti testati: {} ({} nodi + {} punti interni)\n\n",
+      "\nTested points: {} ({} knots + {} internal points)\n\n",
       test_points.size(),
       npts,
       internal_points );
@@ -343,7 +343,7 @@ int main()
     fg( fmt::color::cyan ) | fmt::emphasis::bold,
     "\n"
     "╔══════════════════════════════════════════════════════════╗\n"
-    "║                  TUTTI I TEST COMPLETATI                 ║\n"
+    "║                  ALL TESTS COMPLETED                     ║\n"
     "╚══════════════════════════════════════════════════════════╝\n\n" );
 
   return 0;

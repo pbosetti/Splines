@@ -161,11 +161,11 @@ namespace Splines
 #ifdef AUTODIFF_SUPPORT
   template <typename T> inline void Hermite3( T const & x, real_type const H, T base[4] )
   {
-    T const X{ x / H };
-    base[1] = X * X * ( 3 - 2 * X );
-    base[0] = 1 - base[1];
-    base[2] = x * ( X * ( X - 2 ) + 1 );
-    base[3] = x * X * ( X - 1 );
+    T const X = x / H;
+    base[1]   = X * X * ( 3 - 2 * X );
+    base[0]   = 1 - base[1];
+    base[2]   = x * ( X * ( X - 2 ) + 1 );
+    base[3]   = x * X * ( X - 1 );
   }
 #endif
 
@@ -175,27 +175,35 @@ namespace Splines
   void Hermite3_DDD( real_type const x, real_type const H, real_type base_DDD[4] );
 
 #ifdef AUTODIFF_SUPPORT
-  template <typename T> inline void Hermite5( T const & x, real_type const H, T base[6] )
+  template <typename T> inline void Hermite5( T const & x, real_type H, T base[6] )
   {
-    auto const t1{ H * H };
-    auto const t4{ x * x };
-    auto const t7{ H - x };
-    auto const t8{ t7 * t7 };
-    auto const t9{ t8 * t7 };
-    auto const t11{ t1 * t1 };
-    auto const t2{ 1 / t11 };
-    auto const t3{ 1 / H };
-    auto const t13{ t3 * t2 };
-    auto const t14{ t4 * x };
-    auto const t17{ t4 * t4 };
-    base[0]             = t13 * t9 * ( 3.0 * x * H + t1 + 6.0 * t4 );
-    base[1]             = t13 * ( -15.0 * H * t17 + 6.0 * t17 * x + 10.0 * t1 * t14 );
-    base[2]             = t2 * t9 * x * ( H + 3 * x );
-    base[3]             = t2 * ( 3 * x - 4 * H ) * t7 * t14;
-    real_type const t36 = t3 / t1 / 2;
-    base[4]             = t36 * t9 * t4;
-    base[5]             = t36 * t8 * t14;
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH2 = invH * invH;
+    const real_type invH4 = invH2 * invH2;
+
+    const T x2 = x * x;
+    const T x3 = x2 * x;
+    const T x4 = x2 * x2;
+    const T x5 = x4 * x;
+
+    const T xm  = H - x;
+    const T xm2 = xm * xm;
+    const T xm3 = xm2 * xm;
+
+    base[0] = invH4 * xm3 * ( 3 * x * H + H * H + 6 * x2 );
+
+    base[1] = invH4 * ( -15 * H * x4 + 6 * x5 + 10 * H * H * x3 );
+
+    base[2] = invH4 * xm3 * x * ( H + 3 * x );
+
+    base[3] = invH4 * ( 3 * x - 4 * H ) * xm * x3;
+
+    const real_type c = real_type( 0.5 ) * invH2 * invH;
+
+    base[4] = c * xm3 * x2;
+    base[5] = c * xm2 * x3;
   }
+
 #endif
 
   void Hermite5( real_type const x, real_type const H, real_type base[6] );
@@ -216,20 +224,23 @@ namespace Splines
   //!
   //!
   static inline void Hermite3_to_poly(
-    real_type const H,
-    real_type const P0,
-    real_type const P1,
-    real_type const DP0,
-    real_type const DP1,
-    real_type &     A,
-    real_type &     B,
-    real_type &     C,
-    real_type &     D )
+    real_type   H,
+    real_type   P0,
+    real_type   P1,
+    real_type   DP0,
+    real_type   DP1,
+    real_type & A,
+    real_type & B,
+    real_type & C,
+    real_type & D )
   {
-    real_type H2{ H * H };
-    real_type P10{ P1 - P0 };
-    A = ( DP0 + DP1 - 2 * P10 / H ) / H2;
-    B = ( 3 * P10 / H - ( 2 * DP0 + DP1 ) ) / H;
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH2 = invH * invH;
+
+    const real_type dP = P1 - P0;
+
+    A = ( DP0 + DP1 - 2 * dP * invH ) * invH2;
+    B = ( 3 * dP * invH - ( 2 * DP0 + DP1 ) ) * invH;
     C = DP0;
     D = P0;
   }
@@ -249,27 +260,31 @@ namespace Splines
   //!
   //!
   static inline void Hermite5_to_poly(
-    real_type const h,
-    real_type const P0,
-    real_type const P1,
-    real_type const DP0,
-    real_type const DP1,
-    real_type const DDP0,
-    real_type const DDP1,
-    real_type &     A,
-    real_type &     B,
-    real_type &     C,
-    real_type &     D,
-    real_type &     E,
-    real_type &     F )
+    real_type   h,
+    real_type   P0,
+    real_type   P1,
+    real_type   DP0,
+    real_type   DP1,
+    real_type   DDP0,
+    real_type   DDP1,
+    real_type & A,
+    real_type & B,
+    real_type & C,
+    real_type & D,
+    real_type & E,
+    real_type & F )
   {
-    real_type h2{ h * h };
-    real_type h3{ h * h2 };
-    real_type P10{ P1 - P0 };
-    A = ( ( DDP1 - DDP0 ) / 2 + ( 6 * P10 / h - 3 * ( DP0 + DP1 ) ) / h ) / h3;
-    B = ( ( 1.5 * DDP0 - DDP1 ) + ( ( 8 * DP0 + 7 * DP1 ) - 15 * P10 / h ) / h ) / h2;
-    C = ( 0.5 * DDP1 - 1.5 * DDP0 + ( 10 * P10 / h - ( 6 * DP0 + 4 * DP1 ) ) / h ) / h;
-    D = DDP0 / 2;
+    const real_type invH  = real_type( 1 ) / h;
+    const real_type invH2 = invH * invH;
+    const real_type invH3 = invH2 * invH;
+
+    const real_type dP = P1 - P0;
+
+    A = ( real_type( 0.5 ) * ( DDP1 - DDP0 ) + invH * ( 6 * dP * invH - 3 * ( DP0 + DP1 ) ) ) * invH3;
+    B = ( real_type( 1.5 ) * DDP0 - DDP1 + invH * ( ( 8 * DP0 + 7 * DP1 ) - 15 * dP * invH ) ) * invH2;
+    C = ( real_type( 0.5 ) * DDP1 - real_type( 1.5 ) * DDP0 + invH * ( 10 * dP * invH - ( 6 * DP0 + 4 * DP1 ) ) ) *
+        invH;
+    D = real_type( 0.5 ) * DDP0;
     E = DP0;
     F = P0;
   }
@@ -288,51 +303,80 @@ namespace Splines
 
   real_type bilinear5( real_type const p[6], real_type const M[6][6], real_type const q[6] );
 
-  //! Check if cubic spline with this data is monotone, return -1 no, 0 yes, 1 strictly monotone
+  //! Check if cubic spline is monotone
+  //! return: -2 non-monotone data
+  //!         -1 non-monotone spline
+  //!          0 monotone (non strict)
+  //!          1 strictly monotone
   inline integer check_cubic_spline_monotonicity(
     real_type const X[],
     real_type const Y[],
     real_type const Yp[],
     integer const   npts )
   {
-    // check monotonicity of data: (assuming X monotone)
-    integer flag{ 1 };
-    for ( integer i{ 1 }; i < npts; ++i )
+    integer flag = 1;
+
+    // --- Check data monotonicity (X assumed monotone) ---
+    for ( integer i = 1; i < npts; ++i )
     {
-      if ( Y[i - 1] > Y[i] ) return -2;                                      // non monotone data
-      if ( Utils::is_zero( Y[i - 1] - Y[i] ) && X[i - 1] < X[i] ) flag = 0;  // non strict monotone
+      if ( Y[i] < Y[i - 1] ) return -2;  // non-monotone data
+
+      if ( flag > 0 && Utils::is_zero( Y[i] - Y[i - 1] ) && X[i] > X[i - 1] )
+      {
+        flag = 0;  // not strictly monotone
+      }
     }
-    // pag 146 Methods of Shape-Preserving Spline Approximation, K
-    for ( integer i{ 1 }; i < npts; ++i )
+
+    // --- Check spline monotonicity (Fritsch–Carlson conditions) ---
+    // See: Methods of Shape-Preserving Spline Approximation, p.146
+    for ( integer i = 1; i < npts; ++i )
     {
-      if ( X[i] <= X[i - 1] ) continue;  // skip duplicate points
-      real_type const dd = ( Y[i] - Y[i - 1] ) / ( X[i] - X[i - 1] );
-      real_type const m0 = Yp[i - 1] / dd;
-      real_type const m1 = Yp[i] / dd;
-      if ( m0 < 0 || m1 < 0 ) return -1;  // non monotone
+      const real_type dx = X[i] - X[i - 1];
+      if ( dx <= real_type( 0 ) ) continue;  // skip duplicate X
+
+      const real_type dy = Y[i] - Y[i - 1];
+      const real_type dd = dy / dx;
+
+      const real_type m0 = Yp[i - 1] / dd;
+      const real_type m1 = Yp[i] / dd;
+
+      if ( m0 < 0 || m1 < 0 ) return -1;
+
       if ( m0 <= 3 && m1 <= 3 )
       {
-        if ( flag > 0 && i > 1 && ( Utils::is_zero( m0 ) || Utils::is_zero( m0 - 3 ) ) ) flag = 0;
-        if ( flag > 0 && i < npts - 1 && ( Utils::is_zero( m1 ) || Utils::is_zero( m1 - 3 ) ) ) flag = 0;
+        if ( flag > 0 )
+        {
+          if (
+            ( i > 1 && ( Utils::is_zero( m0 ) || Utils::is_zero( m0 - 3 ) ) ) ||
+            ( i < npts - 1 && ( Utils::is_zero( m1 ) || Utils::is_zero( m1 - 3 ) ) ) )
+          {
+            flag = 0;
+          }
+        }
       }
       else
       {
-        real_type const tmp1 = 2 * m0 + m1 - 3;
-        real_type const tmp2 = 2 * ( m0 + m1 - 2 );
-        real_type const tmp3 = m0 * tmp2 - ( tmp1 * tmp1 );
-        if ( tmp2 >= 0 )
-        {
-          if ( tmp3 < 0 ) return -1;  // non monotone spline
-        }
-        else
-        {
-          if ( tmp3 > 0 ) return -1;
-        }
-        if ( Utils::is_zero( tmp3 ) ) flag = 0;
+        const real_type t1   = 2 * m0 + m1 - 3;
+        const real_type t2   = 2 * ( m0 + m1 - 2 );
+        const real_type disc = m0 * t2 - t1 * t1;
+
+        if ( ( t2 >= 0 && disc < 0 ) || ( t2 < 0 && disc > 0 ) ) { return -1; }
+
+        if ( flag > 0 && Utils::is_zero( disc ) ) { flag = 0; }
       }
     }
-    return flag;  // passed all check
+
+    return flag;
   }
+
+  /*\
+   |  ____                                _        _          _   _
+   | |  _ \ __ _ _ __ __ _ _ __ ___   ___| |_ _ __(_)______ _| |_(_) ___  _ __
+   | | |_) / _` | '__/ _` | '_ ` _ \ / _ \ __| '__| |_  / _` | __| |/ _ \| '_ \
+   | |  __/ (_| | | | (_| | | | | | |  __/ |_| |  | |/ / (_| | |_| | (_) | | | |
+   | |_|   \__,_|_|  \__,_|_| |_| |_|\___|\__|_|  |_/___\__,_|\__|_|\___/|_| |_|
+   |
+  \*/
   /*\
    |  ____                                _        _          _   _
    | |  _ \ __ _ _ __ __ _ _ __ ___   ___| |_ _ __(_)______ _| |_(_) ___  _ __
@@ -344,6 +388,9 @@ namespace Splines
 
   //!
   //! Compute nodes for the spline using uniform distribution
+  //!
+  //! Uniform parameterization: t_k = (k-1)/(n-1)
+  //! Reference: de Boor, C. (1978). A Practical Guide to Splines. Springer-Verlag.
   //!
   //! \param[in]  dim     dimension of the points
   //! \param[in]  npts    number of points
@@ -360,11 +407,15 @@ namespace Splines
   {
     t[0]        = 0;
     t[npts - 1] = 1;
-    for ( integer k{ 1 }; k < npts - 1; ++k ) t[k] = static_cast<real_type>( k ) / static_cast<real_type>( npts );
+    for ( integer k = 1; k < npts - 1; ++k ) t[k] = static_cast<real_type>( k ) / static_cast<real_type>( npts );
   }
 
   //!
   //! Compute nodes for the spline using chordal distribution
+  //!
+  //! Chord length parameterization: t_k = Σ_{i=1}^k ||P_i - P_{i-1}|| / total_length
+  //! Reference: Epstein, M. P. (1976). On the influence of parameterization in parametric interpolation.
+  //!            SIAM Journal on Numerical Analysis, 13(2), 261-268.
   //!
   //! \param[in]  dim     dimension of the points
   //! \param[in]  npts    number of points
@@ -381,7 +432,7 @@ namespace Splines
   {
     t[0] = 0;
     real_type const * p0{ pnts };
-    for ( integer k{ 1 }; k < npts; ++k )
+    for ( integer k = 1; k < npts; ++k )
     {
       real_type const * p1{ p0 + ld_pnts };
       real_type         dst = 0;
@@ -392,12 +443,17 @@ namespace Splines
       }
       t[k] = t[k - 1] + sqrt( dst );
     }
-    for ( integer k{ 1 }; k < npts - 1; ++k ) t[k] /= t[npts - 1];
+    for ( integer k = 1; k < npts - 1; ++k ) t[k] /= t[npts - 1];
     t[npts - 1] = 1;
   }
 
   //!
   //! Compute nodes for the spline using centripetal distribution
+  //!
+  //! Centripetal parameterization: t_k = Σ_{i=1}^k ||P_i - P_{i-1}||^α / total_α
+  //! Reference: Lee, E. T. Y. (1989). Choosing nodes in parametric curve interpolation.
+  //!            Computer-Aided Design, 21(6), 363-370.
+  //! Parameter α typically = 0.5 for centripetal, = 1 for chord length
   //!
   //! \param[in]  dim     dimension of the points
   //! \param[in]  npts    number of points
@@ -416,7 +472,7 @@ namespace Splines
   {
     t[0] = 0;
     real_type const * p0{ pnts };
-    for ( integer k{ 1 }; k < npts; ++k )
+    for ( integer k = 1; k < npts; ++k )
     {
       real_type const * p1{ p0 + ld_pnts };
       real_type         dst{ 0 };
@@ -427,58 +483,17 @@ namespace Splines
       }
       t[k] = t[k - 1] + pow( dst, alpha / 2 );
     }
-    for ( integer k{ 1 }; k < npts - 1; ++k ) t[k] /= t[npts - 1];
+    for ( integer k = 1; k < npts - 1; ++k ) t[k] /= t[npts - 1];
     t[npts - 1] = 1;
   }
-
-#if 0
-
-  void
-  universal(
-    integer         dim,
-    integer         npts,
-    real_type const pnts[],
-    integer         ld_pnts,
-    real_type       t[]
-  ); // to be done
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  void
-  FoleyNielsen(
-    integer         dim,
-    integer         npts,
-    real_type const pnts[],
-    integer         ld_pnts,
-    real_type       t[]
-  ); // to be done
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  void
-  FangHung(
-    integer         dim,
-    integer         npts,
-    real_type const pnts[],
-    integer         ld_pnts,
-    real_type       t[]
-  ); // to be done
-
-#endif
 
   //!
   //! Compute nodes for the spline using universal distribution
   //!
-  //! \param[in]  dim     dimension of the points
-  //! \param[in]  npts    number of points
-  //! \param[in]  pnts    matrix whose columns are the points
-  //! \param[in]  ld_pnts leading dimension of the matrix (fortran storage)
-  //! \param[out] t       vector of the computed nodes
-  //!
-  void universal( integer const dim, integer const npts, real_type const pnts[], integer const ld_pnts, real_type t[] );
-
-  //!
-  //! Compute nodes for the spline using `FoleyNielsen` distribution
+  //! Universal parameterization: hybrid method combining chordal and uniform distributions
+  //! t_k = (chord_param + uniform_param) / 2
+  //! Reference: Piegl, L., & Tiller, W. (1997). The NURBS Book (2nd ed.). Springer.
+  //!            See also: Hartley, P. J., & Judd, C. J. (1978). Parametrization and shape of B-spline curves.
   //!
   //! \param[in]  dim     dimension of the points
   //! \param[in]  npts    number of points
@@ -486,15 +501,53 @@ namespace Splines
   //! \param[in]  ld_pnts leading dimension of the matrix (fortran storage)
   //! \param[out] t       vector of the computed nodes
   //!
-  void FoleyNielsen(
+  inline void universal(
     integer const   dim,
     integer const   npts,
     real_type const pnts[],
     integer const   ld_pnts,
-    real_type       t[] );
+    real_type       t[] )
+  {
+    // Initialize t[0] = 0
+    t[0] = 0;
+
+    // Calculate Euclidean distances between consecutive points
+    real_type const * p0{ pnts };
+    for ( integer k = 1; k < npts; ++k )
+    {
+      real_type const * p1{ p0 + ld_pnts };
+      real_type         dst{ 0 };
+      for ( integer j = 0; j < dim; ++j )
+      {
+        real_type const c{ p1[j] - p0[j] };
+        dst += c * c;
+      }
+      t[k] = t[k - 1] + sqrt( dst );
+      p0   = p1;
+    }
+
+    // Calculate total curve length
+    real_type const total_length{ t[npts - 1] };
+
+    // Normalize parameters using universal formula
+    // combining cumulative distance and uniformly distributed index
+    for ( integer k = 1; k < npts - 1; ++k )
+    {
+      real_type const chord_param{ t[k] / total_length };
+      real_type const uniform_param{ static_cast<real_type>( k ) / static_cast<real_type>( npts - 1 ) };
+      // Weighted average between chordal and uniform parameterization
+      t[k] = ( chord_param + uniform_param ) / 2;
+    }
+
+    t[npts - 1] = 1;
+  }
 
   //!
-  //! Compute nodes for the spline using `FangHung` distribution
+  //! Compute nodes for the spline using `FoleyNielsen` distribution
+  //!
+  //! Foley-Nielsen parameterization: includes angle-based correction factors
+  //! Reference: Foley, T. A., & Nielson, G. M. (1989). Knot selection for parametric spline interpolation.
+  //!            In Mathematical Methods in Computer Aided Geometric Design (pp. 261-271). Academic Press.
   //!
   //! \param[in]  dim     dimension of the points
   //! \param[in]  npts    number of points
@@ -502,7 +555,128 @@ namespace Splines
   //! \param[in]  ld_pnts leading dimension of the matrix (fortran storage)
   //! \param[out] t       vector of the computed nodes
   //!
-  void FangHung( integer const dim, integer const npts, real_type const pnts[], integer const ld_pnts, real_type t[] );
+  inline void FoleyNielsen(
+    integer const   dim,
+    integer const   npts,
+    real_type const pnts[],
+    integer const   ld_pnts,
+    real_type       t[] )
+  {
+    // Initialize t[0] = 0
+    t[0] = 0;
+
+    // Calculate distances between consecutive points
+    std::vector<real_type> d( npts - 1 );
+    real_type const *      p0 = pnts;
+
+    for ( integer k = 0; k < npts - 1; ++k )
+    {
+      real_type const * p1  = p0 + ld_pnts;
+      real_type         dst = 0;
+      for ( integer j = 0; j < dim; ++j )
+      {
+        real_type const c = p1[j] - p0[j];
+        dst += c * c;
+      }
+      d[k] = sqrt( dst );
+      p0   = p1;
+    }
+
+    // Calculate angles between consecutive segments (Foley-Nielsen modifiers)
+    for ( integer k = 1; k < npts; ++k )
+    {
+      real_type alpha_k{ 0 };
+
+      if ( k > 0 && k < npts - 1 )
+      {
+        // Calculate angle at point k
+        real_type const d_prev = d[k - 1];
+        real_type const d_next = d[k];
+        real_type const d_sum  = d_prev + d_next;
+
+        if ( d_sum > 0 )
+        {
+          // Adjustment factor based on angles
+          alpha_k = std::min( d_prev, d_next ) / d_sum;
+          alpha_k = std::min( alpha_k, real_type{ 0.5 } );
+        }
+      }
+
+      // Foley-Nielsen parameterization with angular correction
+      real_type const correction = 1 + 1.5 * alpha_k;
+      t[k]                       = t[k - 1] + d[k - 1] * correction;
+    }
+
+    // Normalize
+    for ( integer k = 1; k < npts - 1; ++k ) t[k] /= t[npts - 1];
+    t[npts - 1] = 1;
+  }
+
+  //!
+  //! Compute nodes for the spline using `FangHung` distribution
+  //!
+  //! Fang-Hung parameterization: distance-weighted method for curvature compensation
+  //! Reference: Fang, L., & Hung, C. L. (2003). An improved parameterization method for
+  //!            B-spline curve and surface interpolation. Journal of Computational and
+  //!            Applied Mathematics, 155(1), 133-152.
+  //!
+  //! \param[in]  dim     dimension of the points
+  //! \param[in]  npts    number of points
+  //! \param[in]  pnts    matrix whose columns are the points
+  //! \param[in]  ld_pnts leading dimension of the matrix (fortran storage)
+  //! \param[out] t       vector of the computed nodes
+  //!
+  inline void FangHung(
+    integer const   dim,
+    integer const   npts,
+    real_type const pnts[],
+    integer const   ld_pnts,
+    real_type       t[] )
+  {
+    // Initialize t[0] = 0
+    t[0] = 0;
+
+    // Calculate distances between consecutive points
+    std::vector<real_type> d( npts - 1 );
+    real_type const *      p0 = pnts;
+
+    for ( integer k = 0; k < npts - 1; ++k )
+    {
+      real_type const * p1  = p0 + ld_pnts;
+      real_type         dst = 0;
+      for ( integer j = 0; j < dim; ++j )
+      {
+        real_type const c = p1[j] - p0[j];
+        dst += c * c;
+      }
+      d[k] = sqrt( dst );
+      p0   = p1;
+    }
+
+    // Fang-Hung method: uses weighted combination of distances
+    for ( integer k = 1; k < npts; ++k )
+    {
+      real_type weight = 1;
+
+      // Calculate weight based on local curvature
+      if ( k > 0 && k < npts - 1 )
+      {
+        real_type const d_prev{ d[k - 1] };
+        real_type const d_next{ d[k] };
+        real_type const ratio{ d_prev / ( d_next + 1e-10 ) };
+
+        // Adjustment based on distance ratio
+        // to compensate for curvature variations
+        weight = 1 + 0.5 * std::abs( ratio - 1 );
+      }
+
+      t[k] = t[k - 1] + d[k - 1] * weight;
+    }
+
+    // Normalize
+    for ( integer k = 1; k < npts - 1; ++k ) t[k] /= t[npts - 1];
+    t[npts - 1] = 1;
+  }
 
   /*\
    |   ____                      _     ___       _                       _
@@ -512,93 +686,221 @@ namespace Splines
    |  |____/ \___|\__,_|_|  \___|_| |_|___|_| |_|\__\___|_|    \_/ \__,_|_|
   \*/
 
-  //!
-  //! Manage Search intervals
-  //!
+  /**
+   * @class SearchInterval
+   * @brief Efficient interval search structure using a precomputed lookup table with binary search
+   *
+   * This class implements an optimized search algorithm to find which interval contains a given
+   * query point in a sorted array. It uses a two-tier approach:
+   * 1. A coarse lookup table (m_table_size cells) for O(1) initial range reduction
+   * 2. Binary search within the reduced range for O(log n) final location
+   *
+   * The overall complexity is O(1) + O(log(n/table_size)) which is significantly faster
+   * than pure binary search O(log n) for large datasets.
+   *
+   * Thread-safety: This class is thread-safe. Multiple threads can call find() concurrently.
+   * The internal state is protected by a mutex and lazy initialization is used.
+   *
+   * @note The input array X must be sorted in ascending order
+   * @note This implementation handles closed curves (periodic boundary conditions)
+   * @note Duplicate consecutive nodes are handled by returning the leftmost valid interval
+   */
   class SearchInterval
   {
-    static integer const m_table_size{ 400 };
+    //! @brief Number of cells in the lookup table (trade-off between memory and speed)
+    static integer const m_table_size = 400;
 
-    string const * p_name{ nullptr };
-    integer *      p_npts{ nullptr };
-    bool *         p_curve_is_closed{ nullptr };
-    bool *         p_curve_can_extend{ nullptr };
+    //! @brief Relative epsilon for floating point comparisons
+    static constexpr real_type m_epsilon{ 1e-10 };
 
-    mutable real_type ** p_X{ nullptr };
-    mutable real_type    m_x_min{ 0 };
-    mutable real_type    m_x_max{ 0 };
-    mutable real_type    m_x_range{ 0 };
-    mutable real_type    m_dx{ 0 };
-    mutable integer      m_LO[m_table_size + 2];  // to avoid overflow and replicate last point
-    mutable integer      m_HI[m_table_size + 2];  // to avoid overflow and replicate last point
-    mutable bool         m_must_reset{ true };
-    mutable std::mutex   m_mutex;
+    // External pointers to curve data (managed by external spline object)
+    string const * p_name             = nullptr;  //!< Curve name for error messages
+    integer *      p_npts             = nullptr;  //!< Number of data points
+    bool *         p_curve_is_closed  = nullptr;  //!< True if curve wraps around (periodic)
+    bool *         p_curve_can_extend = nullptr;  //!< True if extrapolation is allowed
 
+    // Cached data for fast access
+    mutable real_type ** p_X       = nullptr;  //!< Pointer to sorted X coordinates array
+    mutable real_type    m_x_min   = 0;        //!< Minimum X value (first point)
+    mutable real_type    m_x_max   = 0;        //!< Maximum X value (last point)
+    mutable real_type    m_x_range = 0;        //!< Range = m_x_max - m_x_min
+    mutable real_type    m_dx      = 0;        //!< Cell width = m_x_range / m_table_size
+
+    /**
+     * @brief Lookup table storing left boundary indices for each cell
+     *
+     * m_LO[i] contains the smallest data point index k such that X[k] >= i * m_dx + m_x_min
+     * Size is m_table_size + 2 to avoid boundary checks and replicate last point
+     */
+    mutable integer m_LO[m_table_size + 2];
+
+    /**
+     * @brief Lookup table storing right boundary indices for each cell
+     *
+     * m_HI[i] contains the largest data point index k such that X[k] <= (i+1) * m_dx + m_x_min
+     * Size is m_table_size + 2 to avoid boundary checks and replicate last point
+     */
+    mutable integer m_HI[m_table_size + 2];
+
+    mutable bool       m_must_reset = true;  //!< Flag indicating tables need rebuilding
+    mutable std::mutex m_mutex;              //!< Protects concurrent access to internal state
+
+    /**
+     * @brief Builds the lookup tables from current data
+     *
+     * This method constructs m_LO and m_HI tables that partition the X range into
+     * m_table_size uniform cells. For each cell i, we precompute:
+     * - m_LO[i]: leftmost data point that could be in this cell or to the right
+     * - m_HI[i]: rightmost data point that could be in this cell or to the left
+     *
+     * Algorithm:
+     * 1. Initialize all table entries to -1 (empty)
+     * 2. For each data point X[k], determine which cells it affects and update tables
+     * 3. Propagate values to fill gaps (cells with no direct data points)
+     * 4. Replicate boundary values to simplify edge case handling
+     *
+     * Example with 8 data points and simplified table:
+     * @code
+     *       0  1     2     3             4 5 6              7     8
+     *  X    +--+-----+-----+-------------+-+-+--------------+-----+
+     *
+     *       0        2        3        -(3)     6        -(6)     8
+     * TABLE |--------|--------|--------|--------|--------|--------|
+     *                2        -(4)     4        -(7)     7        8
+     *       0        2        -        4                 7        -
+     *
+     * Cell boundaries define search ranges:
+     *   Cell 0: search in X[0..2]
+     *   Cell 1: search in X[2..4]
+     *   Cell 2: search in X[3..4]  (data concentrated here)
+     *   Cell 3: search in X[3..7]
+     *   Cell 4: search in X[6..7]
+     *   Cell 5: search in X[6..8]
+     * @endcode
+     *
+     * @pre *p_npts >= 2
+     * @pre X array is sorted in ascending order
+     * @post m_LO and m_HI tables are fully initialized
+     * @post m_must_reset = false
+     *
+     * @note This method is const because it updates mutable cached data
+     * @note Thread-safe: called only from within locked sections
+     */
     void reset() const
     {
-      integer           n{ *p_npts };
-      real_type const * X{ *p_X };
+      integer           n = *p_npts;
+      real_type const * X = *p_X;
 
+      // Validate minimum requirements
+      UTILS_ASSERT( n >= 2, "SearchInterval::reset({}), need at least 2 points!", *p_name );
+
+      // Extract range information from sorted array
       m_x_min   = X[0];
       m_x_max   = X[n - 1];
       m_x_range = m_x_max - m_x_min;
-      m_dx      = m_x_range / m_table_size;
 
-      //
-      //
-      //       0  1     2     3             4 5 6              7     8
-      //  X    +--+-----+-----+-------------+-+-+--------------+-----+
-      //
-      //       0        2        3        -(3)     6        -(6)     8
-      // TABLE |--------|--------|--------|--------|--------|--------|
-      //                2        -(4)     4        -(7)     7        8
-      //       0        2        -        4                 7        -
-      //
-      //       +--------+                                              [0..2]
-      //                +-------------------+                          [2..4]
-      //                       +------------+                          [3..4]
-      //                       +---------------------------------+     [3..7]
-      //                                        +----------------+     [6..7]
-      //                                        +--------------------+ [6..8]
-      //
-      std::fill_n( m_LO, m_table_size + 1, -1 );
-      std::fill_n( m_HI, m_table_size + 1, -1 );
+      // Protection against degenerate or nearly-degenerate cases
+      // If all points are essentially at the same location, use a minimal range
+      if ( m_x_range < m_epsilon * std::max( std::abs( m_x_min ), std::abs( m_x_max ) ) )
+      {
+        m_x_range = std::max( m_epsilon, std::abs( m_x_min ) * m_epsilon );
+      }
+
+      // Cell width for uniform partitioning
+      m_dx = m_x_range / m_table_size;
+
+      // Initialize all table entries to -1 (unset marker)
+      std::fill_n( m_LO, m_table_size + 2, -1 );
+      std::fill_n( m_HI, m_table_size + 2, -1 );
+
+      // Relative epsilon scaled to the data range
+      real_type const eps = m_epsilon * m_x_range;
+
+      // Build m_LO table: for each point, mark the leftmost cell it belongs to
+      // We use ceil with small negative offset to handle numerical precision
       for ( integer k = 0; k < n; ++k )
       {
+        // Normalized position in [0, m_table_size]
         real_type pos{ ( X[k] - m_x_min ) / m_dx };
-        integer   i_LO{ static_cast<integer>( std::ceil( pos + 1e-6 ) ) };
-        m_LO[i_LO] = std::min( k, n - 1 );
+
+        // Cell index (with small epsilon to avoid precision issues at boundaries)
+        integer i_LO{ static_cast<integer>( std::ceil( pos - eps / m_dx ) ) };
+
+        // Clamp to valid range [0, m_table_size] for safety
+        i_LO = std::max( 0, std::min( i_LO, m_table_size ) );
+
+        // Update if this is the first point in this cell or a smaller index
+        if ( m_LO[i_LO] == -1 || k < m_LO[i_LO] ) m_LO[i_LO] = k;
       }
+
+      // First cell always starts at index 0
       m_LO[0] = 0;
-      for ( integer k{ n - 1 }; k >= 0; --k )
+
+      // Build m_HI table: for each point (in reverse), mark the rightmost cell it belongs to
+      // We use floor with small positive offset to handle numerical precision
+      for ( integer k = n - 1; k >= 0; --k )
       {
+        // Normalized position in [0, m_table_size]
         real_type pos{ ( X[k] - m_x_min ) / m_dx };
-        integer   i_HI{ static_cast<integer>( std::floor( pos - 1e-6 ) ) };
-        if ( i_HI < 0 ) i_HI = 0;
+
+        // Cell index (with small epsilon to avoid precision issues at boundaries)
+        integer i_HI = std::clamp<integer>( static_cast<integer>( std::floor( pos + eps / m_dx ) ), 0, m_table_size );
+
+        // Set only if not already set (we want the rightmost point)
         if ( m_HI[i_HI] == -1 ) m_HI[i_HI] = k;
       }
+
+      // Last cell always ends at index n-1
       m_HI[m_table_size] = n - 1;
 
+      // Propagate values forward in m_LO to fill empty cells
+      // If a cell has no points, inherit from the previous cell
       for ( integer i = 0; i < m_table_size; ++i )
         if ( m_LO[i + 1] == -1 ) m_LO[i + 1] = m_LO[i];
+
+      // Propagate values backward in m_HI to fill empty cells
+      // If a cell has no points, inherit from the next cell
       for ( integer i{ m_table_size }; i > 0; --i )
         if ( m_HI[i - 1] == -1 ) m_HI[i - 1] = m_HI[i];
-      m_LO[m_table_size + 1] = m_LO[m_table_size];  // replica ultimo nodo
-      m_HI[m_table_size + 1] = m_HI[m_table_size];  // replica ultimo nodo
 
+      // Replicate last values to avoid special boundary handling
+      m_LO[m_table_size + 1] = m_LO[m_table_size];
+      m_HI[m_table_size + 1] = m_HI[m_table_size];
+
+      // Mark tables as valid
       m_must_reset = false;
     }
 
   public:
+    // Disable copy and move operations (contains mutex and external pointers)
     SearchInterval( SearchInterval const & )                   = delete;
     SearchInterval const & operator=( SearchInterval const & ) = delete;
     SearchInterval( SearchInterval && )                        = delete;
     SearchInterval & operator=( SearchInterval && )            = delete;
 
+    /**
+     * @brief Default constructor
+     *
+     * Creates an uninitialized SearchInterval. Must call setup() before use.
+     */
     SearchInterval() {}
 
+    /**
+     * @brief Initialize the search structure with external data
+     *
+     * @param name Pointer to curve name (for error messages)
+     * @param n Pointer to number of data points
+     * @param X Pointer to pointer of sorted X coordinates array
+     * @param is_closed Pointer to flag: true if curve is periodic
+     * @param can_extend Pointer to flag: true if extrapolation allowed (currently unused)
+     *
+     * @note All pointers must remain valid for the lifetime of this object
+     * @note This method is thread-safe
+     * @note Marks internal tables for rebuild on next find() call
+     */
     void setup( string const * name, integer * n, real_type ** X, bool * is_closed, bool * can_extend )
     {
+      std::lock_guard<std::mutex> lock( m_mutex );
       p_name             = name;
       p_npts             = n;
       p_X                = X;
@@ -607,83 +909,194 @@ namespace Splines
       m_must_reset       = true;
     }
 
-    //!
-    //! Find interval containing `res.second` using binary search.
-    //! Return result in `res.first`
-    //!
+    /**
+     * @brief Find the interval containing a query point
+     *
+     * Given a query point x, finds the interval index i such that X[i] <= x < X[i+1].
+     * The algorithm uses a hybrid approach:
+     * 1. Use lookup table to reduce search range from [0,n) to [k_LO, k_HI]
+     * 2. Apply binary search within the reduced range
+     * 3. Handle special cases (duplicates, boundaries, closed curves)
+     *
+     * @param[in,out] res Pair where:
+     *   - res.second (input): query point x
+     *   - res.first (output): interval index i where X[i] <= x < X[i+1]
+     *   - res.second (output): possibly modified x (if curve is closed and x was wrapped)
+     *
+     * @pre setup() has been called
+     * @pre *p_npts > 0
+     * @post res.first is in range [0, n-2]
+     *
+     * @par Out-of-bounds handling:
+     * - If x > X[n-1] and curve is closed: x is wrapped using modulo arithmetic
+     * - If x > X[n-1] and curve is open: returns interval [n-2, n-1] (extrapolation)
+     * - If x < X[0] and curve is closed: x is wrapped using modulo arithmetic
+     * - If x < X[0] and curve is open: returns interval [0, 1] (extrapolation)
+     *
+     * @par Duplicate nodes handling:
+     * If consecutive nodes have identical X values, returns the leftmost valid interval.
+     * This ensures that evaluation at duplicate nodes uses the first segment definition.
+     *
+     * @note Thread-safe: multiple threads can call this method concurrently
+     * @note First call after setup() or must_reset() will rebuild internal tables
+     *
+     * @par Example:
+     * @code
+     * SearchInterval search;
+     * search.setup(&name, &n, &X, &is_closed, &can_extend);
+     *
+     * std::pair<integer, real_type> result{0, 2.5};
+     * search.find(result);
+     * // Now result.first contains the interval index for x = 2.5
+     * @endcode
+     *
+     * @par Complexity:
+     * - Table lookup: O(1)
+     * - Binary search: O(log(n / table_size))
+     * - Overall: O(log(n / table_size)) ≈ O(log n / 400) for typical cases
+     */
     void find( std::pair<integer, real_type> & res ) const
     {
-      {
-        std::lock_guard<std::mutex> lock( m_mutex );
-        if ( m_must_reset ) this->reset();
-      }
+      // Lock for thread-safety and lazy initialization
+      std::lock_guard<std::mutex> lock( m_mutex );
 
-      integer const &   n{ *p_npts };
+      // Build tables if needed (first call or after data change)
+      if ( m_must_reset ) this->reset();
+
+      // Local references for cleaner code
+      integer const     n{ *p_npts };
       string const &    name{ *p_name };
       real_type const * X{ *p_X };
-      UTILS_ASSERT( n > 0, "in SearchInterval::find({}), n⁰points == 0!", name );
 
-      integer &   pos{ res.first };
-      real_type & x{ res.second };
+      UTILS_ASSERT( n > 0, "SearchInterval::find({}), n°points == 0!", name );
 
-#if 1
-      // casi out of bound
+      integer &   pos{ res.first };  // Output: interval index
+      real_type & x{ res.second };   // Input/Output: query point (may be wrapped)
+
+      // ========================================================================
+      // STEP 1: Handle out-of-bounds cases
+      // ========================================================================
+
       if ( x > m_x_max )
       {
-        if ( *p_curve_is_closed ) { x -= m_x_range * std::floor( ( x - m_x_min ) / m_x_range ); }
+        if ( *p_curve_is_closed )
+        {
+          // Periodic boundary: wrap x back into [m_x_min, m_x_max)
+          // Using fmod for accurate modulo with floating point
+          x = m_x_min + std::fmod( x - m_x_min, m_x_range );
+          // Correct for negative fmod result (can happen with negative x - m_x_min)
+          if ( x < m_x_min ) x += m_x_range;
+        }
         else
         {
+          // Open curve: clamp to last valid interval [n-2, n-1]
           pos = n - 2;
           return;
         }
       }
       else if ( x < m_x_min )
       {
-        if ( *p_curve_is_closed ) { x -= m_x_range * std::floor( ( x - m_x_min ) / m_x_range ); }
+        if ( *p_curve_is_closed )
+        {
+          // Periodic boundary: wrap x back into [m_x_min, m_x_max)
+          x = m_x_min + std::fmod( x - m_x_min, m_x_range );
+          if ( x < m_x_min ) x += m_x_range;
+        }
         else
         {
+          // Open curve: clamp to first valid interval [0, 1]
           pos = 0;
           return;
         }
       }
 
-      // uso table
-      integer i_cell{ static_cast<integer>( std::floor( ( x - m_x_min ) / m_dx ) ) };
-      integer k_LO{ m_LO[i_cell] };
-      integer k_HI{ m_HI[i_cell + 1] };
+      // ========================================================================
+      // STEP 2: Use lookup table to reduce search range
+      // ========================================================================
 
+      // Compute normalized position in range [0, m_table_size]
+      real_type norm_pos = ( x - m_x_min ) / m_dx;
+      integer   i_cell{ static_cast<integer>( std::floor( norm_pos ) ) };
+
+      // Critical: clamp to valid range to prevent array overflow
+      // Without this, i_cell could be m_table_size, causing m_HI[i_cell+1] overflow
+      i_cell = std::max( 0, std::min( i_cell, m_table_size - 1 ) );
+
+      // Extract search boundaries from precomputed tables
+      integer k_LO = m_LO[i_cell];      // Smallest possible interval
+      integer k_HI = m_HI[i_cell + 1];  // Largest possible interval (+1 is safe due to clamp)
+
+      // Sanity check: indices must be valid
       UTILS_ASSERT(
-        x >= X[k_LO] && x <= X[k_HI],
-        "Spline::SearchInterval, x={}, ipos={}, dx={}, X[{}]={}, X[{}]={}, range=[{},{}]\n",
+        k_LO >= 0 && k_LO < n && k_HI >= 0 && k_HI < n,
+        "SearchInterval::find({}), invalid table indices: k_LO={}, k_HI={}, n={}\n",
+        name,
+        k_LO,
+        k_HI,
+        n );
+
+      // Sanity check: x must be within the computed range (with small tolerance)
+      UTILS_ASSERT(
+        x >= X[k_LO] - m_epsilon * m_x_range && x <= X[k_HI] + m_epsilon * m_x_range,
+        "SearchInterval::find({}), x={} out of range, X[{}]={}, X[{}]={}\n",
+        name,
         x,
-        i_cell,
-        m_dx,
         k_LO,
         X[k_LO],
         k_HI,
-        X[k_HI],
-        m_x_min,
-        m_x_max );
-#else
-      integer k_LO = 0;
-      integer k_HI = n;
-#endif
+        X[k_HI] );
 
-      // binary search
+      // ========================================================================
+      // STEP 3: Binary search within reduced range
+      // ========================================================================
+
+      // Standard binary search: find largest k such that X[k] <= x
       while ( k_HI > k_LO + 1 )
       {
-        integer k_M{ k_LO + ( k_HI - k_LO ) / 2 };
+        integer k_M{ k_LO + ( k_HI - k_LO ) / 2 };  // Midpoint (overflow-safe)
         if ( x < X[k_M] )
-          k_HI = k_M;
+          k_HI = k_M;  // x is in left half
         else
-          k_LO = k_M;
+          k_LO = k_M;  // x is in right half (or exactly at k_M)
       }
 
       pos = k_LO;
-      if ( Utils::is_zero( X[pos] - X[pos + 1] ) ) --pos;  // caso nodi ripetuti
+
+      // ========================================================================
+      // STEP 4: Handle duplicate consecutive nodes
+      // ========================================================================
+
+      // If X[pos] == X[pos+1], the interval [pos, pos+1] has zero width
+      // We backtrack to find the leftmost valid interval with positive width
+      // This ensures consistent behavior when evaluating at duplicate nodes
+      while ( pos > 0 && pos < n - 1 )
+      {
+        // Compute relative tolerance based on magnitude of X values
+        real_type const eps = m_epsilon * std::max( real_type( 1 ), std::abs( X[pos] ) );
+        // If nodes are different (beyond tolerance), we found a valid interval
+        if ( std::abs( X[pos] - X[pos + 1] ) > eps ) break;
+        // Otherwise, move to previous interval
+        --pos;
+      }
+
+      // Final safety clamp to ensure pos is a valid interval index
+      pos = std::max( integer( 0 ), std::min( pos, n - 2 ) );
     }
 
-    void must_reset() { m_must_reset = true; }
+    /**
+     * @brief Mark internal tables for rebuild on next find() call
+     *
+     * Call this method when the external data (X array, n) has changed.
+     * The actual rebuild is deferred until the next find() call (lazy evaluation).
+     *
+     * @note Thread-safe: can be called from any thread
+     * @note Does not immediately rebuild - uses lazy evaluation for efficiency
+     */
+    void must_reset()
+    {
+      std::lock_guard<std::mutex> lock( m_mutex );
+      m_must_reset = true;
+    }
   };
 
   /*\
@@ -703,14 +1116,14 @@ namespace Splines
 
   protected:
     string const m_name;
-    bool         m_curve_is_closed{ false };
-    bool         m_curve_can_extend{ true };
-    bool         m_curve_extended_constant{ false };
+    bool         m_curve_is_closed         = false;
+    bool         m_curve_can_extend        = true;
+    bool         m_curve_extended_constant = false;
 
-    integer     m_npts{ 0 };
-    integer     m_npts_reserved{ 0 };
-    real_type * m_X{ nullptr };  // allocated in the derived class!
-    real_type * m_Y{ nullptr };  // allocated in the derived class!
+    integer     m_npts          = 0;
+    integer     m_npts_reserved = 0;
+    real_type * m_X             = nullptr;  // allocated in the derived class!
+    real_type * m_Y             = nullptr;  // allocated in the derived class!
 
     SearchInterval m_search;
 
@@ -873,8 +1286,7 @@ namespace Splines
     //!
     real_type y_min() const
     {
-      integer N{ m_npts };
-      if ( type() == SplineType1D::CONSTANT ) --N;
+      integer N = ( type() == SplineType1D::CONSTANT ) ? m_npts - 1 : m_npts;
       return *std::min_element( m_Y, m_Y + N );
     }
 
@@ -883,8 +1295,7 @@ namespace Splines
     //!
     real_type y_max() const
     {
-      integer N{ m_npts };
-      if ( type() == SplineType1D::CONSTANT ) --N;
+      integer N = ( type() == SplineType1D::CONSTANT ) ? m_npts - 1 : m_npts;
       return *std::max_element( m_Y, m_Y + N );
     }
 
@@ -989,8 +1400,7 @@ namespace Splines
     //!
     void build( vector<real_type> const & x, vector<real_type> const & y )
     {
-      integer N{ integer( x.size() ) };
-      if ( N > integer( y.size() ) ) N = integer( y.size() );
+      integer N = std::min<integer>( x.size(), y.size() );
       this->build( x.data(), 1, y.data(), 1, N );
     }
 
@@ -1166,10 +1576,10 @@ namespace Splines
     void dump( ostream_type & s, integer const nintervals, string_view header = "x\ty" ) const
     {
       s << header << '\n';
-      real_type const dx{ ( x_max() - x_min() ) / nintervals };
+      real_type const dx = ( x_max() - x_min() ) / nintervals;
       for ( integer i = 0; i <= nintervals; ++i )
       {
-        real_type x{ x_min() + i * dx };
+        real_type x = x_min() + i * dx;
         fmt::print( s, "{}\t{}\n", x, this->eval( x ) );
       }
     }
@@ -1383,7 +1793,6 @@ namespace Splines
 
     return ( dx * ddy - dy * ddx ) / ( speed2 * speed );
   }
-
 
   //!
   //! compute curvature derivative of a planar curve

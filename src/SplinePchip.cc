@@ -155,7 +155,7 @@ namespace Splines
     }
 
     // loop through interior points.
-    for ( integer i{ 1 }; i < n; ++i )
+    for ( integer i = 1; i < n; ++i )
     {
       if ( i > 1 )
       {

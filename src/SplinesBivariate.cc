@@ -767,14 +767,14 @@ namespace Splines
   void SplineSurf::dump_data( ostream_type & s ) const
   {
     s << "X = [ " << m_X[0];
-    for ( integer i{ 1 }; i < m_nx; ++i ) s << ", " << m_X[i];
+    for ( integer i = 1; i < m_nx; ++i ) s << ", " << m_X[i];
     s << " ]\nY = [ " << m_Y[0];
-    for ( integer j{ 1 }; j < m_ny; ++j ) s << ", " << m_Y[j];
+    for ( integer j = 1; j < m_ny; ++j ) s << ", " << m_Y[j];
     s << " ]\nZ = [\n";
     for ( integer j = 0; j < m_ny; ++j )
     {
       s << "  [ " << z_node( 0, j );
-      for ( integer i{ 1 }; i < m_nx; ++i ) s << ", " << z_node( i, j );
+      for ( integer i = 1; i < m_nx; ++i ) s << ", " << z_node( i, j );
       s << " ]\n";
     }
     s << "\n];\n";

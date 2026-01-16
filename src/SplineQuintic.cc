@@ -79,7 +79,7 @@ namespace Splines
     real_type * U{ mem( n + 1 ) };
     real_type * Z{ Ypp };
 
-    for ( integer i{ 1 }; i < n; ++i )
+    for ( integer i = 1; i < n; ++i )
     {
       real_type const hL{ X[i] - X[i - 1] };
       real_type const hL2{ hL * hL };
@@ -178,7 +178,7 @@ namespace Splines
       Ypp[n] = second_deriv3p_R( SL, hL, SR, hR, Yp[n - 2], Yp[n - 1], Yp[n] );
     }
 
-    for ( integer i{ 1 }; i < n; ++i )
+    for ( integer i = 1; i < n; ++i )
     {
       real_type const hL{ X[i] - X[i - 1] };
       real_type const hR{ X[i + 1] - X[i] };

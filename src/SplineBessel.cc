@@ -71,7 +71,7 @@ namespace Splines
     }
     else
     {
-      for ( integer i{ 1 }; i < n; ++i )
+      for ( integer i = 1; i < n; ++i )
       {
         real_type const DL{ X[i] - X[i - 1] };
         real_type const DR{ X[i + 1] - X[i] };

@@ -279,7 +279,7 @@ namespace Splines
     integer const n{ npts - 1 };
     real_type *   Z{ Ypp };
 
-    for ( integer i{ 1 }; i < n; ++i )
+    for ( integer i = 1; i < n; ++i )
     {
       real_type const HL{ X[i] - X[i - 1] };
       real_type const HR{ X[i + 1] - X[i] };
@@ -426,7 +426,7 @@ namespace Splines
       D[1] -= L[1] * U[0];
       U[1] -= L[1] * UU;
       Z[1] -= L[1] * Z[0];
-      integer i{ 1 };
+      integer i = 1;
       do
       {
         Z[i] /= D[i];

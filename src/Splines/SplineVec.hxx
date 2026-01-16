@@ -1752,6 +1752,7 @@ namespace Splines
      */
     real_type curvature( real_type x ) const
     {
+      UTILS_ASSERT( m_dim == 2, "SplineVec::curvature(x={}) defined only for dim=2 found {}", x, m_dim );
       real_type D[2], DD[2];
       this->eval_D( x, D, 1 );
       this->eval_DD( x, DD, 1 );
@@ -1791,6 +1792,7 @@ namespace Splines
      */
     real_type curvature_D( real_type x ) const
     {
+      UTILS_ASSERT( m_dim == 2, "SplineVec::curvature(x={}) defined only for dim=2 found {}", x, m_dim );
       real_type D[2], DD[2], DDD[2];
       this->eval_D( x, D, 1 );
       this->eval_DD( x, DD, 1 );

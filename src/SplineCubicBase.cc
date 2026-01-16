@@ -377,7 +377,7 @@ namespace Splines
     x_min_pos = x_max_pos = m_X[0];
     y_min = y_max = m_Y[0];
     PolynomialRoots::Quadratic q;
-    for ( integer i{ 1 }; i < m_npts; ++i )
+    for ( integer i = 1; i < m_npts; ++i )
     {
       real_type const & X0{ m_X[i - 1] };
       real_type const & X1{ m_X[i] };
@@ -455,7 +455,7 @@ namespace Splines
       i_max_pos.emplace_back( 0 );
     }
     PolynomialRoots::Quadratic q;
-    for ( integer i{ 1 }; i < m_npts; ++i )
+    for ( integer i = 1; i < m_npts; ++i )
     {
       real_type const & X0{ m_X[i - 1] };
       real_type const & X1{ m_X[i] };

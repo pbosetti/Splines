@@ -100,10 +100,10 @@ namespace Splines
   void BiQuinticSpline::write_to_stream( ostream_type & s ) const
   {
     fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
-    for ( integer i{ 1 }; i < m_nx; ++i )
+    for ( integer i = 1; i < m_nx; ++i )
     {
       real_type dx{ m_X[i] - m_X[i - 1] };
-      for ( integer j{ 1 }; j < m_ny; ++j )
+      for ( integer j = 1; j < m_ny; ++j )
       {
         integer const   i00{ ipos_C( i - 1, j - 1 ) };
         integer const   i10{ ipos_C( i, j - 1 ) };

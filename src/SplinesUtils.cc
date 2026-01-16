@@ -440,7 +440,7 @@ namespace Splines
     }
 
     // loop through interior points.
-    for ( integer i{ 2 }; i < n - 1; ++i )
+    for ( integer i = 2; i < n - 1; ++i )
     {
       real_type const hLL{ X[i - 1] - X[i - 2] };
       real_type const hL{ X[i + 0] - X[i - 1] };
@@ -490,7 +490,7 @@ namespace Splines
     }
 
     // loop through interior points.
-    for ( integer i{ 1 }; i < n; ++i )
+    for ( integer i = 1; i < n; ++i )
     {
       real_type const hL{ X[i + 0] - X[i - 1] };
       real_type const hR{ X[i + 1] - X[i + 0] };
