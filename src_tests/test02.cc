@@ -76,6 +76,16 @@ struct DerivativeErrorStats
   real_type max_abs_error_boundary;
   real_type avg_abs_error_boundary;
   size_t    points_checked_boundary;
+
+  DerivativeErrorStats()
+    : max_abs_error_interior( 0 )
+    , avg_abs_error_interior( 0 )
+    , points_checked_interior( 0 )
+    , max_abs_error_boundary( 0 )
+    , avg_abs_error_boundary( 0 )
+    , points_checked_boundary( 0 )
+  {
+  }
 };
 
 // Structure to hold all derivative errors
@@ -217,18 +227,26 @@ void print_derivative_table(
   real_type                                      tol_max_boundary,
   real_type                                      tol_avg_boundary )
 {
+  auto color = fg( fmt::color::light_blue ) | fmt::emphasis::bold;
   fmt::print(
-    fg( fmt::color::magenta ) | fmt::emphasis::bold,
+    color,
     "\n"
-    "┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐\n"
+    "┌─{:─^122}─┐\n"
     "│ {:^122} │\n"
-    "├──────────────┬──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────┤\n"
+    "├─{:─^12}─┬─{:─^52}─┬─{:─^52}─┤\n"
     "│ {:^12} │ {:^52} │ {:^52} │\n"
-    "├──────────────┼──────────────────────────────────────────────────────┼──────────────────────────────────────────────────────┤\n",
+    "├─{:─^12}─┼─{:─^52}─┼─{:─^52}─┤\n",
+    "",
     fmt::format( "DERIVATIVE {} - FINITE DIFFERENCE ERRORS", derivative_name ),
+    "",
+    "",
+    "",
     "Spline Type",
     "Interior Points (within patches)",
-    "Boundary Points (between patches)" );
+    "Boundary Points (between patches)",
+    "",
+    "",
+    "" );
 
   // Function to get the appropriate error stats for the derivative
   auto get_error_stats = [&]( const DerivativeErrors & err, const string & deriv ) -> const DerivativeErrorStats &
@@ -271,53 +289,90 @@ void print_derivative_table(
     fmt::print( "│ {} ", interior_cell );
     fmt::print( "│ {} │\n", boundary_cell );
 
-    if ( i < errors.size() - 1 )
-    {
-      fmt::print(
-        fg( fmt::color::magenta ) | fmt::emphasis::bold,
-        "├──────────────┼──────────────────────────────────────────────────────┼──────────────────────────────────────────────────────┤\n" );
-    }
+    if ( i < errors.size() - 1 ) { fmt::print( color, "├─{:─^12}─┼─{:─^52}─┼─{:─^52}─┤\n", "", "", "" ); }
   }
 
-  fmt::print(
-    fg( fmt::color::magenta ) | fmt::emphasis::bold,
-    "└──────────────┴──────────────────────────────────────────────────────┴──────────────────────────────────────────────────────┘\n" );
+  fmt::print( color, "└─{:─^12}─┴─{:─^52}─┴─{:─^52}─┘\n", "", "", "" );
 }
 
 // Finite difference approximations
+
+constexpr real_type eps = std::numeric_limits<real_type>::epsilon();
+
+inline real_type h_first( real_type x )
+{
+  return std::cbrt( eps ) * std::max( real_type( 1 ), std::abs( x ) );
+}
+
+inline real_type h_second( real_type x )
+{
+  return std::sqrt( std::sqrt( eps ) ) * std::max( real_type( 1 ), std::abs( x ) );
+}
+
 namespace FiniteDifferences
 {
-  template <typename SplineType>
-  real_type dx_central( const SplineType & spline, real_type x, real_type y, real_type h = 1e-6 )
+  using real_type = double;
+
+  namespace detail
   {
-    return ( spline( x + h, y ) - spline( x - h, y ) ) / ( 2 * h );
+    constexpr real_type eps = std::numeric_limits<real_type>::epsilon();
+
+    inline real_type h_first( real_type x, real_type y )
+    {
+      real_type scale = std::max( { real_type( 1 ), std::abs( x ), std::abs( y ) } );
+      return std::cbrt( eps ) * scale;  // ~ 6e-6
+    }
+
+    inline real_type h_second( real_type x, real_type y )
+    {
+      real_type scale = std::max( { real_type( 1 ), std::abs( x ), std::abs( y ) } );
+      return std::sqrt( std::sqrt( eps ) ) * scale;  // ~ 1e-4
+    }
+  }  // namespace detail
+
+  // =========================
+  // Derivate prime O(h^4)
+  // =========================
+
+  template <typename SplineType> real_type dx( const SplineType & spline, real_type x, real_type y )
+  {
+    real_type h = detail::h_first( x, y );
+    return ( -spline( x + 2 * h, y ) + 8 * spline( x + h, y ) - 8 * spline( x - h, y ) + spline( x - 2 * h, y ) ) /
+           ( 12 * h );
   }
 
-  template <typename SplineType>
-  real_type dy_central( const SplineType & spline, real_type x, real_type y, real_type h = 1e-6 )
+  template <typename SplineType> real_type dy( const SplineType & spline, real_type x, real_type y )
   {
-    return ( spline( x, y + h ) - spline( x, y - h ) ) / ( 2 * h );
+    real_type h = detail::h_first( x, y );
+    return ( -spline( x, y + 2 * h ) + 8 * spline( x, y + h ) - 8 * spline( x, y - h ) + spline( x, y - 2 * h ) ) /
+           ( 12 * h );
   }
 
-  template <typename SplineType>
-  real_type dxx_central( const SplineType & spline, real_type x, real_type y, real_type h = 1e-6 )
+  // =========================
+  // Derivate seconde O(h^2)
+  // =========================
+
+  template <typename SplineType> real_type dxx( const SplineType & spline, real_type x, real_type y )
   {
+    real_type h = detail::h_second( x, y );
     return ( spline( x + h, y ) - 2 * spline( x, y ) + spline( x - h, y ) ) / ( h * h );
   }
 
-  template <typename SplineType>
-  real_type dyy_central( const SplineType & spline, real_type x, real_type y, real_type h = 1e-6 )
+  template <typename SplineType> real_type dyy( const SplineType & spline, real_type x, real_type y )
   {
+    real_type h = detail::h_second( x, y );
     return ( spline( x, y + h ) - 2 * spline( x, y ) + spline( x, y - h ) ) / ( h * h );
   }
 
-  template <typename SplineType>
-  real_type dxy_central( const SplineType & spline, real_type x, real_type y, real_type h = 1e-6 )
+  template <typename SplineType> real_type dxy( const SplineType & spline, real_type x, real_type y )
   {
+    real_type h = detail::h_second( x, y );
     return ( spline( x + h, y + h ) - spline( x + h, y - h ) - spline( x - h, y + h ) + spline( x - h, y - h ) ) /
            ( 4 * h * h );
   }
+
 }  // namespace FiniteDifferences
+
 
 // Function to check if a point is on a patch boundary (including internal patch boundaries)
 bool is_on_patch_boundary(
@@ -358,7 +413,17 @@ template <typename SplineType> DerivativeErrors check_derivatives_with_patch_sep
   DerivativeErrors errors{};
 
   // Initialize all statistics to zero
-  auto init_stats = []() -> DerivativeErrorStats { return DerivativeErrorStats{ 0, 0, 0, 0, 0, 0 }; };
+  auto init_stats = []() -> DerivativeErrorStats
+  {
+    DerivativeErrorStats stats;
+    stats.max_abs_error_interior  = 0;
+    stats.avg_abs_error_interior  = 0;
+    stats.points_checked_interior = 0;
+    stats.max_abs_error_boundary  = 0;
+    stats.avg_abs_error_boundary  = 0;
+    stats.points_checked_boundary = 0;
+    return stats;
+  };
 
   errors.Dx  = init_stats();
   errors.Dy  = init_stats();
@@ -470,11 +535,11 @@ template <typename SplineType> DerivativeErrors check_derivatives_with_patch_sep
     real_type Dxy_analytic = spline.Dxy( x_val, y_val );
 
     // Get finite difference approximations
-    real_type Dx_fd  = FiniteDifferences::dx_central( spline, x_val, y_val, h );
-    real_type Dy_fd  = FiniteDifferences::dy_central( spline, x_val, y_val, h );
-    real_type Dxx_fd = FiniteDifferences::dxx_central( spline, x_val, y_val, h );
-    real_type Dyy_fd = FiniteDifferences::dyy_central( spline, x_val, y_val, h );
-    real_type Dxy_fd = FiniteDifferences::dxy_central( spline, x_val, y_val, h );
+    real_type Dx_fd  = FiniteDifferences::dx( spline, x_val, y_val );
+    real_type Dy_fd  = FiniteDifferences::dy( spline, x_val, y_val );
+    real_type Dxx_fd = FiniteDifferences::dxx( spline, x_val, y_val );
+    real_type Dyy_fd = FiniteDifferences::dyy( spline, x_val, y_val );
+    real_type Dxy_fd = FiniteDifferences::dxy( spline, x_val, y_val );
 
     // Calculate absolute errors
     real_type abs_error_Dx  = fabs( Dx_analytic - Dx_fd );
@@ -690,10 +755,10 @@ int main()
     y_data[0],
     y_data[5] );
 
-  BiCubicSpline   bc;
   BiQuinticSpline bq;
-  BilinearSpline  bl;
+  BiCubicSpline   bc;
   Akima2Dspline   ak;
+  BilinearSpline  bl;
 
   real_type X[6], Y[6], Z[6 * 6];
 
@@ -704,26 +769,26 @@ int main()
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n🔨 Building 2D splines...\n" );
 
   // Build all splines
-  bc.build( X, 1, Y, 1, Z, 6, 6, 6 );
-  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline built\n" );
-
   bq.build( X, 1, Y, 1, Z, 6, 6, 6 );
   fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline built\n" );
 
-  bl.build( X, 1, Y, 1, Z, 6, 6, 6 );
-  fmt::print( fg( fmt::color::green ), "   ✓ BilinearSpline built\n" );
+  bc.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline built\n" );
 
   ak.build( X, 1, Y, 1, Z, 6, 6, 6 );
   fmt::print( fg( fmt::color::green ), "   ✓ Akima2Dspline built\n" );
+
+  bl.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BilinearSpline built\n" );
 
   // Analyze all splines
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n📈 Analyzing spline properties...\n" );
 
   vector<Spline2DInfo> spline_results;
-  spline_results.push_back( analyze_2D_spline( bc, "BiCubic" ) );
   spline_results.push_back( analyze_2D_spline( bq, "BiQuintic" ) );
-  spline_results.push_back( analyze_2D_spline( bl, "Bilinear" ) );
+  spline_results.push_back( analyze_2D_spline( bc, "BiCubic" ) );
   spline_results.push_back( analyze_2D_spline( ak, "Akima2D" ) );
+  spline_results.push_back( analyze_2D_spline( bl, "Bilinear" ) );
 
   // Print results table
   print_2D_spline_table( spline_results );
@@ -735,17 +800,17 @@ int main()
 
   vector<pair<string, DerivativeErrors>> derivative_errors;
   derivative_errors.emplace_back(
-    "BiCubic",
-    check_derivatives_with_patch_separation( bc, "BiCubicSpline", X, 6, Y, 6, 10 ) );
-  derivative_errors.emplace_back(
     "BiQuintic",
     check_derivatives_with_patch_separation( bq, "BiQuinticSpline", X, 6, Y, 6, 10 ) );
   derivative_errors.emplace_back(
-    "Bilinear",
-    check_derivatives_with_patch_separation( bl, "BilinearSpline", X, 6, Y, 6, 10 ) );
+    "BiCubic",
+    check_derivatives_with_patch_separation( bc, "BiCubicSpline", X, 6, Y, 6, 10 ) );
   derivative_errors.emplace_back(
     "Akima2D",
     check_derivatives_with_patch_separation( ak, "Akima2Dspline", X, 6, Y, 6, 10 ) );
+  derivative_errors.emplace_back(
+    "Bilinear",
+    check_derivatives_with_patch_separation( bl, "BilinearSpline", X, 6, Y, 6, 10 ) );
 
   // Print separate tables for each derivative
   fmt::print( fg( fmt::color::magenta ) | fmt::emphasis::bold, "\n📊 DERIVATIVE ERROR TABLES (Absolute Errors):\n" );
@@ -804,15 +869,15 @@ int main()
   // Generate output files
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n💾 Writing spline data to files...\n" );
 
-  generate_grid_data( bc, "bicubic", "BiCubicSpline" );
   generate_grid_data( bq, "biquintic", "BiQuinticSpline" );
-  generate_grid_data( bl, "bilinear", "BilinearSpline" );
+  generate_grid_data( bc, "bicubic", "BiCubicSpline" );
   generate_grid_data( ak, "akima2d", "Akima2Dspline" );
+  generate_grid_data( bl, "bilinear", "BilinearSpline" );
 
   // Print summary of generated files
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n📁 Generated Files Summary:\n" );
 
-  vector<string> spline_types = { "bicubic", "biquintic", "bilinear", "akima2d" };
+  vector<string> spline_types = { "bicubic", "biquintic", "akima2d", "bilinear" };
   vector<string> derivatives  = { "", "_Dx", "_Dy", "_Dxx", "_Dyy", "_Dxy" };
 
   for ( const auto & spline_type : spline_types )
