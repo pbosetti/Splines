@@ -254,11 +254,11 @@ namespace Splines
       case QuinticSpline_sub_type::AKIMA:
       {
         Malloc_real mem( "Quintic_build::work memory" );
-        Akima_build( X, Y, Yp, mem.malloc( npts ), npts );
+        AkimaSpline::build( X, Y, Yp, mem.malloc( npts ), npts );
         mem.free();
       }
       break;
-      case QuinticSpline_sub_type::BESSEL: Bessel_build( X, Y, Yp, npts ); break;
+      case QuinticSpline_sub_type::BESSEL: BesselSpline::build( X, Y, Yp, npts ); break;
     }
     QuinticSpline_Ypp_build( X, Y, Yp, Ypp, npts );
   }
