@@ -91,7 +91,7 @@ private:
   real_type *             m_X_ptr;
   bool                    m_curve_is_closed;
   bool                    m_curve_can_extend;
-  Splines::SearchInterval m_si;  // Usiamo il namespace completo
+  Utils::SearchInterval<real_type,integer> m_si;  // Usiamo il namespace completo
 
   // Statistiche dei test
   struct TestStats

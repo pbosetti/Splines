@@ -39,13 +39,6 @@ namespace Splines
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  QuinticSplineBase::QuinticSplineBase( string_view name )
-    : Spline( name ), m_base_quintic( fmt::format( "QuinticSplineBase[{}]", name ) )
-  {
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
   /*\
      Sistema lineare da risolvere
 

@@ -617,7 +617,7 @@ void test_utility_functions()
   // Test Hermite functions
   fmt::print( fg( fmt::color::light_yellow ), "\n🔺 Hermite Basis Functions (H=1):\n" );
   real_type base[4];
-  Hermite3( 0.5, 1.0, base );
+  Splines::Hermite3( 0.5, 1.0, base );
 
   vector<vector<real_type>> hermite_data;
   hermite_data.push_back( { 0.5, base[0], base[1], base[2], base[3] } );

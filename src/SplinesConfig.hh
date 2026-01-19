@@ -40,7 +40,9 @@
 #include "Utils.hh"
 #include "Utils_autodiff.hh"
 #include "GenericContainer/GenericContainer.hh"
+#include "PolynomialRoots.hh"
 
+#include <algorithm>
 #include <thread>
 #include <mutex>
 #include <set>

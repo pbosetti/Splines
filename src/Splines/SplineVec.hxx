@@ -190,7 +190,7 @@ namespace Splines
     real_type ** m_Yp = nullptr;
 
     /// Efficient interval search structure for finding the correct spline segment
-    SearchInterval m_search;
+    Utils::SearchInterval<real_type,integer> m_search;
 
     /**
      * \brief Allocate memory for spline data structures
@@ -530,7 +530,7 @@ namespace Splines
       m_search.find( res );
       real_type     base[4];
       integer const idx{ res.first };
-      Hermite3( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base );
+      Splines::Hermite3( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
       return base[0] * Y[idx] + base[1] * Y[idx + 1] + base[2] * Yp[idx] + base[3] * Yp[idx + 1];
@@ -577,7 +577,7 @@ namespace Splines
       m_search.find( res );
       real_type     base_D[4];
       integer const idx{ res.first };
-      Hermite3_D( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_D );
+      Splines::Hermite3_D( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_D );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
       return base_D[0] * Y[idx] + base_D[1] * Y[idx + 1] + base_D[2] * Yp[idx] + base_D[3] * Yp[idx + 1];
@@ -621,7 +621,7 @@ namespace Splines
       m_search.find( res );
       real_type     base_DD[4];
       integer const idx{ res.first };
-      Hermite3_DD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DD );
+      Splines::Hermite3_DD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DD );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
       return base_DD[0] * Y[idx] + base_DD[1] * Y[idx + 1] + base_DD[2] * Yp[idx] + base_DD[3] * Yp[idx + 1];
@@ -665,7 +665,7 @@ namespace Splines
       m_search.find( res );
       real_type     base_DDD[4];
       integer const idx{ res.first };
-      Hermite3_DDD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DDD );
+      Splines::Hermite3_DDD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DDD );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
       return base_DDD[0] * Y[idx] + base_DDD[1] * Y[idx + 1] + base_DDD[2] * Yp[idx] + base_DDD[3] * Yp[idx + 1];
@@ -890,7 +890,7 @@ namespace Splines
       m_search.find( res );
       real_type     base[4];
       integer const idx = res.first;
-      Hermite3( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base );
+      Splines::Hermite3( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base );
       real_type * v = vals;
       for ( integer j = 0; j < m_dim; ++j, v += inc )
       {
@@ -916,7 +916,7 @@ namespace Splines
       m_search.find( res );
       real_type     base_D[4];
       integer const idx = res.first;
-      Hermite3_D( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_D );
+      Splines::Hermite3_D( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_D );
       real_type * v = vals;
       for ( integer j = 0; j < m_dim; ++j, v += inc )
       {
@@ -949,7 +949,7 @@ namespace Splines
       m_search.find( res );
       real_type     base_DD[4];
       integer const idx = res.first;
-      Hermite3_DD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DD );
+      Splines::Hermite3_DD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DD );
       real_type * v = vals;
       for ( integer j = 0; j < m_dim; ++j, v += inc )
       {
@@ -982,7 +982,7 @@ namespace Splines
       m_search.find( res );
       real_type     base_DDD[4];
       integer const idx{ res.first };
-      Hermite3_DDD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DDD );
+      Splines::Hermite3_DDD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DDD );
       real_type * v = vals;
       for ( integer j = 0; j < m_dim; ++j, v += inc )
       {

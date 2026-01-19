@@ -43,47 +43,6 @@ namespace Splines
    |  |_| |_|\___|_|  |_| |_| |_|_|\__\___|
   \*/
 
-  void Hermite3( real_type const x, real_type const H, real_type base[4] )
-  {
-    real_type const X{ x / H };
-    base[1] = X * X * ( 3 - 2 * X );
-    base[0] = 1 - base[1];
-    base[2] = x * ( X * ( X - 2 ) + 1 );
-    base[3] = x * X * ( X - 1 );
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  void Hermite3_D( real_type const x, real_type const H, real_type base_D[4] )
-  {
-    real_type const X{ x / H };
-    base_D[0] = 6.0 * X * ( X - 1.0 ) / H;
-    base_D[1] = -base_D[0];
-    base_D[2] = ( ( 3 * X - 4 ) * X + 1 );
-    base_D[3] = X * ( 3 * X - 2 );
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  void Hermite3_DD( real_type const x, real_type const H, real_type base_DD[4] )
-  {
-    real_type const X{ x / H };
-    base_DD[0] = ( 12 * X - 6 ) / ( H * H );
-    base_DD[1] = -base_DD[0];
-    base_DD[2] = ( 6 * X - 4 ) / H;
-    base_DD[3] = ( 6 * X - 2 ) / H;
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  void Hermite3_DDD( real_type, real_type const H, real_type base_DDD[4] )
-  {
-    base_DDD[0] = 12 / ( H * H * H );
-    base_DDD[1] = -base_DDD[0];
-    base_DDD[2] = 6 / ( H * H );
-    base_DDD[3] = base_DDD[2];
-  }
-
   // --------------------------------------------------------------------------
 
   void Hermite5( real_type const x, real_type const H, real_type base[6] )
@@ -246,76 +205,6 @@ namespace Splines
              ( M[4][0] * q[0] + M[4][1] * q[1] + M[4][2] * q[2] + M[4][3] * q[3] + M[4][4] * q[4] + M[4][5] * q[5] ) +
            p[5] *
              ( M[5][0] * q[0] + M[5][1] * q[1] + M[5][2] * q[2] + M[5][3] * q[3] + M[5][4] * q[4] + M[5][5] * q[5] );
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  void HermiteSpline::build( real_type const[], integer, real_type const[], integer, integer )
-  {
-    UTILS_ERROR( "HermiteSpline[{}]::build(x,incx,y,incy,n) cannot be used\n", m_name );
-  }
-
-  using GC_namespace::GC_type;
-  using GC_namespace::vec_real_type;
-
-  //!
-  //!
-  //! Setup a spline using a `GenericContainer`
-  //!
-  //! - gc("xdata")  vector with the `x` coordinate of the data
-  //! - gc("ydata")  vector with the `y` coordinate of the data
-  //! - gc("ypdata") vector with the `y` derivative of the data
-  //!
-  void HermiteSpline::setup( GenericContainer const & gc )
-  {
-    /*
-    // gc["xdata"]
-    // gc["ydata"]
-    //
-    */
-    string const where{ fmt::format( "HermiteSpline[{}]::setup( gc ):", m_name ) };
-
-    std::set<std::string> keywords;
-    for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
-    keywords.erase( "spline_type" );
-
-    GenericContainer const & gc_x{ gc( "xdata", where ) };
-    keywords.erase( "xdata" );
-    GenericContainer const & gc_y{ gc( "ydata", where ) };
-    keywords.erase( "ydata" );
-    GenericContainer const & gc_yp{ gc( "ypdata", where ) };
-    keywords.erase( "ypdata" );
-
-    vec_real_type x, y, yp;
-    {
-      string const ff{ fmt::format( "{}, field `xdata'", where ) };
-      gc_x.copyto_vec_real( x, ff );
-    }
-    {
-      string const ff{ fmt::format( "{}, field `ydata'", where ) };
-      gc_y.copyto_vec_real( y, ff );
-    }
-    {
-      string const ff{ fmt::format( "{}, field `ypdata'", where ) };
-      gc_yp.copyto_vec_real( yp, ff );
-    }
-
-    UTILS_WARNING(
-      keywords.empty(),
-      "{}: unused keys\n{}\n",
-      where,
-      [&keywords]() -> string
-      {
-        string res;
-        for ( auto const & it : keywords )
-        {
-          res += it;
-          res += ' ';
-        };
-        return res;
-      }() );
-
-    this->build( x, y, yp );
   }
 
 }  // namespace Splines

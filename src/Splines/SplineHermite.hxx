@@ -56,9 +56,70 @@ namespace Splines
     void build() override { m_search.must_reset(); }
 
     // block method!
-    void build( real_type const[], integer, real_type const[], integer, integer ) override;
+    void build( real_type const[], integer, real_type const[], integer, integer ) override
+    {
+      UTILS_ERROR( "HermiteSpline[{}]::build(x,incx,y,incy,n) cannot be used\n", m_name );
+    }
 
-    void setup( GenericContainer const & gc ) override;
+    //!
+    //!
+    //! Setup a spline using a `GenericContainer`
+    //!
+    //! - gc("xdata")  vector with the `x` coordinate of the data
+    //! - gc("ydata")  vector with the `y` coordinate of the data
+    //! - gc("ypdata") vector with the `y` derivative of the data
+    //!
+    void setup( GenericContainer const & gc ) override
+    {
+      /*
+      // gc["xdata"]
+      // gc["ydata"]
+      //
+      */
+      string const where{ fmt::format( "HermiteSpline[{}]::setup( gc ):", m_name ) };
+
+      std::set<std::string> keywords;
+      for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
+      keywords.erase( "spline_type" );
+
+      GenericContainer const & gc_x{ gc( "xdata", where ) };
+      keywords.erase( "xdata" );
+      GenericContainer const & gc_y{ gc( "ydata", where ) };
+      keywords.erase( "ydata" );
+      GenericContainer const & gc_yp{ gc( "ypdata", where ) };
+      keywords.erase( "ypdata" );
+
+      vec_real_type x, y, yp;
+      {
+        string const ff{ fmt::format( "{}, field `xdata'", where ) };
+        gc_x.copyto_vec_real( x, ff );
+      }
+      {
+        string const ff{ fmt::format( "{}, field `ydata'", where ) };
+        gc_y.copyto_vec_real( y, ff );
+      }
+      {
+        string const ff{ fmt::format( "{}, field `ypdata'", where ) };
+        gc_yp.copyto_vec_real( yp, ff );
+      }
+
+      UTILS_WARNING(
+        keywords.empty(),
+        "{}: unused keys\n{}\n",
+        where,
+        [&keywords]() -> string
+        {
+          string res;
+          for ( auto const & it : keywords )
+          {
+            res += it;
+            res += ' ';
+          };
+          return res;
+        }() );
+
+      this->build( x, y, yp );
+    }
   };
 
 }  // namespace Splines
