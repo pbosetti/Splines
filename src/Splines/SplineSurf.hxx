@@ -68,8 +68,8 @@ namespace Splines
     real_type m_Z_min = 0;
     real_type m_Z_max = 0;
 
-    Utils::SearchInterval<real_type,integer> m_search_x;
-    Utils::SearchInterval<real_type,integer> m_search_y;
+    Utils::SearchInterval<real_type, integer> m_search_x;
+    Utils::SearchInterval<real_type, integer> m_search_y;
 
     static integer ipos_C( integer const i, integer const j, integer const ldZ ) { return i * ldZ + j; }
 
@@ -723,7 +723,7 @@ namespace Splines
       D( val( x ), val( y ), dd );
 
       dual1st res = dd[0];
-      res.grad = dd[1] * x.grad + dd[2] * y.grad;
+      res.grad    = dd[1] * x.grad + dd[2] * y.grad;
       return res;
     }
 
@@ -739,7 +739,7 @@ namespace Splines
       real_type ddy = y.grad.grad;
       DD( val( x ), val( y ), dd );
 
-      dual2nd res = dd[0];
+      dual2nd res   = dd[0];
       res.grad      = dd[1] * dx + dd[2] * dy;
       res.grad.grad = dx * dx * dd[3] + 2 * dx * dy * dd[4] + dy * dy * dd[5] + ddx * dd[1] + ddy * dd[2];
       return res;
@@ -884,10 +884,7 @@ namespace Splines
     //!
     //! String information of the kind and order of the spline
     //!
-    virtual string info() const
-    {
-      return fmt::format( "Bivariate spline [{}] of type = {}", name(), type_name() );
-    }
+    virtual string info() const { return fmt::format( "Bivariate spline [{}] of type = {}", name(), type_name() ); }
 
     //!
     //! Print information of the kind and order of the spline

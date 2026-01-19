@@ -190,7 +190,7 @@ namespace Splines
     real_type ** m_Yp = nullptr;
 
     /// Efficient interval search structure for finding the correct spline segment
-    Utils::SearchInterval<real_type,integer> m_search;
+    Utils::SearchInterval<real_type, integer> m_search;
 
     /**
      * \brief Allocate memory for spline data structures

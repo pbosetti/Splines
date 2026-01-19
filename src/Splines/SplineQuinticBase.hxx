@@ -65,9 +65,10 @@ namespace Splines
     //!
     //! \param name the name of the spline
     //!
-    explicit
-    QuinticSplineBase( string_view name = "QuinticSplineBase" )
-    : Spline( name ), m_base_quintic( fmt::format( "QuinticSplineBase[{}]", name ) ) {}
+    explicit QuinticSplineBase( string_view name = "QuinticSplineBase" )
+      : Spline( name ), m_base_quintic( fmt::format( "QuinticSplineBase[{}]", name ) )
+    {
+    }
 
     //!
     //! Spline destructor.
@@ -318,12 +319,7 @@ namespace Splines
     //!
     //! Use externally allocated memory for `npts` points
     //!
-    void reserve_external(
-      integer const n,
-      real_type *&  p_x,
-      real_type *&  p_y,
-      real_type *&  p_Yp,
-      real_type *&  p_Ypp )
+    void reserve_external( integer const n, real_type *& p_x, real_type *& p_y, real_type *& p_Yp, real_type *& p_Ypp )
     {
       if ( !m_external_alloc ) m_base_quintic.free();
       m_npts           = 0;
@@ -542,8 +538,8 @@ namespace Splines
       real_type const x0{ m_X[ni] };
       real_type const H{ m_X[ni + 1] - x0 };
       Hermite5_DDDD( x - x0, H, base_DDDD );
-      return base_DDDD[0] * m_Y[ni] + base_DDDD[1] * m_Y[ni + 1] + base_DDDD[2] * m_Yp[ni] + base_DDDD[3] * m_Yp[ni + 1] +
-             base_DDDD[4] * m_Ypp[ni] + base_DDDD[5] * m_Ypp[ni + 1];
+      return base_DDDD[0] * m_Y[ni] + base_DDDD[1] * m_Y[ni + 1] + base_DDDD[2] * m_Yp[ni] +
+             base_DDDD[3] * m_Yp[ni + 1] + base_DDDD[4] * m_Ypp[ni] + base_DDDD[5] * m_Ypp[ni + 1];
     }
 
     real_type id_DDDDD( integer const ni, real_type const x ) const override
@@ -627,10 +623,7 @@ namespace Splines
       return 6;
     }
 
-    integer order() const override
-    {
-      return 6;
-    }
+    integer order() const override { return 6; }
 
 #ifdef SPLINES_BACK_COMPATIBILITY
     void      copySpline( QuinticSplineBase const & S ) { this->copy_spline( S ); }

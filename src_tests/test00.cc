@@ -85,13 +85,13 @@ void print_info( const string & message )
 class SearchIntervalTester
 {
 private:
-  string                  m_curve_name;
-  integer                 m_npts;
-  vector<real_type>       m_X;
-  real_type *             m_X_ptr;
-  bool                    m_curve_is_closed;
-  bool                    m_curve_can_extend;
-  Utils::SearchInterval<real_type,integer> m_si;  // Usiamo il namespace completo
+  string                                    m_curve_name;
+  integer                                   m_npts;
+  vector<real_type>                         m_X;
+  real_type *                               m_X_ptr;
+  bool                                      m_curve_is_closed;
+  bool                                      m_curve_can_extend;
+  Utils::SearchInterval<real_type, integer> m_si;  // Usiamo il namespace completo
 
   // Statistiche dei test
   struct TestStats

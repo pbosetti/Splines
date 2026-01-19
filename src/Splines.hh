@@ -145,12 +145,12 @@ namespace Splines
     return "NO_TYPE";
   }
 
+  using GC_namespace::GC_type;
   using GC_namespace::GenericContainer;
   using GC_namespace::map_type;
   using GC_namespace::vec_real_type;
   using GC_namespace::vec_string_type;
   using GC_namespace::vector_type;
-  using GC_namespace::GC_type;
 
   /*
   //   _   _                     _ _
@@ -416,7 +416,7 @@ namespace Splines
     integer const   ld_pnts,
     real_type       t[] )
   {
-    t[0] = 0;
+    t[0]                 = 0;
     real_type const * p0 = pnts;
     for ( integer k = 1; k < npts; ++k )
     {
@@ -456,7 +456,7 @@ namespace Splines
     real_type const alpha,
     real_type       t[] )
   {
-    t[0] = 0;
+    t[0]                 = 0;
     real_type const * p0 = pnts;
     for ( integer k = 1; k < npts; ++k )
     {
@@ -690,7 +690,7 @@ namespace Splines
     real_type * m_X             = nullptr;  // allocated in the derived class!
     real_type * m_Y             = nullptr;  // allocated in the derived class!
 
-    Utils::SearchInterval<real_type,integer> m_search;
+    Utils::SearchInterval<real_type, integer> m_search;
 
   protected:
     void copy_flags( Spline const & S )

@@ -32,7 +32,8 @@
 namespace Splines
 {
 
-  namespace {
+  namespace
+  {
     static real_type max_abs( real_type const a, real_type const b )
     {
       real_type res{ std::abs( a ) };
@@ -61,7 +62,7 @@ namespace Splines
         sb = -1;
       return sa * sb;
     }
-  }
+  }  // namespace
 
   //!
   //! References:

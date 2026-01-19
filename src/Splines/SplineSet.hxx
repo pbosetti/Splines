@@ -3675,10 +3675,8 @@ namespace Splines
   //! Evaluate all the splines at `x` values contained in vec and
   //! fill a map of vector in a GenericContainer with keys in `columns`
   //!
-  inline void SplineSet::eval_DDD(
-    vec_real_type const &   vec,
-    vec_string_type const & columns,
-    GenericContainer &      gc ) const
+  inline void SplineSet::eval_DDD( vec_real_type const & vec, vec_string_type const & columns, GenericContainer & gc )
+    const
   {
     integer const npts{ static_cast<integer>( vec.size() ) };
     map_type &    vals{ gc.set_map() };

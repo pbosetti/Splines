@@ -33,200 +33,193 @@ namespace Splines
 
   // --------------------------------------------------------------------------
 
-inline void Hermite5(real_type x, real_type H, real_type base[6])
-{
-  // Potenze di base
-  const real_type x2 = x * x;
-  const real_type x3 = x2 * x;
-  const real_type x4 = x2 * x2;
+  inline void Hermite5( real_type x, real_type H, real_type base[6] )
+  {
+    // Potenze di base
+    const real_type x2 = x * x;
+    const real_type x3 = x2 * x;
+    const real_type x4 = x2 * x2;
 
-  const real_type H2 = H * H;
-  const real_type H4 = H2 * H2;
+    const real_type H2 = H * H;
+    const real_type H4 = H2 * H2;
 
-  // (H - x)
-  const real_type dx  = H - x;
-  const real_type dx2 = dx * dx;
-  const real_type dx3 = dx2 * dx;
+    // (H - x)
+    const real_type dx  = H - x;
+    const real_type dx2 = dx * dx;
+    const real_type dx3 = dx2 * dx;
 
-  // Inversi
-  const real_type invH  = real_type(1) / H;
-  const real_type invH4 = real_type(1) / H4;
-  const real_type invH5 = invH * invH4;
+    // Inversi
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH4 = real_type( 1 ) / H4;
+    const real_type invH5 = invH * invH4;
 
-  // Base functions
-  base[0] = invH5 * dx3 * (3 * x * H + H2 + 6 * x2);
+    // Base functions
+    base[0] = invH5 * dx3 * ( 3 * x * H + H2 + 6 * x2 );
 
-  base[1] = invH5 * (
-              -15 * H * x4 +
-                6 * x4 * x +
-               10 * H2 * x3
-            );
+    base[1] = invH5 * ( -15 * H * x4 + 6 * x4 * x + 10 * H2 * x3 );
 
-  base[2] = invH4 * dx3 * x * (H + 3 * x);
+    base[2] = invH4 * dx3 * x * ( H + 3 * x );
 
-  base[3] = invH4 * (3 * x - 4 * H) * dx * x3;
+    base[3] = invH4 * ( 3 * x - 4 * H ) * dx * x3;
 
-  const real_type c = invH / (2 * H2);
+    const real_type c = invH / ( 2 * H2 );
 
-  base[4] = c * dx3 * x2;
-  base[5] = c * dx2 * x3;
-}
+    base[4] = c * dx3 * x2;
+    base[5] = c * dx2 * x3;
+  }
 
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-inline void Hermite5_D(real_type x, real_type H, real_type base_D[6])
-{
-  // Differenza
-  const real_type dx  = H - x;
-  const real_type dx2 = dx * dx;
+  inline void Hermite5_D( real_type x, real_type H, real_type base_D[6] )
+  {
+    // Differenza
+    const real_type dx  = H - x;
+    const real_type dx2 = dx * dx;
 
-  // Potenze di x
-  const real_type x2 = x * x;
-  const real_type x4 = x2 * x2;
+    // Potenze di x
+    const real_type x2 = x * x;
+    const real_type x4 = x2 * x2;
 
-  // Potenze di H
-  const real_type H2 = H * H;
-  const real_type H4 = H2 * H2;
+    // Potenze di H
+    const real_type H2 = H * H;
+    const real_type H4 = H2 * H2;
 
-  // Inversi
-  const real_type invH  = real_type(1) / H;
-  const real_type invH4 = real_type(1) / H4;
+    // Inversi
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH4 = real_type( 1 ) / H4;
 
-  // Termine comune
-  const real_type common = 30 * x2 * dx2 * invH * invH4;
+    // Termine comune
+    const real_type common = 30 * x2 * dx2 * invH * invH4;
 
-  // Derivate delle basi
-  base_D[0] = -common;
-  base_D[1] =  common;
+    // Derivate delle basi
+    base_D[0] = -common;
+    base_D[1] = common;
 
-  base_D[2] = invH4 * (H - 3 * x) * (H + 5 * x) * dx2;
+    base_D[2] = invH4 * ( H - 3 * x ) * ( H + 5 * x ) * dx2;
 
-  base_D[3] = invH4 * (
-                x2 * (28 * x * H - 12 * H2)
-                - 15 * x4
-              );
+    base_D[3] = invH4 * ( x2 * ( 28 * x * H - 12 * H2 ) - 15 * x4 );
 
-  const real_type c = invH / (2 * H2);
+    const real_type c = invH / ( 2 * H2 );
 
-  base_D[4] = c * (2 * H - 5 * x) * dx2 * x;
-  base_D[5] = c * (3 * H - 5 * x) * x2 * dx;
-}
+    base_D[4] = c * ( 2 * H - 5 * x ) * dx2 * x;
+    base_D[5] = c * ( 3 * H - 5 * x ) * x2 * dx;
+  }
 
-inline void Hermite5_DD(real_type x, real_type H, real_type base_DD[6])
-{
-  // Differenza
-  const real_type dx = H - x;
+  inline void Hermite5_DD( real_type x, real_type H, real_type base_DD[6] )
+  {
+    // Differenza
+    const real_type dx = H - x;
 
-  // Potenze di x
-  const real_type x2 = x * x;
+    // Potenze di x
+    const real_type x2 = x * x;
 
-  // Potenze di H
-  const real_type H2 = H * H;
-  const real_type H4 = H2 * H2;
+    // Potenze di H
+    const real_type H2 = H * H;
+    const real_type H4 = H2 * H2;
 
-  // Inversi
-  const real_type invH  = real_type(1) / H;
-  const real_type invH4 = real_type(1) / H4;
+    // Inversi
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH4 = real_type( 1 ) / H4;
 
-  // Termine comune
-  const real_type common = 60 * (H - 2 * x) * x * dx * invH * invH4;
+    // Termine comune
+    const real_type common = 60 * ( H - 2 * x ) * x * dx * invH * invH4;
 
-  base_DD[0] = -common;
-  base_DD[1] =  common;
+    base_DD[0] = -common;
+    base_DD[1] = common;
 
-  base_DD[2] = 12 * invH4 * dx * (5 * x - 3 * H) * x;
+    base_DD[2] = 12 * invH4 * dx * ( 5 * x - 3 * H ) * x;
 
-  base_DD[3] = 12 * invH4 * x * dx * (5 * x - 2 * H);
+    base_DD[3] = 12 * invH4 * x * dx * ( 5 * x - 2 * H );
 
-  const real_type c = invH / H2;
+    const real_type c = invH / H2;
 
-  base_DD[4] = c * (10 * x2 + H2 - 8 * H * x) * dx;
+    base_DD[4] = c * ( 10 * x2 + H2 - 8 * H * x ) * dx;
 
-  base_DD[5] = c * (x2 * (10 * x - 12 * H) + 3 * x * H2);
-}
+    base_DD[5] = c * ( x2 * ( 10 * x - 12 * H ) + 3 * x * H2 );
+  }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void Hermite5_DDD(real_type x, real_type H, real_type base_DDD[6])
-{
-  // Potenze
-  const real_type x2 = x * x;
-  const real_type H2 = H * H;
-  const real_type H4 = H2 * H2;
+  inline void Hermite5_DDD( real_type x, real_type H, real_type base_DDD[6] )
+  {
+    // Potenze
+    const real_type x2 = x * x;
+    const real_type H2 = H * H;
+    const real_type H4 = H2 * H2;
 
-  // Prodotti utili
-  const real_type Hx = H * x;
+    // Prodotti utili
+    const real_type Hx = H * x;
 
-  // Inversi
-  const real_type invH  = real_type(1) / H;
-  const real_type invH4 = real_type(1) / H4;
+    // Inversi
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH4 = real_type( 1 ) / H4;
 
-  // Termine comune
-  const real_type common = invH * invH4 * (360 * Hx - 60 * H2 - 360 * x2);
+    // Termine comune
+    const real_type common = invH * invH4 * ( 360 * Hx - 60 * H2 - 360 * x2 );
 
-  base_DDD[0] =  common;
-  base_DDD[1] = -common;
+    base_DDD[0] = common;
+    base_DDD[1] = -common;
 
-  base_DDD[2] = invH4 * (192 * Hx - 36 * H2 - 180 * x2);
-  base_DDD[3] = invH4 * (168 * Hx - 24 * H2 - 180 * x2);
+    base_DDD[2] = invH4 * ( 192 * Hx - 36 * H2 - 180 * x2 );
+    base_DDD[3] = invH4 * ( 168 * Hx - 24 * H2 - 180 * x2 );
 
-  const real_type c = invH / H2;
+    const real_type c = invH / H2;
 
-  base_DDD[4] = c * (36 * Hx - 9 * H2 - 30 * x2);
-  base_DDD[5] = c * (3 * H2 - 24 * Hx + 30 * x2);
-}
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void Hermite5_DDDD(real_type x, real_type H, real_type base_DDDD[6])
-{
-  // Potenze di H
-  const real_type H2 = H * H;
-  const real_type H4 = H2 * H2;
-
-  // Inversi
-  const real_type invH  = real_type(1) / H;
-  const real_type invH4 = real_type(1) / H4;
-
-  // Termine comune
-  const real_type common = invH * invH4 * (360 * H - 720 * x);
-
-  base_DDDD[0] =  common;
-  base_DDDD[1] = -common;
-
-  base_DDDD[2] = invH4 * (192 * H - 360 * x);
-  base_DDDD[3] = invH4 * (168 * H - 360 * x);
-
-  const real_type c = invH / H2;
-
-  base_DDDD[4] = c * (36 * H - 60 * x);
-  base_DDDD[5] = c * (60 * x - 24 * H);
-}
+    base_DDD[4] = c * ( 36 * Hx - 9 * H2 - 30 * x2 );
+    base_DDD[5] = c * ( 3 * H2 - 24 * Hx + 30 * x2 );
+  }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-inline void Hermite5_DDDDD(real_type /*x*/, real_type H, real_type base_DDDDD[6])
-{
-  // Potenze di H
-  const real_type H2 = H * H;
-  const real_type H4 = H2 * H2;
+  inline void Hermite5_DDDD( real_type x, real_type H, real_type base_DDDD[6] )
+  {
+    // Potenze di H
+    const real_type H2 = H * H;
+    const real_type H4 = H2 * H2;
 
-  // Inversi
-  const real_type invH  = real_type(1) / H;
-  const real_type invH4 = real_type(1) / H4;
+    // Inversi
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH4 = real_type( 1 ) / H4;
 
-  // Costanti
-  const real_type c0 = 720 * invH * invH4;
-  const real_type c1 = 360 * invH4;
-  const real_type c2 = 60  * invH / H2;
+    // Termine comune
+    const real_type common = invH * invH4 * ( 360 * H - 720 * x );
 
-  base_DDDDD[0] = -c0;
-  base_DDDDD[1] =  c0;
+    base_DDDD[0] = common;
+    base_DDDD[1] = -common;
 
-  base_DDDDD[2] = -c1;
-  base_DDDDD[3] = -c1;
+    base_DDDD[2] = invH4 * ( 192 * H - 360 * x );
+    base_DDDD[3] = invH4 * ( 168 * H - 360 * x );
 
-  base_DDDDD[4] = -c2;
-  base_DDDDD[5] =  c2;
-}
+    const real_type c = invH / H2;
+
+    base_DDDD[4] = c * ( 36 * H - 60 * x );
+    base_DDDD[5] = c * ( 60 * x - 24 * H );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  inline void Hermite5_DDDDD( real_type /*x*/, real_type H, real_type base_DDDDD[6] )
+  {
+    // Potenze di H
+    const real_type H2 = H * H;
+    const real_type H4 = H2 * H2;
+
+    // Inversi
+    const real_type invH  = real_type( 1 ) / H;
+    const real_type invH4 = real_type( 1 ) / H4;
+
+    // Costanti
+    const real_type c0 = 720 * invH * invH4;
+    const real_type c1 = 360 * invH4;
+    const real_type c2 = 60 * invH / H2;
+
+    base_DDDDD[0] = -c0;
+    base_DDDDD[1] = c0;
+
+    base_DDDDD[2] = -c1;
+    base_DDDDD[3] = -c1;
+
+    base_DDDDD[4] = -c2;
+    base_DDDDD[5] = c2;
+  }
 
   // --------------------------------------------------------------------------
 

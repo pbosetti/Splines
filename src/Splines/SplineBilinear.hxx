@@ -210,7 +210,8 @@ namespace Splines
     }
 
     template <typename T1, typename T2>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval( T1 const & x, T2 const & y ) const
+    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval( T1 const & x, T2 const & y )
+      const
     {
       autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> X{ x }, Y{ y };
       return eval( X, Y );
@@ -249,10 +250,7 @@ namespace Splines
     }
 
     //! Return spline type name
-    char const * type_name() const override
-    {
-      return "bilinear";
-    }
+    char const * type_name() const override { return "bilinear"; }
   };
 
 }  // namespace Splines
