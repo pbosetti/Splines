@@ -18,16 +18,13 @@
 \*--------------------------------------------------------------------------*/
 
 #ifdef __clang__
-#pragma clang diagnostic ignored "-Wc++98-compat-pedantic"
-#pragma clang diagnostic ignored "-Wc++98-compat"
-#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
-#pragma clang diagnostic ignored "-Wglobal-constructors"
-#pragma clang diagnostic ignored "-Wpoison-system-directories"
-#pragma clang diagnostic ignored "-Wundefined-func-template"
+#pragma clang diagnostic ignored "-Wsign-conversion"
 #endif
 
 #include "Splines.hh"
 #include "Utils_fmt.hh"
+#include "Utils_FD.hh"
+#include "Utils_TridiagonalSolver.hh"
 #include <set>
 
 /*\
@@ -44,209 +41,8 @@ using namespace std;  // load standard namspace
 namespace Splines
 {
 
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  static real_type deriv2_3p_L( real_type const SR, real_type const hR, real_type const SRR, real_type const hRR )
-  {
-    return 2 * ( SRR - SR ) / ( hR + hRR );
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  static real_type deriv2_4p_L(
-    real_type const SR,
-    real_type const hR,
-    real_type const SRR,
-    real_type const hRR,
-    real_type const SRRR,
-    real_type const hRRR )
-  {
-    real_type const t5{ hRR * hRR };
-    real_type const t12{ SR - SRR };
-    real_type const t13{ t12 * hRRR };
-    real_type const t19{ hR * hR };
-    real_type const t23{ hRRR * hRRR };
-    real_type const bot{ ( hRR + hRRR ) * ( hR + hRR + hRRR ) * ( hR + hRR ) };
-    real_type const top{ t5 * ( 6 * SRR - 4 * SR - 2 * SRRR ) + 6 * hRR * ( ( 2 * SRR - SR - SRRR ) * hR - t13 ) +
-                         4 * t19 * ( SRR - SRRR ) - 6 * hR * t13 - 2 * t12 * t23 };
-    return top / bot;
-  }
-
-  static real_type deriv2_5p_L(
-    real_type const SR,
-    real_type const hR,
-    real_type const SRR,
-    real_type const hRR,
-    real_type const SRRR,
-    real_type const hRRR,
-    real_type const SRRRR,
-    real_type const hRRRR )
-  {
-    real_type const t1{ SRRRR - SRRR };
-    real_type const t3{ hRR * hRR };
-    real_type const t4{ t3 * t3 };
-    real_type const t10{ 6 * SRRRR };
-    real_type const t16{ SR - 2 * SRR + SRRR };
-    real_type const t17{ t16 * hRRRR };
-    real_type const t25{ hRRR * hRRR };
-    real_type const t29{ 60 * SRRR };
-    real_type const t30{ 30 * SRRRR };
-    real_type const t35{ SR - ( 8.0 / 5.0 ) * SRR + ( 3.0 / 5.0 ) * SRRR };
-    real_type const t41{ hR * hR };
-    real_type const t49{ hRRRR * hRRRR };
-    real_type const t55{ 24 * SR };
-    real_type const t56{ 30 * SRR };
-    real_type const t60{ t25 * hRRR };
-    real_type const t75{ 12 * SR };
-    real_type const t76{ 60 * SRR };
-    real_type const t91{ t41 * hR };
-    real_type const t102{ t49 * hRRRR };
-    real_type const t105{ SR - ( 3.0 / 2.0 ) * SRR + SRRR / 2 };
-    real_type const t110{ SRR - SR };
-    real_type const t112{ t25 * t25 };
-    real_type const t118{ -t110 };
-    real_type const t119{ t118 * hRRRR };
-    real_type const t134{ t118 * t49 };
-    real_type const t142{ SR - ( 10.0 / 3.0 ) * SRR + ( 7.0 / 3.0 ) * SRRR };
-    real_type const t149{ t118 * t102 };
-    real_type const t156{ SRR - SRRR };
-    real_type const t159{ ( 5.0 / 2.0 ) * t41 * t156 * hRRRR };
-    real_type const MapleGenVar2 = 2 * t4 * hRR * t1 +
-                                   t4 * ( hRRR * ( 12 * SRR - 6 * SR - 12 * SRRR + t10 ) + 12 * hR * t1 - 6 * t17 );
-    real_type const MapleGenVar3 = MapleGenVar2 +
-                                   t3 * hRR *
-                                     ( t25 * ( 32 * SRR - 20 * SR - 18 * SRRR + t10 ) +
-                                       hRRR * ( hR * ( t30 - 18 * SR + 48 * SRR - t29 ) - 30 * hRRRR * t35 ) +
-                                       24 * t41 * t1 - 10 * t49 * t35 +
-                                       hRRRR * ( 48 * SRR - 18 * SR - 30 * SRRR ) * hR );
-    real_type const MapleGenVar1 =
-      MapleGenVar3 +
-      t3 *
-        ( t60 * ( 2 * SRRRR - t55 + t56 - 8 * SRRR ) +
-          t25 * ( ( -48 * SR + 96 * SRR - 72 * SRRR + 24 * SRRRR ) * hR - hRRRR * ( 48 * SR - 60 * SRR + 12 * SRRR ) ) +
-          hRRR *
-            ( t41 * ( 48 * SRRRR - 96 * SRRR - t75 + t76 ) - 72 * hR * t17 - t49 * ( 28 * SR - 36 * SRR + 8 * SRRR ) ) +
-          20 * t91 * t1 - 12 * t41 * ( SR - 5 * SRR + 4 * SRRR ) * hRRRR - 24 * hR * t16 * t49 - 4 * t105 * t102 ) +
-      hRR * ( 12 * t112 * t110 + t60 * ( hR * ( t76 - 42 * SR - 24 * SRRR + t10 ) - 30 * t119 ) +
-              t25 * ( t41 * ( 80 * SRR - 84 * SRRR + 28 * SRRRR - t55 ) -
-                      ( 84 * SR - 120 * SRR + 36 * SRRR ) * hRRRR * hR - 24 * t134 ) +
-              hRRR * ( t91 * ( t56 - t29 + t30 ) - 36 * t41 * hRRRR * t142 - 48 * hR * t105 * t49 - 6 * t149 ) -
-              ( 6 * ( t16 * t102 - t91 * t1 ) + 12 * ( hR * t142 * t49 - t159 ) ) * hR );
-    real_type const top = ( ( 28 * SRR - 12 * SR - 16 * SRRR ) * t49 * hRRR + 6 * t41 * t156 * hRRRR ) * t41 +
-                          ( ( ( 6 * SRR - 12 * SRRR + 6 * SRRRR ) * t91 + 12 * t159 - 6 * t149 ) * hRRR -
-                            12 * t112 * t118 - 24 * t25 * t134 - 30 * t60 * t119 + 10 * t41 * t156 * t49 ) *
-                            hR +
-                          2 * t112 * hRRR * t110 +
-                          ( ( 4 * SRRRR - t75 - 16 * SRRR + 24 * SRR ) * t60 - 24 * t25 * t17 + 4 * t156 * t102 ) *
-                            t41 +
-                          ( t91 * ( 20 * SRR - 30 * SRRR + 10 * SRRRR ) - 2 * t149 ) * t25 - 6 * t112 * t118 * hRRRR +
-                          MapleGenVar1 - 6 * t60 * t134;
-    real_type const bot = ( hR + hRR ) * ( hRRR + hRRRR ) * ( hRR + hRRR ) * ( hRR + hRRR + hRRRR ) *
-                          ( hR + hRR + hRRR ) * ( hR + hRR + hRRR + hRRRR );
-    return top / bot;
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  static real_type deriv2_3p_R( real_type const SL, real_type const hL, real_type const SLL, real_type const hLL )
-  {
-    return 2 * ( SL - SLL ) / ( hL + hLL );
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  static real_type deriv2_4p_R(
-    real_type const SL,
-    real_type const hL,
-    real_type const SLL,
-    real_type const hLL,
-    real_type const SLLL,
-    real_type const hLLL )
-  {
-    real_type const t5{ hLL * hLL };
-    real_type const t12{ SL - SLL };
-    real_type const t13{ t12 * hLLL };
-    real_type const t19{ hL * hL };
-    real_type const t23{ hLLL * hLLL };
-    real_type const bot{ ( hLL + hLLL ) * ( hL + hLL + hLLL ) * ( hL + hLL ) };
-    real_type const top{ t5 * ( 4 * SL - 6 * SLL + 2 * SLLL ) + 6 * hLL * ( ( SL + SLLL - 2 * SLL ) * hL + t13 ) +
-                         4 * t19 * ( SLLL - SLL ) + 6 * hL * t13 + 2 * t12 * t23 };
-    return top / bot;
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  static real_type deriv2_5p_R(
-    real_type const SL,
-    real_type const hL,
-    real_type const SLL,
-    real_type const hLL,
-    real_type const SLLL,
-    real_type const hLLL,
-    real_type const SLLLL,
-    real_type const hLLLL )
-  {
-    real_type const t1{ SLLL - SLLLL };
-    real_type const t3{ hLL * hLL };
-    real_type const t4{ t3 * t3 };
-    real_type const t10{ 6 * SLLLL };
-    real_type const t16{ SL - 2 * SLL + SLLL };
-    real_type const t17{ t16 * hLLLL };
-    real_type const t25{ hLLL * hLLL };
-    real_type const t29{ 60 * SLLL };
-    real_type const t30{ 30 * SLLLL };
-    real_type const t35{ SL - ( 8.0 / 5.0 ) * SLL + ( 3.0 / 5.0 ) * SLLL };
-    real_type const t41{ hL * hL };
-    real_type const t49{ hLLLL * hLLLL };
-    real_type const t55{ 24 * SL };
-    real_type const t56{ 30 * SLL };
-    real_type const t60{ t25 * hLLL };
-    real_type const t75{ 12 * SL };
-    real_type const t76{ 60 * SLL };
-    real_type const t91{ t41 * hL };
-    real_type const t102{ t49 * hLLLL };
-    real_type const t105{ SL - ( 3.0 / 2.0 ) * SLL + SLLL / 2 };
-    real_type const t110{ SL - SLL };
-    real_type const t112{ t25 * t25 };
-    real_type const t118{ t110 * hLLLL };
-    real_type const t133{ t110 * t49 };
-    real_type const t141{ SL - ( 10.0 / 3.0 ) * SLL + ( 7.0 / 3.0 ) * SLLL };
-    real_type const t148{ t110 * t102 };
-    real_type const t156{ t41 * ( SLL - SLLL ) * hLLLL };
-    real_type const t157{ ( 5.0 / 2.0 ) * t156 };
-    real_type const MapleGenVar2 = 2 * t4 * hLL * t1 +
-                                   t4 * ( hLLL * ( 6 * SL + 12 * ( SLLL - SLL ) - t10 ) + 12 * hL * t1 + 6 * t17 );
-    real_type const MapleGenVar3 = MapleGenVar2 +
-                                   t3 * hLL *
-                                     ( t25 * ( 20 * SL - 32 * SLL + 18 * SLLL - t10 ) +
-                                       hLLL * ( hL * ( 18 * SL - 48 * SLL + t29 - t30 ) + 30 * hLLLL * t35 ) +
-                                       24 * t41 * t1 + 10 * t49 * t35 +
-                                       ( 18 * SL - 48 * SLL + 30 * SLLL ) * hLLLL * hL );
-    real_type const MapleGenVar1 =
-      MapleGenVar3 +
-      t3 * ( t60 * ( t55 - t56 + 8 * SLLL - 2 * SLLLL ) +
-             t25 * ( ( 48 * SL - 96 * SLL + 72 * SLLL - 24 * SLLLL ) * hL + 12 * ( 4 * SL - 5 * SLL + SLLL ) * hLLLL ) +
-             hLLL * ( t41 * ( t75 - t76 + 96 * SLLL - 48 * SLLLL ) + 72 * hL * t17 +
-                      ( 28 * SL - 36 * SLL + 8 * SLLL ) * t49 ) +
-             20 * t91 * t1 + 24 * hL * t16 * t49 + 4 * t105 * t102 + 12 * t41 * ( SL - 5 * SLL + 4 * SLLL ) * hLLLL ) +
-      hLL * ( 12 * t112 * t110 + t60 * ( hL * ( 42 * SL - t76 + 24 * SLLL - t10 ) + 30 * t118 ) +
-              t25 * ( t41 * ( t55 - 80 * SLL + 84 * SLLL - 28 * SLLLL ) +
-                      12 * hLLLL * ( 7 * SL - 10 * SLL + 3 * SLLL ) * hL + 24 * t133 ) +
-              hLLL * ( t91 * ( t29 - t56 - t30 ) + 36 * t41 * t141 * hLLLL + 48 * hL * t105 * t49 + 6 * t148 ) +
-              6 * ( t91 * t1 + 2 * ( hL * t141 * t49 - t157 ) + t16 * t102 ) * hL );
-    real_type const top =
-      MapleGenVar1 + 2 * t112 * hLLL * t110 + 6 * t112 * t110 * ( 2 * hL + hLLLL ) -
-      t156 * ( hL + hLLLL ) * ( 6 * hL + 4 * hLLLL ) +
-      t60 * ( t41 * ( t75 - 24 * SLL + 16 * SLLL - 4 * SLLLL ) + 30 * hL * t118 + 6 * t133 ) +
-      t25 * ( t91 * ( 30 * SLLL - 20 * SLL - 10 * SLLLL ) + 24 * ( t41 * t17 + hL * t133 ) + 2 * t148 ) +
-      hLLL * hL *
-        ( 6 * t91 * ( 2 * SLLL - SLL - SLLLL ) - 12 * t157 + hL * ( 12 * SL - 28 * SLL + 16 * SLLL ) * t49 + 6 * t148 );
-    real_type const bot = ( hL + hLL ) * ( hLLL + hLLLL ) * ( hLL + hLLL ) * ( hLL + hLLL + hLLLL ) *
-                          ( hL + hLL + hLLL ) * ( hL + hLL + hLLL + hLLLL );
-    return top / bot;
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   /*\
      Sistema lineare da risolvere
@@ -261,202 +57,187 @@ namespace Splines
                 LL L D
 
   \*/
+void CubicSpline_build(
+  real_type const      X[],
+  real_type const      Y[],
+  real_type            Yp[],
+  real_type            Ypp[],
+  real_type            L[],
+  real_type            D[],
+  real_type            U[],
+  integer const        npts,
+  CubicSpline_BC const bc0,
+  CubicSpline_BC const bcn )
+{
+  UTILS_ASSERT( npts >= 2, "CubicSpline_build, npts={} must be >= 2\n", npts );
 
-  void CubicSpline_build(
-    real_type const      X[],
-    real_type const      Y[],
-    real_type            Yp[],
-    real_type            Ypp[],
-    real_type            L[],
-    real_type            D[],
-    real_type            U[],
-    integer const        npts,
-    CubicSpline_BC const bc0,
-    CubicSpline_BC const bcn )
+  integer const n{ npts - 1 };
+  real_type * Z{ Ypp };
+
+  for ( integer i = 1; i < n; ++i )
   {
-    UTILS_ASSERT( npts >= 2, "CubicSpline_build, npts={} must be >= 2\n", npts );
-
-    integer const n{ npts - 1 };
-    real_type *   Z{ Ypp };
-
-    for ( integer i = 1; i < n; ++i )
-    {
-      real_type const HL{ X[i] - X[i - 1] };
-      real_type const HR{ X[i + 1] - X[i] };
-      real_type const HH{ HL + HR };
-      L[i] = HL / HH;
-      U[i] = HR / HH;
-      D[i] = 2;
-      Z[i] = 6 * ( ( Y[i + 1] - Y[i] ) / HR - ( Y[i] - Y[i - 1] ) / HL ) / HH;
-    }
-
-    real_type UU{ 0 }, LL{ 0 };
-
-    switch ( bc0 )
-    {
-      case CubicSpline_BC::EXTRAPOLATE:
-        L[0] = 0;
-        D[0] = 1;
-        U[0] = 0;
-        if ( npts == 2 ) { Z[0] = 0; }
-        else if ( npts == 3 )
-        {
-          real_type const hR{ X[1] - X[0] };
-          real_type const hRR{ X[2] - X[1] };
-          real_type const SR{ ( Y[1] - Y[0] ) / hR };
-          real_type const SRR{ ( Y[2] - Y[1] ) / hRR };
-          Z[0] = deriv2_3p_L( SR, hR, SRR, hRR );
-        }
-        else if ( npts == 4 )
-        {
-          real_type const hR{ X[1] - X[0] };
-          real_type const hRR{ X[2] - X[1] };
-          real_type const hRRR{ X[3] - X[2] };
-          real_type const SR{ ( Y[1] - Y[0] ) / hR };
-          real_type const SRR{ ( Y[2] - Y[1] ) / hRR };
-          real_type const SRRR{ ( Y[3] - Y[2] ) / hRRR };
-          Z[0] = deriv2_4p_L( SR, hR, SRR, hRR, SRRR, hRRR );
-        }
-        else
-        {
-          real_type const hR{ X[1] - X[0] };
-          real_type const hRR{ X[2] - X[1] };
-          real_type const hRRR{ X[3] - X[2] };
-          real_type const hRRRR{ X[4] - X[3] };
-          real_type const SR{ ( Y[1] - Y[0] ) / hR };
-          real_type const SRR{ ( Y[2] - Y[1] ) / hRR };
-          real_type const SRRR{ ( Y[3] - Y[2] ) / hRRR };
-          real_type const SRRRR{ ( Y[4] - Y[3] ) / hRRRR };
-          Z[0] = deriv2_5p_L( SR, hR, SRR, hRR, SRRR, hRRR, SRRRR, hRRRR );
-        }
-        break;
-      case CubicSpline_BC::NATURAL:
-        L[0] = 0;
-        D[0] = 1;
-        U[0] = 0;
-        Z[0] = 0;
-        break;
-      case CubicSpline_BC::PARABOLIC_RUNOUT:
-        L[0] = 0;
-        D[0] = 1;
-        U[0] = -1;
-        Z[0] = 0;
-        break;
-      case CubicSpline_BC::NOT_A_KNOT:
-      {
-        real_type const r = ( X[1] - X[0] ) / ( X[2] - X[1] );
-        // v0 - v1*(1+r) + r*v2 == 0
-        L[0] = 0;
-        D[0] = 1;
-        U[0] = -( 1 + r );
-        UU   = r;
-        Z[0] = 0;
-      }
-      break;
-    }
-
-    switch ( bcn )
-    {
-      case CubicSpline_BC::EXTRAPOLATE:
-        L[n] = 0;
-        D[n] = 1;
-        U[n] = 0;
-        if ( npts == 2 ) { Z[n] = 0; }
-        else if ( npts == 3 )
-        {
-          real_type const hL{ X[n] - X[n - 1] };
-          real_type const hLL{ X[n - 1] - X[n - 2] };
-          real_type const SL{ ( Y[n] - Y[n - 1] ) / hL };
-          real_type const SLL{ ( Y[n - 1] - Y[n - 2] ) / hLL };
-          Z[n] = deriv2_3p_R( SL, hL, SLL, hLL );
-        }
-        else if ( npts == 4 )
-        {
-          real_type const hL{ X[n] - X[n - 1] };
-          real_type const hLL{ X[n - 1] - X[n - 2] };
-          real_type const hLLL{ X[n - 2] - X[n - 3] };
-          real_type const SL{ ( Y[n] - Y[n - 1] ) / hL };
-          real_type const SLL{ ( Y[n - 1] - Y[n - 2] ) / hLL };
-          real_type const SLLL{ ( Y[n - 2] - Y[n - 3] ) / hLLL };
-          Z[n] = deriv2_4p_R( SL, hL, SLL, hLL, SLLL, hLLL );
-        }
-        else
-        {
-          real_type const hL{ X[n] - X[n - 1] };
-          real_type const hLL{ X[n - 1] - X[n - 2] };
-          real_type const hLLL{ X[n - 2] - X[n - 3] };
-          real_type const hLLLL{ X[n - 3] - X[n - 4] };
-          real_type const SL{ ( Y[n] - Y[n - 1] ) / hL };
-          real_type const SLL{ ( Y[n - 1] - Y[n - 2] ) / hLL };
-          real_type const SLLL{ ( Y[n - 2] - Y[n - 3] ) / hLLL };
-          real_type const SLLLL{ ( Y[n - 3] - Y[n - 4] ) / hLLLL };
-          Z[n] = deriv2_5p_R( SL, hL, SLL, hLL, SLLL, hLLL, SLLLL, hLLLL );
-        }
-        break;
-      case CubicSpline_BC::NATURAL:
-        L[n] = 0;
-        D[n] = 1;
-        U[n] = 0;
-        Z[n] = 0;
-        break;
-      case CubicSpline_BC::PARABOLIC_RUNOUT:
-        L[n] = -1;
-        D[n] = 1;
-        U[n] = 0;
-        Z[n] = 0;
-        break;
-      case CubicSpline_BC::NOT_A_KNOT:
-      {
-        real_type const r = ( X[n - 1] - X[n - 2] ) / ( X[n] - X[n - 1] );
-        // r*v0 - v1*(1+r) + v2 == 0
-        U[n] = 0;
-        D[n] = 1;
-        L[n] = -( 1 + r );
-        LL   = r;
-        Z[n] = 0;
-      }
-      break;
-    }
-
-    if ( n > 2 )
-    {
-      Z[0] /= D[0];
-      U[0] /= D[0];
-      UU /= D[0];
-      D[1] -= L[1] * U[0];
-      U[1] -= L[1] * UU;
-      Z[1] -= L[1] * Z[0];
-      integer i = 1;
-      do
-      {
-        Z[i] /= D[i];
-        U[i] /= D[i];
-        D[i + 1] -= L[i + 1] * U[i];
-        Z[i + 1] -= L[i + 1] * Z[i];
-      } while ( ++i < n );
-
-      D[i] -= LL * U[i - 2];
-      Z[i] -= LL * Z[i - 2];
-
-      Z[i] /= D[i];
-
-      do
-      {
-        --i;
-        Z[i] -= U[i] * Z[i + 1];
-      } while ( i > 0 );
-
-      Z[0] -= UU * Z[2];
-    }
-
-    for ( integer i = 0; i < n; ++i )
-    {
-      real_type const DX = X[i + 1] - X[i];
-      Yp[i]              = ( Y[i + 1] - Y[i] ) / DX - ( 2 * Z[i] + Z[i + 1] ) * ( DX / 6 );
-    }
-    real_type const DX2 = ( X[n] - X[n - 1] ) / 2;
-    Yp[n]               = Yp[n - 1] + DX2 * ( Z[n - 1] + Z[n] );
+    real_type const HL{ X[i] - X[i - 1] };
+    real_type const HR{ X[i + 1] - X[i] };
+    real_type const HH{ HL + HR };
+    L[i] = HL / HH;
+    U[i] = HR / HH;
+    D[i] = 2;
+    Z[i] = 6 * ( ( Y[i + 1] - Y[i] ) / HR - ( Y[i] - Y[i - 1] ) / HL ) / HH;
   }
+
+  real_type UU{ 0 }, LL{ 0 };
+
+  switch ( bc0 )
+  {
+    case CubicSpline_BC::EXTRAPOLATE:
+      L[0] = 0;
+      D[0] = 1;
+      U[0] = 0;
+      if ( npts == 2 ) { 
+        Z[0] = 0; 
+      }
+      else if ( npts == 3 )
+      {
+        Z[0] = Utils::second_derivative_3p(X[0], Y[0], X[1], Y[1], X[2], Y[2]);
+      }
+      else if ( npts == 4 )
+      {
+        Z[0] = Utils::second_derivative_4p(X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3]);
+      }
+      else
+      {
+        Z[0] = Utils::second_derivative_5p(X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3], X[4], Y[4]);
+      }
+      break;
+    case CubicSpline_BC::NATURAL:
+      L[0] = 0;
+      D[0] = 1;
+      U[0] = 0;
+      Z[0] = 0;
+      break;
+    case CubicSpline_BC::PARABOLIC_RUNOUT:
+      L[0] = 0;
+      D[0] = 1;
+      U[0] = -1;
+      Z[0] = 0;
+      break;
+    case CubicSpline_BC::NOT_A_KNOT:
+    {
+      real_type const r = ( X[1] - X[0] ) / ( X[2] - X[1] );
+      L[0] = 0;
+      D[0] = 1;
+      U[0] = -( 1 + r );
+      UU    = r;  // elemento extra in posizione (0,2)
+      Z[0] = 0;
+    }
+    break;
+  }
+
+  switch ( bcn )
+  {
+    case CubicSpline_BC::EXTRAPOLATE:
+      L[n] = 0;
+      D[n] = 1;
+      U[n] = 0;
+      if ( npts == 2 ) { 
+        Z[n] = 0; 
+      }
+      else if ( npts == 3 )
+      {
+        Z[n] = Utils::second_derivative_3p(X[n], Y[n], X[n-1], Y[n-1], X[n-2], Y[n-2]);
+      }
+      else if ( npts == 4 )
+      {
+        Z[n] = Utils::second_derivative_4p(X[n], Y[n], X[n-1], Y[n-1], X[n-2], Y[n-2], X[n-3], Y[n-3]);
+      }
+      else
+      {
+        Z[n] = Utils::second_derivative_5p(X[n], Y[n], X[n-1], Y[n-1], X[n-2], Y[n-2], X[n-3], Y[n-3], X[n-4], Y[n-4]);
+      }
+      break;
+    case CubicSpline_BC::NATURAL:
+      L[n] = 0;
+      D[n] = 1;
+      U[n] = 0;
+      Z[n] = 0;
+      break;
+    case CubicSpline_BC::PARABOLIC_RUNOUT:
+      L[n] = -1;
+      D[n] = 1;
+      U[n] = 0;
+      Z[n] = 0;
+      break;
+    case CubicSpline_BC::NOT_A_KNOT:
+    {
+      real_type const r = ( X[n - 1] - X[n - 2] ) / ( X[n] - X[n - 1] );
+      U[n] = 0;
+      D[n] = 1;
+      L[n] = -( 1 + r );
+      LL    = r;  // elemento extra in posizione (n, n-2)
+      Z[n] = 0;
+    }
+    break;
+  }
+
+  // --- SEMPRE usa il solutore tridiagonale standard ---
+  integer const m{ npts };
+  Utils::TridiagonalSolver<real_type> solver;
+  solver.resize( m );
+
+  // Prepara i vettori per il sistema tridiagonale standard
+  // a[i] = L[i+1] per i=0..m-2 (primo elemento a[0] corrisponde a L[1])
+  // b[i] = D[i] per i=0..m-1
+  // c[i] = U[i] per i=0..m-2 (c[m-1] non usato)
+  Eigen::Matrix<real_type, Eigen::Dynamic, 1> a( m - 1 ), b( m ), c( m - 1 ), d( m );
+
+  for ( integer i = 0; i < m - 1; ++i ) a( i ) = L[i + 1];
+  for ( integer i = 0; i < m; ++i ) b( i ) = D[i];
+  for ( integer i = 0; i < m - 1; ++i ) c( i ) = U[i];
+  for ( integer i = 0; i < m; ++i ) d( i ) = Z[i];
+
+  // Elimina separatamente UU e LL se presenti
+  if ( UU != 0 ) {
+    // UU è in posizione (0,2) → modifica la prima equazione
+    // La prima equazione originale: D[0]*Z[0] + U[0]*Z[1] + UU*Z[2] = Z[0]
+    // Portiamo UU*Z[2] a destra:
+    d(0) -= UU * Z[2];  // Z[2] è ancora incognito, ma possiamo risolvere
+    // Ora la matrice è tridiagonale standard
+  }
+
+  if ( LL != 0 ) {
+    // LL è in posizione (n, n-2) → modifica l'ultima equazione
+    // L'ultima equazione originale: LL*Z[n-2] + L[n]*Z[n-1] + D[n]*Z[n] = Z[n]
+    // Portiamo LL*Z[n-2] a destra:
+    d(n) -= LL * Z[n-2];
+  }
+
+  // Fattorizza e risolvi il sistema tridiagonale standard
+  solver.factorize( a, b, c );
+  Eigen::Matrix<real_type, Eigen::Dynamic, 1> x;
+  solver.solve( a, b, d, x );
+
+  // Copia la soluzione in Z
+  for ( integer i = 0; i < m; ++i ) Z[i] = x( i );
+
+  // Se UU o LL erano non zero, dobbiamo rifare una iterazione per aggiornare
+  // i termini a destra che contenevano Z[2] e Z[n-2] ora noti
+  if ( UU != 0 || LL != 0 ) {
+    // Ricalcola i termini noti con i valori di Z appena trovati
+    if ( UU != 0 ) d(0) = Z[0] - UU * Z[2];
+    if ( LL != 0 ) d(n) = Z[n] - LL * Z[n-2];
+    // Risolvi di nuovo (la fattorizzazione è già stata fatta)
+    solver.solve( a, b, d, x );
+    for ( integer i = 0; i < m; ++i ) Z[i] = x( i );
+  }
+
+  for ( integer i = 0; i < n; ++i )
+  {
+    real_type const DX = X[i + 1] - X[i];
+    Yp[i]              = ( Y[i + 1] - Y[i] ) / DX - ( 2 * Z[i] + Z[i + 1] ) * ( DX / 6 );
+  }
+  real_type const DX2 = ( X[n] - X[n - 1] ) / 2;
+  Yp[n]               = Yp[n - 1] + DX2 * ( Z[n - 1] + Z[n] );
+}
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
