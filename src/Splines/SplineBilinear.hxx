@@ -181,7 +181,7 @@ namespace Splines
     //! \name Autodiff
     //!
     ///@{
-    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
+    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const override
     {
       using autodiff::dual1st;
       using autodiff::detail::val;
@@ -195,7 +195,7 @@ namespace Splines
       return res;
     }
 
-    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
+    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const override
     {
       using autodiff::derivative;
       using autodiff::dual2nd;

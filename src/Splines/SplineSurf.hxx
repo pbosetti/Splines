@@ -714,7 +714,7 @@ namespace Splines
 
 #ifdef AUTODIFF_SUPPORT
     // Metodi base per dual1st e dual2nd
-    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
+    virtual autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
     {
       using autodiff::dual1st;
       using autodiff::detail::val;
@@ -727,7 +727,7 @@ namespace Splines
       return res;
     }
 
-    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
+    virtual autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
     {
       using autodiff::derivative;
       using autodiff::dual2nd;

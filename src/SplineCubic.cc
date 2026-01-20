@@ -41,8 +41,8 @@ using namespace std;  // load standard namspace
 namespace Splines
 {
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   /*\
      Sistema lineare da risolvere
@@ -57,187 +57,190 @@ namespace Splines
                 LL L D
 
   \*/
-void CubicSpline_build(
-  real_type const      X[],
-  real_type const      Y[],
-  real_type            Yp[],
-  real_type            Ypp[],
-  real_type            L[],
-  real_type            D[],
-  real_type            U[],
-  integer const        npts,
-  CubicSpline_BC const bc0,
-  CubicSpline_BC const bcn )
-{
-  UTILS_ASSERT( npts >= 2, "CubicSpline_build, npts={} must be >= 2\n", npts );
-
-  integer const n{ npts - 1 };
-  real_type * Z{ Ypp };
-
-  for ( integer i = 1; i < n; ++i )
+  void CubicSpline_build(
+    real_type const      X[],
+    real_type const      Y[],
+    real_type            Yp[],
+    real_type            Ypp[],
+    real_type            L[],
+    real_type            D[],
+    real_type            U[],
+    integer const        npts,
+    CubicSpline_BC const bc0,
+    CubicSpline_BC const bcn )
   {
-    real_type const HL{ X[i] - X[i - 1] };
-    real_type const HR{ X[i + 1] - X[i] };
-    real_type const HH{ HL + HR };
-    L[i] = HL / HH;
-    U[i] = HR / HH;
-    D[i] = 2;
-    Z[i] = 6 * ( ( Y[i + 1] - Y[i] ) / HR - ( Y[i] - Y[i - 1] ) / HL ) / HH;
-  }
+    UTILS_ASSERT( npts >= 2, "CubicSpline_build, npts={} must be >= 2\n", npts );
 
-  real_type UU{ 0 }, LL{ 0 };
+    integer const n{ npts - 1 };
+    real_type *   Z{ Ypp };
 
-  switch ( bc0 )
-  {
-    case CubicSpline_BC::EXTRAPOLATE:
-      L[0] = 0;
-      D[0] = 1;
-      U[0] = 0;
-      if ( npts == 2 ) { 
-        Z[0] = 0; 
-      }
-      else if ( npts == 3 )
-      {
-        Z[0] = Utils::second_derivative_3p(X[0], Y[0], X[1], Y[1], X[2], Y[2]);
-      }
-      else if ( npts == 4 )
-      {
-        Z[0] = Utils::second_derivative_4p(X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3]);
-      }
-      else
-      {
-        Z[0] = Utils::second_derivative_5p(X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3], X[4], Y[4]);
-      }
-      break;
-    case CubicSpline_BC::NATURAL:
-      L[0] = 0;
-      D[0] = 1;
-      U[0] = 0;
-      Z[0] = 0;
-      break;
-    case CubicSpline_BC::PARABOLIC_RUNOUT:
-      L[0] = 0;
-      D[0] = 1;
-      U[0] = -1;
-      Z[0] = 0;
-      break;
-    case CubicSpline_BC::NOT_A_KNOT:
+    for ( integer i = 1; i < n; ++i )
     {
-      real_type const r = ( X[1] - X[0] ) / ( X[2] - X[1] );
-      L[0] = 0;
-      D[0] = 1;
-      U[0] = -( 1 + r );
-      UU    = r;  // elemento extra in posizione (0,2)
-      Z[0] = 0;
+      real_type const HL{ X[i] - X[i - 1] };
+      real_type const HR{ X[i + 1] - X[i] };
+      real_type const HH{ HL + HR };
+      L[i] = HL / HH;
+      U[i] = HR / HH;
+      D[i] = 2;
+      Z[i] = 6 * ( ( Y[i + 1] - Y[i] ) / HR - ( Y[i] - Y[i - 1] ) / HL ) / HH;
     }
-    break;
-  }
 
-  switch ( bcn )
-  {
-    case CubicSpline_BC::EXTRAPOLATE:
-      L[n] = 0;
-      D[n] = 1;
-      U[n] = 0;
-      if ( npts == 2 ) { 
-        Z[n] = 0; 
-      }
-      else if ( npts == 3 )
-      {
-        Z[n] = Utils::second_derivative_3p(X[n], Y[n], X[n-1], Y[n-1], X[n-2], Y[n-2]);
-      }
-      else if ( npts == 4 )
-      {
-        Z[n] = Utils::second_derivative_4p(X[n], Y[n], X[n-1], Y[n-1], X[n-2], Y[n-2], X[n-3], Y[n-3]);
-      }
-      else
-      {
-        Z[n] = Utils::second_derivative_5p(X[n], Y[n], X[n-1], Y[n-1], X[n-2], Y[n-2], X[n-3], Y[n-3], X[n-4], Y[n-4]);
-      }
-      break;
-    case CubicSpline_BC::NATURAL:
-      L[n] = 0;
-      D[n] = 1;
-      U[n] = 0;
-      Z[n] = 0;
-      break;
-    case CubicSpline_BC::PARABOLIC_RUNOUT:
-      L[n] = -1;
-      D[n] = 1;
-      U[n] = 0;
-      Z[n] = 0;
-      break;
-    case CubicSpline_BC::NOT_A_KNOT:
+    real_type UU{ 0 }, LL{ 0 };
+
+    switch ( bc0 )
     {
-      real_type const r = ( X[n - 1] - X[n - 2] ) / ( X[n] - X[n - 1] );
-      U[n] = 0;
-      D[n] = 1;
-      L[n] = -( 1 + r );
-      LL    = r;  // elemento extra in posizione (n, n-2)
-      Z[n] = 0;
+      case CubicSpline_BC::EXTRAPOLATE:
+        L[0] = 0;
+        D[0] = 1;
+        U[0] = 0;
+        if ( npts == 2 ) { Z[0] = 0; }
+        else if ( npts == 3 ) { Z[0] = Utils::second_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] ); }
+        else if ( npts == 4 ) { Z[0] = Utils::second_derivative_4p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3] ); }
+        else
+        {
+          Z[0] = Utils::second_derivative_5p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3], X[4], Y[4] );
+        }
+        break;
+      case CubicSpline_BC::NATURAL:
+        L[0] = 0;
+        D[0] = 1;
+        U[0] = 0;
+        Z[0] = 0;
+        break;
+      case CubicSpline_BC::PARABOLIC_RUNOUT:
+        L[0] = 0;
+        D[0] = 1;
+        U[0] = -1;
+        Z[0] = 0;
+        break;
+      case CubicSpline_BC::NOT_A_KNOT:
+      {
+        real_type const r = ( X[1] - X[0] ) / ( X[2] - X[1] );
+        L[0]              = 0;
+        D[0]              = 1;
+        U[0]              = -( 1 + r );
+        UU                = r;  // elemento extra in posizione (0,2)
+        Z[0]              = 0;
+      }
+      break;
     }
-    break;
-  }
 
-  // --- SEMPRE usa il solutore tridiagonale standard ---
-  integer const m{ npts };
-  Utils::TridiagonalSolver<real_type> solver;
-  solver.resize( m );
+    switch ( bcn )
+    {
+      case CubicSpline_BC::EXTRAPOLATE:
+        L[n] = 0;
+        D[n] = 1;
+        U[n] = 0;
+        if ( npts == 2 ) { Z[n] = 0; }
+        else if ( npts == 3 )
+        {
+          Z[n] = Utils::second_derivative_3p( X[n], Y[n], X[n - 1], Y[n - 1], X[n - 2], Y[n - 2] );
+        }
+        else if ( npts == 4 )
+        {
+          Z[n] = Utils::second_derivative_4p( X[n], Y[n], X[n - 1], Y[n - 1], X[n - 2], Y[n - 2], X[n - 3], Y[n - 3] );
+        }
+        else
+        {
+          Z[n] = Utils::second_derivative_5p(
+            X[n],
+            Y[n],
+            X[n - 1],
+            Y[n - 1],
+            X[n - 2],
+            Y[n - 2],
+            X[n - 3],
+            Y[n - 3],
+            X[n - 4],
+            Y[n - 4] );
+        }
+        break;
+      case CubicSpline_BC::NATURAL:
+        L[n] = 0;
+        D[n] = 1;
+        U[n] = 0;
+        Z[n] = 0;
+        break;
+      case CubicSpline_BC::PARABOLIC_RUNOUT:
+        L[n] = -1;
+        D[n] = 1;
+        U[n] = 0;
+        Z[n] = 0;
+        break;
+      case CubicSpline_BC::NOT_A_KNOT:
+      {
+        real_type const r = ( X[n - 1] - X[n - 2] ) / ( X[n] - X[n - 1] );
+        U[n]              = 0;
+        D[n]              = 1;
+        L[n]              = -( 1 + r );
+        LL                = r;  // elemento extra in posizione (n, n-2)
+        Z[n]              = 0;
+      }
+      break;
+    }
 
-  // Prepara i vettori per il sistema tridiagonale standard
-  // a[i] = L[i+1] per i=0..m-2 (primo elemento a[0] corrisponde a L[1])
-  // b[i] = D[i] per i=0..m-1
-  // c[i] = U[i] per i=0..m-2 (c[m-1] non usato)
-  Eigen::Matrix<real_type, Eigen::Dynamic, 1> a( m - 1 ), b( m ), c( m - 1 ), d( m );
+    // --- SEMPRE usa il solutore tridiagonale standard ---
+    integer const                       m{ npts };
+    Utils::TridiagonalSolver<real_type> solver;
+    solver.resize( m );
 
-  for ( integer i = 0; i < m - 1; ++i ) a( i ) = L[i + 1];
-  for ( integer i = 0; i < m; ++i ) b( i ) = D[i];
-  for ( integer i = 0; i < m - 1; ++i ) c( i ) = U[i];
-  for ( integer i = 0; i < m; ++i ) d( i ) = Z[i];
+    // Prepara i vettori per il sistema tridiagonale standard
+    // a[i] = L[i+1] per i=0..m-2 (primo elemento a[0] corrisponde a L[1])
+    // b[i] = D[i] per i=0..m-1
+    // c[i] = U[i] per i=0..m-2 (c[m-1] non usato)
+    Eigen::Matrix<real_type, Eigen::Dynamic, 1> a( m - 1 ), b( m ), c( m - 1 ), d( m );
 
-  // Elimina separatamente UU e LL se presenti
-  if ( UU != 0 ) {
-    // UU è in posizione (0,2) → modifica la prima equazione
-    // La prima equazione originale: D[0]*Z[0] + U[0]*Z[1] + UU*Z[2] = Z[0]
-    // Portiamo UU*Z[2] a destra:
-    d(0) -= UU * Z[2];  // Z[2] è ancora incognito, ma possiamo risolvere
-    // Ora la matrice è tridiagonale standard
-  }
+    for ( integer i = 0; i < m - 1; ++i ) a( i ) = L[i + 1];
+    for ( integer i = 0; i < m; ++i ) b( i ) = D[i];
+    for ( integer i = 0; i < m - 1; ++i ) c( i ) = U[i];
+    for ( integer i = 0; i < m; ++i ) d( i ) = Z[i];
 
-  if ( LL != 0 ) {
-    // LL è in posizione (n, n-2) → modifica l'ultima equazione
-    // L'ultima equazione originale: LL*Z[n-2] + L[n]*Z[n-1] + D[n]*Z[n] = Z[n]
-    // Portiamo LL*Z[n-2] a destra:
-    d(n) -= LL * Z[n-2];
-  }
+    // Elimina separatamente UU e LL se presenti
+    if ( UU != 0 )
+    {
+      // UU è in posizione (0,2) → modifica la prima equazione
+      // La prima equazione originale: D[0]*Z[0] + U[0]*Z[1] + UU*Z[2] = Z[0]
+      // Portiamo UU*Z[2] a destra:
+      d( 0 ) -= UU * Z[2];  // Z[2] è ancora incognito, ma possiamo risolvere
+      // Ora la matrice è tridiagonale standard
+    }
 
-  // Fattorizza e risolvi il sistema tridiagonale standard
-  solver.factorize( a, b, c );
-  Eigen::Matrix<real_type, Eigen::Dynamic, 1> x;
-  solver.solve( a, b, d, x );
+    if ( LL != 0 )
+    {
+      // LL è in posizione (n, n-2) → modifica l'ultima equazione
+      // L'ultima equazione originale: LL*Z[n-2] + L[n]*Z[n-1] + D[n]*Z[n] = Z[n]
+      // Portiamo LL*Z[n-2] a destra:
+      d( n ) -= LL * Z[n - 2];
+    }
 
-  // Copia la soluzione in Z
-  for ( integer i = 0; i < m; ++i ) Z[i] = x( i );
-
-  // Se UU o LL erano non zero, dobbiamo rifare una iterazione per aggiornare
-  // i termini a destra che contenevano Z[2] e Z[n-2] ora noti
-  if ( UU != 0 || LL != 0 ) {
-    // Ricalcola i termini noti con i valori di Z appena trovati
-    if ( UU != 0 ) d(0) = Z[0] - UU * Z[2];
-    if ( LL != 0 ) d(n) = Z[n] - LL * Z[n-2];
-    // Risolvi di nuovo (la fattorizzazione è già stata fatta)
+    // Fattorizza e risolvi il sistema tridiagonale standard
+    solver.factorize( a, b, c );
+    Eigen::Matrix<real_type, Eigen::Dynamic, 1> x;
     solver.solve( a, b, d, x );
-    for ( integer i = 0; i < m; ++i ) Z[i] = x( i );
-  }
 
-  for ( integer i = 0; i < n; ++i )
-  {
-    real_type const DX = X[i + 1] - X[i];
-    Yp[i]              = ( Y[i + 1] - Y[i] ) / DX - ( 2 * Z[i] + Z[i + 1] ) * ( DX / 6 );
+    // Copia la soluzione in Z
+    for ( integer i = 0; i < m; ++i ) Z[i] = x( i );
+
+    // Se UU o LL erano non zero, dobbiamo rifare una iterazione per aggiornare
+    // i termini a destra che contenevano Z[2] e Z[n-2] ora noti
+    if ( UU != 0 || LL != 0 )
+    {
+      // Ricalcola i termini noti con i valori di Z appena trovati
+      if ( UU != 0 ) d( 0 ) = Z[0] - UU * Z[2];
+      if ( LL != 0 ) d( n ) = Z[n] - LL * Z[n - 2];
+      // Risolvi di nuovo (la fattorizzazione è già stata fatta)
+      solver.solve( a, b, d, x );
+      for ( integer i = 0; i < m; ++i ) Z[i] = x( i );
+    }
+
+    for ( integer i = 0; i < n; ++i )
+    {
+      real_type const DX = X[i + 1] - X[i];
+      Yp[i]              = ( Y[i + 1] - Y[i] ) / DX - ( 2 * Z[i] + Z[i + 1] ) * ( DX / 6 );
+    }
+    real_type const DX2 = ( X[n] - X[n - 1] ) / 2;
+    Yp[n]               = Yp[n - 1] + DX2 * ( Z[n - 1] + Z[n] );
   }
-  real_type const DX2 = ( X[n] - X[n - 1] ) / 2;
-  Yp[n]               = Yp[n - 1] + DX2 * ( Z[n - 1] + Z[n] );
-}
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

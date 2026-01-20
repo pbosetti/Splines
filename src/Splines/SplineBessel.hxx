@@ -17,6 +17,11 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
+#pragma once
+
+#ifndef SPLINE_BESSEL_HXX
+#define SPLINE_BESSEL_HXX
+
 /*\
  |   ____                     _ ____        _ _
  |  | __ )  ___  ___ ___  ___| / ___| _ __ | (_)_ __   ___
@@ -163,3 +168,5 @@ namespace Splines
   };
 
 }  // namespace Splines
+
+#endif

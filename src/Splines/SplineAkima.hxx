@@ -17,6 +17,11 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
+#pragma once
+
+#ifndef SPLINE_AKIMA_HXX
+#define SPLINE_AKIMA_HXX
+
 /*\
  |      _    _    _                   ____        _ _
  |     / \  | | _(_)_ __ ___   __ _  / ___| _ __ | (_)_ __   ___
@@ -198,4 +203,8 @@ namespace Splines
 
 }  // namespace Splines
 
+#endif
+
+//
 // EOF: SplineAkima.hxx
+//

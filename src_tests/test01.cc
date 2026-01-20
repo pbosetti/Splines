@@ -67,100 +67,146 @@ static integer nn[] = { 11, 11, 11, 9, 12, 4 };
 // ============================================================================
 
 // Definizione del tipo per le funzioni test
-typedef real_type (*TestFunctionPtr)(real_type);
+typedef real_type ( *TestFunctionPtr )( real_type );
 
 // Test 1: Polinomio di grado 1: f(x) = 2x + 1
-real_type test_poly1(real_type x) { return 2.0*x + 1.0; }
-real_type test_poly1_D(real_type) { return 2.0; }
-real_type test_poly1_DD(real_type) { return 0.0; }
+real_type test_poly1( real_type x )
+{
+  return 2.0 * x + 1.0;
+}
+real_type test_poly1_D( real_type )
+{
+  return 2.0;
+}
+real_type test_poly1_DD( real_type )
+{
+  return 0.0;
+}
 
 // Test 2: Polinomio di grado 2: f(x) = x^2 - 3x + 2
-real_type test_poly2(real_type x) { return x*x - 3.0*x + 2.0; }
-real_type test_poly2_D(real_type x) { return 2.0*x - 3.0; }
-real_type test_poly2_DD(real_type) { return 2.0; }
+real_type test_poly2( real_type x )
+{
+  return x * x - 3.0 * x + 2.0;
+}
+real_type test_poly2_D( real_type x )
+{
+  return 2.0 * x - 3.0;
+}
+real_type test_poly2_DD( real_type )
+{
+  return 2.0;
+}
 
 // Test 3: Polinomio di grado 3: f(x) = x^3 - 2x^2 + x - 5
-real_type test_poly3(real_type x) { return x*x*x - 2.0*x*x + x - 5.0; }
-real_type test_poly3_D(real_type x) { return 3.0*x*x - 4.0*x + 1.0; }
-real_type test_poly3_DD(real_type x) { return 6.0*x - 4.0; }
+real_type test_poly3( real_type x )
+{
+  return x * x * x - 2.0 * x * x + x - 5.0;
+}
+real_type test_poly3_D( real_type x )
+{
+  return 3.0 * x * x - 4.0 * x + 1.0;
+}
+real_type test_poly3_DD( real_type x )
+{
+  return 6.0 * x - 4.0;
+}
 
 // Test 4: Polinomio di grado 4: f(x) = x^4 + x^3 - 2x^2 + 3x - 1
-real_type test_poly4(real_type x) { 
-    real_type x2 = x*x;
-    return x2*x2 + x*x2 - 2.0*x2 + 3.0*x - 1.0; 
+real_type test_poly4( real_type x )
+{
+  real_type x2 = x * x;
+  return x2 * x2 + x * x2 - 2.0 * x2 + 3.0 * x - 1.0;
 }
-real_type test_poly4_D(real_type x) { 
-    return 4.0*x*x*x + 3.0*x*x - 4.0*x + 3.0; 
+real_type test_poly4_D( real_type x )
+{
+  return 4.0 * x * x * x + 3.0 * x * x - 4.0 * x + 3.0;
 }
-real_type test_poly4_DD(real_type x) { 
-    return 12.0*x*x + 6.0*x - 4.0; 
+real_type test_poly4_DD( real_type x )
+{
+  return 12.0 * x * x + 6.0 * x - 4.0;
 }
 
 // Test 5: Funzione esponenziale/trigonometrica: f(x) = exp(x) + sin(2x)
-real_type test_exp_trig(real_type x) { return exp(x) + sin(2.0*x); }
-real_type test_exp_trig_D(real_type x) { return exp(x) + 2.0*cos(2.0*x); }
-real_type test_exp_trig_DD(real_type x) { return exp(x) - 4.0*sin(2.0*x); }
+real_type test_exp_trig( real_type x )
+{
+  return exp( x ) + sin( 2.0 * x );
+}
+real_type test_exp_trig_D( real_type x )
+{
+  return exp( x ) + 2.0 * cos( 2.0 * x );
+}
+real_type test_exp_trig_DD( real_type x )
+{
+  return exp( x ) - 4.0 * sin( 2.0 * x );
+}
 
 // Struttura per informazioni sulle funzioni test
-struct TestFunctionInfo {
-    string name;
-    TestFunctionPtr func;
-    TestFunctionPtr deriv;
-    TestFunctionPtr deriv2;
-    real_type a;  // dominio minimo
-    real_type b;  // dominio massimo
-    
-    TestFunctionInfo(const string& n, TestFunctionPtr f, TestFunctionPtr d, TestFunctionPtr d2, 
-                     real_type min_domain, real_type max_domain)
-        : name(n), func(f), deriv(d), deriv2(d2), a(min_domain), b(max_domain) {}
+struct TestFunctionInfo
+{
+  string          name;
+  TestFunctionPtr func;
+  TestFunctionPtr deriv;
+  TestFunctionPtr deriv2;
+  real_type       a;  // dominio minimo
+  real_type       b;  // dominio massimo
+
+  TestFunctionInfo(
+    const string &  n,
+    TestFunctionPtr f,
+    TestFunctionPtr d,
+    TestFunctionPtr d2,
+    real_type       min_domain,
+    real_type       max_domain )
+    : name( n ), func( f ), deriv( d ), deriv2( d2 ), a( min_domain ), b( max_domain )
+  {
+  }
 };
 
 // Array di funzioni test
 vector<TestFunctionInfo> test_functions = {
-    {"Polynomial deg 1", test_poly1, test_poly1_D, test_poly1_DD, -2.0, 2.0},
-    {"Polynomial deg 2", test_poly2, test_poly2_D, test_poly2_DD, -2.0, 2.0},
-    {"Polynomial deg 3", test_poly3, test_poly3_D, test_poly3_DD, -2.0, 2.0},
-    {"Polynomial deg 4", test_poly4, test_poly4_D, test_poly4_DD, -2.0, 2.0},
-    {"Exp + sin(2x)", test_exp_trig, test_exp_trig_D, test_exp_trig_DD, 0.0, 2.0}
+  { "Polynomial deg 1", test_poly1, test_poly1_D, test_poly1_DD, -2.0, 2.0 },
+  { "Polynomial deg 2", test_poly2, test_poly2_D, test_poly2_DD, -2.0, 2.0 },
+  { "Polynomial deg 3", test_poly3, test_poly3_D, test_poly3_DD, -2.0, 2.0 },
+  { "Polynomial deg 4", test_poly4, test_poly4_D, test_poly4_DD, -2.0, 2.0 },
+  { "Exp + sin(2x)", test_exp_trig, test_exp_trig_D, test_exp_trig_DD, 0.0, 2.0 }
 };
 
 // Generate uniform mesh
-vector<real_type> generate_uniform_mesh(real_type a, real_type b, integer N) {
-    vector<real_type> mesh(N);
-    for (integer i = 0; i < N; ++i) {
-        mesh[i] = a + i * (b - a) / (N - 1);
-    }
-    return mesh;
+vector<real_type> generate_uniform_mesh( real_type a, real_type b, integer N )
+{
+  vector<real_type> mesh( N );
+  for ( integer i = 0; i < N; ++i ) { mesh[i] = a + i * ( b - a ) / ( N - 1 ); }
+  return mesh;
 }
 
 // Generate non-uniform mesh (random with refinement)
-vector<real_type> generate_nonuniform_mesh(real_type a, real_type b, integer N) {
-    vector<real_type> mesh(N);
-    
-    // Seed for random number generation
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    
-    if (N <= 2) {
-        mesh[0] = a;
-        if (N > 1) mesh[N-1] = b;
-        return mesh;
-    }
-    
-    // Start with endpoints
+vector<real_type> generate_nonuniform_mesh( real_type a, real_type b, integer N )
+{
+  vector<real_type> mesh( N );
+
+  // Seed for random number generation
+  static std::random_device rd;
+  static std::mt19937       gen( rd() );
+
+  if ( N <= 2 )
+  {
     mesh[0] = a;
-    mesh[N-1] = b;
-    
-    // Generate random interior points
-    std::uniform_real_distribution<real_type> dis(a, b);
-    for (integer i = 1; i < N-1; ++i) {
-        mesh[i] = dis(gen);
-    }
-    
-    // Sort the points
-    sort(mesh.begin(), mesh.end());
-    
+    if ( N > 1 ) mesh[N - 1] = b;
     return mesh;
+  }
+
+  // Start with endpoints
+  mesh[0]     = a;
+  mesh[N - 1] = b;
+
+  // Generate random interior points
+  std::uniform_real_distribution<real_type> dis( a, b );
+  for ( integer i = 1; i < N - 1; ++i ) { mesh[i] = dis( gen ); }
+
+  // Sort the points
+  sort( mesh.begin(), mesh.end() );
+
+  return mesh;
 }
 
 // ============================================================================
@@ -168,83 +214,92 @@ vector<real_type> generate_nonuniform_mesh(real_type a, real_type b, integer N) 
 // ============================================================================
 
 // Generate a base non-uniform mesh
-vector<real_type> generate_base_nonuniform_mesh(real_type a, real_type b, integer base_N) {
-    vector<real_type> mesh(base_N);
-    
-    if (base_N <= 2) {
-        mesh[0] = a;
-        if (base_N > 1) mesh[base_N-1] = b;
-        return mesh;
-    }
-    
-    // Start with endpoints
+vector<real_type> generate_base_nonuniform_mesh( real_type a, real_type b, integer base_N )
+{
+  vector<real_type> mesh( base_N );
+
+  if ( base_N <= 2 )
+  {
     mesh[0] = a;
-    mesh[base_N-1] = b;
-    
-    // Use Chebyshev-like distribution for interior points
-    // This creates a non-uniform mesh with more points near boundaries
-    for (integer i = 1; i < base_N-1; ++i) {
-        real_type theta = M_PI * i / (base_N - 1);
-        mesh[i] = a + 0.5 * (b - a) * (1 - cos(theta));
-    }
-    
+    if ( base_N > 1 ) mesh[base_N - 1] = b;
     return mesh;
+  }
+
+  // Start with endpoints
+  mesh[0]          = a;
+  mesh[base_N - 1] = b;
+
+  // Use Chebyshev-like distribution for interior points
+  // This creates a non-uniform mesh with more points near boundaries
+  for ( integer i = 1; i < base_N - 1; ++i )
+  {
+    real_type theta = M_PI * i / ( base_N - 1 );
+    mesh[i]         = a + 0.5 * ( b - a ) * ( 1 - cos( theta ) );
+  }
+
+  return mesh;
 }
 
 // Refine mesh by inserting midpoints of all intervals
-vector<real_type> refine_mesh_by_insertion(const vector<real_type>& old_mesh) {
-    integer old_N = static_cast<integer>(old_mesh.size());
-    integer new_N = 2 * old_N - 1;  // Inserting midpoints
-    vector<real_type> new_mesh(new_N);
-    
-    for (integer i = 0; i < old_N - 1; ++i) {
-        // Original point
-        new_mesh[2*i] = old_mesh[i];
-        // Midpoint
-        new_mesh[2*i + 1] = 0.5 * (old_mesh[i] + old_mesh[i+1]);
-    }
-    // Last point
-    new_mesh[new_N - 1] = old_mesh[old_N - 1];
-    
-    return new_mesh;
+vector<real_type> refine_mesh_by_insertion( const vector<real_type> & old_mesh )
+{
+  integer           old_N = static_cast<integer>( old_mesh.size() );
+  integer           new_N = 2 * old_N - 1;  // Inserting midpoints
+  vector<real_type> new_mesh( new_N );
+
+  for ( integer i = 0; i < old_N - 1; ++i )
+  {
+    // Original point
+    new_mesh[2 * i] = old_mesh[i];
+    // Midpoint
+    new_mesh[2 * i + 1] = 0.5 * ( old_mesh[i] + old_mesh[i + 1] );
+  }
+  // Last point
+  new_mesh[new_N - 1] = old_mesh[old_N - 1];
+
+  return new_mesh;
 }
 
 // Calculate characteristic mesh size (average interval length)
-real_type compute_mesh_size(const vector<real_type>& X) {
-    integer N = static_cast<integer>(X.size());
-    real_type total_length = 0.0;
-    
-    for (integer i = 0; i < N - 1; ++i) {
-        total_length += (X[i+1] - X[i]);
-    }
-    
-    return total_length / (N - 1);  // Average interval length
+real_type compute_mesh_size( const vector<real_type> & X )
+{
+  integer   N            = static_cast<integer>( X.size() );
+  real_type total_length = 0.0;
+
+  for ( integer i = 0; i < N - 1; ++i ) { total_length += ( X[i + 1] - X[i] ); }
+
+  return total_length / ( N - 1 );  // Average interval length
 }
 
 // Calculate maximum interval length
-real_type compute_max_interval_length(const vector<real_type>& X) {
-    integer N = static_cast<integer>(X.size());
-    real_type max_length = 0.0;
-    
-    for (integer i = 0; i < N - 1; ++i) {
-        real_type length = X[i+1] - X[i];
-        if (length > max_length) max_length = length;
-    }
-    
-    return max_length;
+real_type compute_max_interval_length( const vector<real_type> & X )
+{
+  integer   N          = static_cast<integer>( X.size() );
+  real_type max_length = 0.0;
+
+  for ( integer i = 0; i < N - 1; ++i )
+  {
+    real_type length = X[i + 1] - X[i];
+    if ( length > max_length ) max_length = length;
+  }
+
+  return max_length;
 }
 
 // Structure to hold convergence results
-struct ConvergenceResult {
-    string spline_name;
-    string test_func_name;
-    vector<integer> N_values;
-    vector<real_type> errors;
-    vector<real_type> orders;
-    vector<real_type> mesh_sizes;  // Added to store actual mesh sizes
-    
-    ConvergenceResult(const string& spline, const string& test_func) 
-        : spline_name(spline), test_func_name(test_func) {}
+struct ConvergenceResult
+{
+  string            spline_name;
+  string            test_func_name;
+  vector<integer>   N_values;
+  vector<real_type> errors;
+  vector<real_type> orders;
+  vector<real_type> mesh_sizes;  // Added to store actual mesh sizes
+
+  ConvergenceResult( const string & spline, const string & test_func )
+    : spline_name( spline ), test_func_name( test_func )
+  {
+  }
 };
 
 // ============================================================================
@@ -618,344 +673,402 @@ template <typename SplineType> DerivativeErrors1D check_derivatives_1D(
 
 // Compute maximum error between spline and exact function
 real_type compute_max_error(
-    Splines::Spline & spline,
-    const vector<real_type> & eval_points,
-    TestFunctionPtr exact_func
-) {
-    real_type max_error = 0.0;
-    for (const auto& x : eval_points) {
-        real_type error = abs(spline(x) - exact_func(x));
-        if (error > max_error) max_error = error;
-    }
-    return max_error;
+  Splines::Spline &         spline,
+  const vector<real_type> & eval_points,
+  TestFunctionPtr           exact_func )
+{
+  real_type max_error = 0.0;
+  for ( const auto & x : eval_points )
+  {
+    real_type error = abs( spline( x ) - exact_func( x ) );
+    if ( error > max_error ) max_error = error;
+  }
+  return max_error;
 }
 
 // Perform convergence test with hierarchical refinement for non-uniform meshes
-template<typename SplineType>
-ConvergenceResult test_convergence_nonuniform_hierarchical(
-    const string& spline_name,
-    const string& test_func_name,
-    real_type a,
-    real_type b,
-    TestFunctionPtr test_func,
-    integer base_N = 5,      // Starting mesh size
-    integer num_levels = 7,  // Number of refinement levels (5, 9, 17, 33, 65, 129, 257)
-    integer Neval = 10000
-) {
-    ConvergenceResult result(spline_name, test_func_name);
-    
-    // Generate base non-uniform mesh
-    vector<real_type> current_mesh = generate_base_nonuniform_mesh(a, b, base_N);
-    
-    // Generate evaluation points once
-    vector<real_type> eval_points = generate_uniform_mesh(a, b, Neval);
-    
-    for (integer level = 0; level < num_levels; ++level) {
-        integer N = static_cast<integer>(current_mesh.size());
-        
-        // Evaluate function at mesh points
-        vector<real_type> Y(N);
-        for (integer i = 0; i < N; ++i) {
-            Y[i] = test_func(current_mesh[i]);
-        }
-        
-        // Build spline
-        SplineType spline;
-        spline.build(current_mesh, Y);
-        
-        // Compute maximum error
-        real_type error = compute_max_error(spline, eval_points, test_func);
-        
-        // Compute mesh size (average interval length)
-        real_type h = compute_mesh_size(current_mesh);
-        
-        // Store results
-        result.N_values.push_back(N);
-        result.errors.push_back(error);
-        result.mesh_sizes.push_back(h);
-        
-        // Refine mesh for next level (except for the last iteration)
-        if (level < num_levels - 1) {
-            current_mesh = refine_mesh_by_insertion(current_mesh);
-        }
+template <typename SplineType> ConvergenceResult test_convergence_nonuniform_hierarchical(
+  const string &  spline_name,
+  const string &  test_func_name,
+  real_type       a,
+  real_type       b,
+  TestFunctionPtr test_func,
+  integer         base_N     = 5,  // Starting mesh size
+  integer         num_levels = 7,  // Number of refinement levels (5, 9, 17, 33, 65, 129, 257)
+  integer         Neval      = 10000 )
+{
+  ConvergenceResult result( spline_name, test_func_name );
+
+  // Generate base non-uniform mesh
+  vector<real_type> current_mesh = generate_base_nonuniform_mesh( a, b, base_N );
+
+  // Generate evaluation points once
+  vector<real_type> eval_points = generate_uniform_mesh( a, b, Neval );
+
+  for ( integer level = 0; level < num_levels; ++level )
+  {
+    integer N = static_cast<integer>( current_mesh.size() );
+
+    // Evaluate function at mesh points
+    vector<real_type> Y( N );
+    for ( integer i = 0; i < N; ++i ) { Y[i] = test_func( current_mesh[i] ); }
+
+    // Build spline
+    SplineType spline;
+    spline.build( current_mesh, Y );
+
+    // Compute maximum error
+    real_type error = compute_max_error( spline, eval_points, test_func );
+
+    // Compute mesh size (average interval length)
+    real_type h = compute_mesh_size( current_mesh );
+
+    // Store results
+    result.N_values.push_back( N );
+    result.errors.push_back( error );
+    result.mesh_sizes.push_back( h );
+
+    // Refine mesh for next level (except for the last iteration)
+    if ( level < num_levels - 1 ) { current_mesh = refine_mesh_by_insertion( current_mesh ); }
+  }
+
+  // Compute convergence orders using actual mesh sizes
+  for ( size_t i = 0; i < result.errors.size() - 1; ++i )
+  {
+    real_type h1 = result.mesh_sizes[i];
+    real_type h2 = result.mesh_sizes[i + 1];
+
+    // Check for very small errors
+    if ( result.errors[i] < 1e-15 && result.errors[i + 1] < 1e-15 )
+    {
+      result.orders.push_back( std::numeric_limits<real_type>::infinity() );
     }
-    
-    // Compute convergence orders using actual mesh sizes
-    for (size_t i = 0; i < result.errors.size() - 1; ++i) {
-        real_type h1 = result.mesh_sizes[i];
-        real_type h2 = result.mesh_sizes[i+1];
-        
-        // Check for very small errors
-        if (result.errors[i] < 1e-15 && result.errors[i+1] < 1e-15) {
-            result.orders.push_back(std::numeric_limits<real_type>::infinity());
-        } else if (result.errors[i+1] < 1e-15) {
-            result.orders.push_back(std::numeric_limits<real_type>::infinity());
-        } else if (result.errors[i] < 1e-15) {
-            result.orders.push_back(std::numeric_limits<real_type>::quiet_NaN());
-        } else {
-            // Compute order using actual mesh sizes
-            real_type order = log(result.errors[i] / result.errors[i+1]) / log(h1 / h2);
-            result.orders.push_back(order);
-        }
+    else if ( result.errors[i + 1] < 1e-15 ) { result.orders.push_back( std::numeric_limits<real_type>::infinity() ); }
+    else if ( result.errors[i] < 1e-15 ) { result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() ); }
+    else
+    {
+      // Compute order using actual mesh sizes
+      real_type order = log( result.errors[i] / result.errors[i + 1] ) / log( h1 / h2 );
+      result.orders.push_back( order );
     }
-    // Add NaN for the last point
-    result.orders.push_back(std::numeric_limits<real_type>::quiet_NaN());
-    
-    return result;
+  }
+  // Add NaN for the last point
+  result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() );
+
+  return result;
 }
 
 // Perform convergence test for a specific spline type and test function
-template<typename SplineType>
-ConvergenceResult test_convergence(
-    const string& spline_name,
-    const string& test_func_name,
-    bool uniform_mesh,
-    real_type a,
-    real_type b,
-    TestFunctionPtr test_func,
-    integer Neval = 10000
-) {
-    if (uniform_mesh) {
-        // Original uniform mesh test
-        ConvergenceResult result(spline_name, test_func_name);
-        
-        // Sequence of mesh sizes (increasing)
-        vector<integer> N_seq = {5, 9, 17, 33, 65, 129, 257};
-        
-        // Generate evaluation points once - using more points for accurate error estimation
-        vector<real_type> eval_points = generate_uniform_mesh(a, b, Neval);
-        
-        for (integer N : N_seq) {
-            // Generate mesh
-            vector<real_type> X = generate_uniform_mesh(a, b, N);
-            
-            // Evaluate function at mesh points
-            vector<real_type> Y(N);
-            for (integer i = 0; i < N; ++i) {
-                Y[i] = test_func(X[i]);
-            }
-            
-            // Build spline
-            SplineType spline;
-            spline.build(X, Y);
-            
-            // Compute maximum error
-            real_type error = compute_max_error(spline, eval_points, test_func);
-            
-            // Compute mesh size (average interval length)
-            real_type h = compute_mesh_size(X);
-            
-            result.N_values.push_back(N);
-            result.errors.push_back(error);
-            result.mesh_sizes.push_back(h);
-        }
-        
-        // Compute convergence orders with protection against division by zero
-        for (size_t i = 0; i < result.errors.size() - 1; ++i) {
-            real_type h1 = result.mesh_sizes[i];
-            real_type h2 = result.mesh_sizes[i+1];
-            
-            // Check for very small errors (machine precision)
-            if (result.errors[i] < 1e-15 && result.errors[i+1] < 1e-15) {
-                // Both errors are essentially zero, convergence is perfect
-                result.orders.push_back(std::numeric_limits<real_type>::infinity());
-            } else if (result.errors[i+1] < 1e-15) {
-                // Only the finer mesh error is zero, perfect convergence
-                result.orders.push_back(std::numeric_limits<real_type>::infinity());
-            } else if (result.errors[i] < 1e-15) {
-                // Coarse mesh error is zero but fine mesh is not (shouldn't happen)
-                result.orders.push_back(std::numeric_limits<real_type>::quiet_NaN());
-            } else {
-                // Normal case
-                real_type order = log(result.errors[i] / result.errors[i+1]) / log(h1 / h2);
-                result.orders.push_back(order);
-            }
-        }
-        // Add NaN for the last point (no next point to compare with)
-        result.orders.push_back(std::numeric_limits<real_type>::quiet_NaN());
-        
-        return result;
-    } else {
-        // Use hierarchical refinement for non-uniform meshes
-        return test_convergence_nonuniform_hierarchical<SplineType>(
-            spline_name, test_func_name, a, b, test_func, 5, 7, Neval);
+template <typename SplineType> ConvergenceResult test_convergence(
+  const string &  spline_name,
+  const string &  test_func_name,
+  bool            uniform_mesh,
+  real_type       a,
+  real_type       b,
+  TestFunctionPtr test_func,
+  integer         Neval = 10000 )
+{
+  if ( uniform_mesh )
+  {
+    // Original uniform mesh test
+    ConvergenceResult result( spline_name, test_func_name );
+
+    // Sequence of mesh sizes (increasing)
+    vector<integer> N_seq = { 5, 9, 17, 33, 65, 129, 257 };
+
+    // Generate evaluation points once - using more points for accurate error estimation
+    vector<real_type> eval_points = generate_uniform_mesh( a, b, Neval );
+
+    for ( integer N : N_seq )
+    {
+      // Generate mesh
+      vector<real_type> X = generate_uniform_mesh( a, b, N );
+
+      // Evaluate function at mesh points
+      vector<real_type> Y( N );
+      for ( integer i = 0; i < N; ++i ) { Y[i] = test_func( X[i] ); }
+
+      // Build spline
+      SplineType spline;
+      spline.build( X, Y );
+
+      // Compute maximum error
+      real_type error = compute_max_error( spline, eval_points, test_func );
+
+      // Compute mesh size (average interval length)
+      real_type h = compute_mesh_size( X );
+
+      result.N_values.push_back( N );
+      result.errors.push_back( error );
+      result.mesh_sizes.push_back( h );
     }
+
+    // Compute convergence orders with protection against division by zero
+    for ( size_t i = 0; i < result.errors.size() - 1; ++i )
+    {
+      real_type h1 = result.mesh_sizes[i];
+      real_type h2 = result.mesh_sizes[i + 1];
+
+      // Check for very small errors (machine precision)
+      if ( result.errors[i] < 1e-15 && result.errors[i + 1] < 1e-15 )
+      {
+        // Both errors are essentially zero, convergence is perfect
+        result.orders.push_back( std::numeric_limits<real_type>::infinity() );
+      }
+      else if ( result.errors[i + 1] < 1e-15 )
+      {
+        // Only the finer mesh error is zero, perfect convergence
+        result.orders.push_back( std::numeric_limits<real_type>::infinity() );
+      }
+      else if ( result.errors[i] < 1e-15 )
+      {
+        // Coarse mesh error is zero but fine mesh is not (shouldn't happen)
+        result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() );
+      }
+      else
+      {
+        // Normal case
+        real_type order = log( result.errors[i] / result.errors[i + 1] ) / log( h1 / h2 );
+        result.orders.push_back( order );
+      }
+    }
+    // Add NaN for the last point (no next point to compare with)
+    result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() );
+
+    return result;
+  }
+  else
+  {
+    // Use hierarchical refinement for non-uniform meshes
+    return test_convergence_nonuniform_hierarchical<SplineType>(
+      spline_name,
+      test_func_name,
+      a,
+      b,
+      test_func,
+      5,
+      7,
+      Neval );
+  }
 }
 
 // Print convergence table for a specific test function
 void print_convergence_table_for_test(
-    const vector<ConvergenceResult>& results,
-    const string& mesh_type,
-    const TestFunctionInfo& test_func,
-    integer func_index)
+  const vector<ConvergenceResult> & results,
+  const string &                    mesh_type,
+  const TestFunctionInfo &          test_func,
+  integer                           func_index )
 {
-    print_header(fmt::format("CONVERGENCE TEST - {} - {} MESH", test_func.name, mesh_type));
-    
-    // Determine if we should show mesh sizes
-    bool show_mesh_size = true;  // Always show mesh size now
-    
-    if (show_mesh_size) {
-        // Table with mesh size column
-        fmt::print(
-            fg(fmt::color::yellow) | fmt::emphasis::bold,
-            "\n"
-            "┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐\n"
-            "│ {:^12} │ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
-            "├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n",
-            "Spline Type", "N points", "Mesh Size", "Max Error", "Order"
-        );
-    } else {
-        // Table without mesh size column
-        fmt::print(
-            fg(fmt::color::yellow) | fmt::emphasis::bold,
-            "\n"
-            "┌──────────────┬──────────────┬──────────────┬──────────────┐\n"
-            "│ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
-            "├──────────────┼──────────────┼──────────────┼──────────────┤\n",
-            "Spline Type", "N points", "Max Error", "Order"
-        );
-    }
-    
-    // Table rows
-    for (size_t i = 0; i < results.size(); ++i) {
-        const auto& res = results[i];
-        
-        for (size_t j = 0; j < res.N_values.size(); ++j) {
-            auto row_color = (j % 2 == 0) ? fg(fmt::color::light_green) : fg(fmt::color::light_blue);
-            
-            fmt::print(row_color, "│ {:<12} ", (j == 0) ? res.spline_name : "");
-            fmt::print(row_color, "│ {:>12} ", res.N_values[j]);
-            
-            if (show_mesh_size) {
-                // Show mesh size
-                real_type h = res.mesh_sizes[j];
-                fmt::print(row_color, "│ {:>12.3e} ", h);
-            }
-            
-            // Color code error based on magnitude
-            real_type error = res.errors[j];
-            fmt::text_style error_style = fg(fmt::color::white);
-            if (error < 1e-10) error_style = fg(fmt::color::green) | fmt::emphasis::bold;
-            else if (error < 1e-8) error_style = fg(fmt::color::light_green);
-            else if (error < 1e-6) error_style = fg(fmt::color::yellow);
-            else if (error < 1e-4) error_style = fg(fmt::color::orange);
-            else error_style = fg(fmt::color::red) | fmt::emphasis::bold;
-            
-            fmt::print(error_style, "│ {:>12.3e} ", error);
-            
-            // Print order (if available)
-            if (!isnan(res.orders[j])) {
-                if (isinf(res.orders[j])) {
-                    fmt::print(fg(fmt::color::green) | fmt::emphasis::bold, "│ {:>12} ", "INF");
-                } else {
-                    real_type order = res.orders[j];
-                    fmt::text_style order_style = fg(fmt::color::white);
-                    if (order > 5.0) order_style = fg(fmt::color::green) | fmt::emphasis::bold;
-                    else if (order > 3.0) order_style = fg(fmt::color::light_green);
-                    else if (order > 1.5) order_style = fg(fmt::color::yellow);
-                    else if (order > 0.5) order_style = fg(fmt::color::orange);
-                    else order_style = fg(fmt::color::red) | fmt::emphasis::bold;
-                    
-                    fmt::print(order_style, "│ {:>12.2f} ", order);
-                }
-            } else {
-                fmt::print(row_color, "│ {:>12} ", "---");
-            }
-            
-            fmt::print("│\n");
+  print_header( fmt::format( "CONVERGENCE TEST - {} - {} MESH", test_func.name, mesh_type ) );
+
+  // Determine if we should show mesh sizes
+  bool show_mesh_size = true;  // Always show mesh size now
+
+  if ( show_mesh_size )
+  {
+    // Table with mesh size column
+    fmt::print(
+      fg( fmt::color::yellow ) | fmt::emphasis::bold,
+      "\n"
+      "┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐\n"
+      "│ {:^12} │ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
+      "├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n",
+      "Spline Type",
+      "N points",
+      "Mesh Size",
+      "Max Error",
+      "Order" );
+  }
+  else
+  {
+    // Table without mesh size column
+    fmt::print(
+      fg( fmt::color::yellow ) | fmt::emphasis::bold,
+      "\n"
+      "┌──────────────┬──────────────┬──────────────┬──────────────┐\n"
+      "│ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
+      "├──────────────┼──────────────┼──────────────┼──────────────┤\n",
+      "Spline Type",
+      "N points",
+      "Max Error",
+      "Order" );
+  }
+
+  // Table rows
+  for ( size_t i = 0; i < results.size(); ++i )
+  {
+    const auto & res = results[i];
+
+    for ( size_t j = 0; j < res.N_values.size(); ++j )
+    {
+      auto row_color = ( j % 2 == 0 ) ? fg( fmt::color::light_green ) : fg( fmt::color::light_blue );
+
+      fmt::print( row_color, "│ {:<12} ", ( j == 0 ) ? res.spline_name : "" );
+      fmt::print( row_color, "│ {:>12} ", res.N_values[j] );
+
+      if ( show_mesh_size )
+      {
+        // Show mesh size
+        real_type h = res.mesh_sizes[j];
+        fmt::print( row_color, "│ {:>12.3e} ", h );
+      }
+
+      // Color code error based on magnitude
+      real_type       error       = res.errors[j];
+      fmt::text_style error_style = fg( fmt::color::white );
+      if ( error < 1e-10 )
+        error_style = fg( fmt::color::green ) | fmt::emphasis::bold;
+      else if ( error < 1e-8 )
+        error_style = fg( fmt::color::light_green );
+      else if ( error < 1e-6 )
+        error_style = fg( fmt::color::yellow );
+      else if ( error < 1e-4 )
+        error_style = fg( fmt::color::orange );
+      else
+        error_style = fg( fmt::color::red ) | fmt::emphasis::bold;
+
+      fmt::print( error_style, "│ {:>12.3e} ", error );
+
+      // Print order (if available)
+      if ( !isnan( res.orders[j] ) )
+      {
+        if ( isinf( res.orders[j] ) )
+        {
+          fmt::print( fg( fmt::color::green ) | fmt::emphasis::bold, "│ {:>12} ", "INF" );
         }
-        
-        if (i < results.size() - 1) {
-            if (show_mesh_size) {
-                fmt::print(
-                    fg(fmt::color::yellow),
-                    "├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n"
-                );
-            } else {
-                fmt::print(
-                    fg(fmt::color::yellow),
-                    "├──────────────┼──────────────┼──────────────┼──────────────┤\n"
-                );
-            }
+        else
+        {
+          real_type       order       = res.orders[j];
+          fmt::text_style order_style = fg( fmt::color::white );
+          if ( order > 5.0 )
+            order_style = fg( fmt::color::green ) | fmt::emphasis::bold;
+          else if ( order > 3.0 )
+            order_style = fg( fmt::color::light_green );
+          else if ( order > 1.5 )
+            order_style = fg( fmt::color::yellow );
+          else if ( order > 0.5 )
+            order_style = fg( fmt::color::orange );
+          else
+            order_style = fg( fmt::color::red ) | fmt::emphasis::bold;
+
+          fmt::print( order_style, "│ {:>12.2f} ", order );
         }
+      }
+      else
+      {
+        fmt::print( row_color, "│ {:>12} ", "---" );
+      }
+
+      fmt::print( "│\n" );
     }
-    
-    if (show_mesh_size) {
+
+    if ( i < results.size() - 1 )
+    {
+      if ( show_mesh_size )
+      {
         fmt::print(
-            fg(fmt::color::yellow) | fmt::emphasis::bold,
-            "└──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘\n"
-        );
-    } else {
-        fmt::print(
-            fg(fmt::color::yellow) | fmt::emphasis::bold,
-            "└──────────────┴──────────────┴──────────────┴──────────────┘\n"
-        );
+          fg( fmt::color::yellow ),
+          "├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n" );
+      }
+      else
+      {
+        fmt::print( fg( fmt::color::yellow ), "├──────────────┼──────────────┼──────────────┼──────────────┤\n" );
+      }
     }
-    
-    // Summary statistics
-    fmt::print(fg(fmt::color::cyan), "\n📊 SUMMARY STATISTICS FOR {}:\n", test_func.name);
-    
-    for (const auto& res : results) {
-        // Compute average order (excluding first, last, and infinite/NaN values)
-        real_type avg_order = 0.0;
-        integer count = 0;
-        for (size_t i = 1; i < res.orders.size() - 2; ++i) {
-            if (!isnan(res.orders[i]) && !isinf(res.orders[i])) {
-                avg_order += res.orders[i];
-                count++;
-            }
-        }
-        
-        if (count > 0) {
-            avg_order /= count;
-            fmt::print(
-                fg(fmt::color::white),
-                "  {}: Average convergence order = {:.3f}\n",
-                res.spline_name, avg_order
-            );
-        } else if (res.errors.back() < 1e-10) {
-            // If the last error is very small, the spline interpolates exactly
-            fmt::print(
-                fg(fmt::color::green) | fmt::emphasis::bold,
-                "  {}: Exact interpolation (error < 1e-10)\n",
-                res.spline_name
-            );
-        }
+  }
+
+  if ( show_mesh_size )
+  {
+    fmt::print(
+      fg( fmt::color::yellow ) | fmt::emphasis::bold,
+      "└──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘\n" );
+  }
+  else
+  {
+    fmt::print(
+      fg( fmt::color::yellow ) | fmt::emphasis::bold,
+      "└──────────────┴──────────────┴──────────────┴──────────────┘\n" );
+  }
+
+  // Summary statistics
+  fmt::print( fg( fmt::color::cyan ), "\n📊 SUMMARY STATISTICS FOR {}:\n", test_func.name );
+
+  for ( const auto & res : results )
+  {
+    // Compute average order (excluding first, last, and infinite/NaN values)
+    real_type avg_order = 0.0;
+    integer   count     = 0;
+    for ( size_t i = 1; i < res.orders.size() - 2; ++i )
+    {
+      if ( !isnan( res.orders[i] ) && !isinf( res.orders[i] ) )
+      {
+        avg_order += res.orders[i];
+        count++;
+      }
     }
-    
-    // Theoretical expectations based on polynomial degree
-    fmt::print(fg(fmt::color::cyan), "\n🎯 THEORETICAL EXPECTATIONS:\n");
-    
-    // Determine polynomial degree from function name
-    if (test_func.name.find("deg 1") != string::npos) {
-        fmt::print(fg(fmt::color::white),
-            "  Linear polynomial (deg 1):\n"
-            "    • Linear splines should interpolate exactly (error ~0)\n"
-            "    • Cubic and higher splines should interpolate exactly (error ~0)\n");
-    } else if (test_func.name.find("deg 2") != string::npos) {
-        fmt::print(fg(fmt::color::white),
-            "  Quadratic polynomial (deg 2):\n"
-            "    • Linear splines: O(h²) convergence\n"
-            "    • Cubic and higher splines should interpolate exactly (error ~0)\n");
-    } else if (test_func.name.find("deg 3") != string::npos) {
-        fmt::print(fg(fmt::color::white),
-            "  Cubic polynomial (deg 3):\n"
-            "    • Linear splines: O(h²) convergence\n"
-            "    • Cubic splines should interpolate exactly (error ~0)\n"
-            "    • Quintic and higher splines should interpolate exactly (error ~0)\n");
-    } else if (test_func.name.find("deg 4") != string::npos) {
-        fmt::print(fg(fmt::color::white),
-            "  Quartic polynomial (deg 4):\n"
-            "    • Linear splines: O(h²) convergence\n"
-            "    • Cubic splines: O(h⁴) convergence\n"
-            "    • Quintic splines should interpolate exactly (error ~0)\n");
-    } else if (test_func.name.find("Exp") != string::npos) {
-        fmt::print(fg(fmt::color::white),
-            "  Exponential + trigonometric function:\n"
-            "    • Linear splines: O(h²) convergence\n"
-            "    • Cubic splines: O(h⁴) convergence\n"
-            "    • Quintic splines: O(h⁶) convergence\n");
+
+    if ( count > 0 )
+    {
+      avg_order /= count;
+      fmt::print( fg( fmt::color::white ), "  {}: Average convergence order = {:.3f}\n", res.spline_name, avg_order );
     }
+    else if ( res.errors.back() < 1e-10 )
+    {
+      // If the last error is very small, the spline interpolates exactly
+      fmt::print(
+        fg( fmt::color::green ) | fmt::emphasis::bold,
+        "  {}: Exact interpolation (error < 1e-10)\n",
+        res.spline_name );
+    }
+  }
+
+  // Theoretical expectations based on polynomial degree
+  fmt::print( fg( fmt::color::cyan ), "\n🎯 THEORETICAL EXPECTATIONS:\n" );
+
+  // Determine polynomial degree from function name
+  if ( test_func.name.find( "deg 1" ) != string::npos )
+  {
+    fmt::print(
+      fg( fmt::color::white ),
+      "  Linear polynomial (deg 1):\n"
+      "    • Linear splines should interpolate exactly (error ~0)\n"
+      "    • Cubic and higher splines should interpolate exactly (error ~0)\n" );
+  }
+  else if ( test_func.name.find( "deg 2" ) != string::npos )
+  {
+    fmt::print(
+      fg( fmt::color::white ),
+      "  Quadratic polynomial (deg 2):\n"
+      "    • Linear splines: O(h²) convergence\n"
+      "    • Cubic and higher splines should interpolate exactly (error ~0)\n" );
+  }
+  else if ( test_func.name.find( "deg 3" ) != string::npos )
+  {
+    fmt::print(
+      fg( fmt::color::white ),
+      "  Cubic polynomial (deg 3):\n"
+      "    • Linear splines: O(h²) convergence\n"
+      "    • Cubic splines should interpolate exactly (error ~0)\n"
+      "    • Quintic and higher splines should interpolate exactly (error ~0)\n" );
+  }
+  else if ( test_func.name.find( "deg 4" ) != string::npos )
+  {
+    fmt::print(
+      fg( fmt::color::white ),
+      "  Quartic polynomial (deg 4):\n"
+      "    • Linear splines: O(h²) convergence\n"
+      "    • Cubic splines: O(h⁴) convergence\n"
+      "    • Quintic splines should interpolate exactly (error ~0)\n" );
+  }
+  else if ( test_func.name.find( "Exp" ) != string::npos )
+  {
+    fmt::print(
+      fg( fmt::color::white ),
+      "  Exponential + trigonometric function:\n"
+      "    • Linear splines: O(h²) convergence\n"
+      "    • Cubic splines: O(h⁴) convergence\n"
+      "    • Quintic splines: O(h⁶) convergence\n" );
+  }
 }
 
 // ============================================================================
@@ -1016,62 +1129,71 @@ void print_results_table( const vector<SplineResult> & results, integer dataset 
 // ============================================================================
 
 void test_derivative_accuracy_for_function(
-    const TestFunctionInfo& test_func,
-    const string& spline_name,
-    Splines::Spline* spline_ptr,
-    integer N_fine = 64
-) {
-    auto X_fine = generate_uniform_mesh(test_func.a, test_func.b, N_fine);
-    vector<real_type> Y_fine(N_fine);
-    for (integer i = 0; i < N_fine; ++i) {
-        Y_fine[i] = test_func.func(X_fine[i]);
-    }
-    
-    spline_ptr->build(X_fine, Y_fine);
-    
-    fmt::print(fg(fmt::color::white), "\nDerivative accuracy test ({} spline, {}, N={}):\n", 
-               spline_name, test_func.name, N_fine);
-    fmt::print(fg(fmt::color::cyan), "{:>10} {:>15} {:>15} {:>15} {:>15}\n",
-               "x", "f'(exact)", "f'(spline)", "f''(exact)", "f''(spline)");
-    
-    // Test points across the domain
-    integer num_test_points = 5;
-    vector<real_type> test_points(num_test_points);
-    for (integer i = 0; i < num_test_points; ++i) {
-        test_points[i] = test_func.a + i * (test_func.b - test_func.a) / (num_test_points - 1);
-    }
-    
-    real_type max_D_error = 0.0, max_DD_error = 0.0;
-    
-    for (real_type x : test_points) {
-        real_type D_exact = test_func.deriv(x);
-        real_type DD_exact = test_func.deriv2(x);
-        real_type D_spline = spline_ptr->D(x);
-        real_type DD_spline = spline_ptr->DD(x);
-        
-        real_type D_error = abs(D_exact - D_spline);
-        real_type DD_error = abs(DD_exact - DD_spline);
-        
-        max_D_error = max(max_D_error, D_error);
-        max_DD_error = max(max_DD_error, DD_error);
-        
-        auto D_style = (D_error < 1e-6) ? fg(fmt::color::green) : 
-                      (D_error < 1e-4) ? fg(fmt::color::yellow) : 
-                      fg(fmt::color::red);
-        
-        auto DD_style = (DD_error < 1e-4) ? fg(fmt::color::green) : 
-                       (DD_error < 1e-2) ? fg(fmt::color::yellow) : 
-                       fg(fmt::color::red);
-        
-        fmt::print(fg(fmt::color::white), "{:>10.3f} ", x);
-        fmt::print(fg(fmt::color::light_blue), "{:>15.6f} ", D_exact);
-        fmt::print(D_style, "{:>15.6f} ", D_spline);
-        fmt::print(fg(fmt::color::light_blue), "{:>15.6f} ", DD_exact);
-        fmt::print(DD_style, "{:>15.6f}\n", DD_spline);
-    }
-    
-    fmt::print(fg(fmt::color::white), "  Max errors: D = {:.2e}, DD = {:.2e}\n", 
-               max_D_error, max_DD_error);
+  const TestFunctionInfo & test_func,
+  const string &           spline_name,
+  Splines::Spline *        spline_ptr,
+  integer                  N_fine = 64 )
+{
+  auto              X_fine = generate_uniform_mesh( test_func.a, test_func.b, N_fine );
+  vector<real_type> Y_fine( N_fine );
+  for ( integer i = 0; i < N_fine; ++i ) { Y_fine[i] = test_func.func( X_fine[i] ); }
+
+  spline_ptr->build( X_fine, Y_fine );
+
+  fmt::print(
+    fg( fmt::color::white ),
+    "\nDerivative accuracy test ({} spline, {}, N={}):\n",
+    spline_name,
+    test_func.name,
+    N_fine );
+  fmt::print(
+    fg( fmt::color::cyan ),
+    "{:>10} {:>15} {:>15} {:>15} {:>15}\n",
+    "x",
+    "f'(exact)",
+    "f'(spline)",
+    "f''(exact)",
+    "f''(spline)" );
+
+  // Test points across the domain
+  integer           num_test_points = 5;
+  vector<real_type> test_points( num_test_points );
+  for ( integer i = 0; i < num_test_points; ++i )
+  {
+    test_points[i] = test_func.a + i * ( test_func.b - test_func.a ) / ( num_test_points - 1 );
+  }
+
+  real_type max_D_error = 0.0, max_DD_error = 0.0;
+
+  for ( real_type x : test_points )
+  {
+    real_type D_exact   = test_func.deriv( x );
+    real_type DD_exact  = test_func.deriv2( x );
+    real_type D_spline  = spline_ptr->D( x );
+    real_type DD_spline = spline_ptr->DD( x );
+
+    real_type D_error  = abs( D_exact - D_spline );
+    real_type DD_error = abs( DD_exact - DD_spline );
+
+    max_D_error  = max( max_D_error, D_error );
+    max_DD_error = max( max_DD_error, DD_error );
+
+    auto D_style = ( D_error < 1e-6 )   ? fg( fmt::color::green )
+                   : ( D_error < 1e-4 ) ? fg( fmt::color::yellow )
+                                        : fg( fmt::color::red );
+
+    auto DD_style = ( DD_error < 1e-4 )   ? fg( fmt::color::green )
+                    : ( DD_error < 1e-2 ) ? fg( fmt::color::yellow )
+                                          : fg( fmt::color::red );
+
+    fmt::print( fg( fmt::color::white ), "{:>10.3f} ", x );
+    fmt::print( fg( fmt::color::light_blue ), "{:>15.6f} ", D_exact );
+    fmt::print( D_style, "{:>15.6f} ", D_spline );
+    fmt::print( fg( fmt::color::light_blue ), "{:>15.6f} ", DD_exact );
+    fmt::print( DD_style, "{:>15.6f}\n", DD_spline );
+  }
+
+  fmt::print( fg( fmt::color::white ), "  Max errors: D = {:.2e}, DD = {:.2e}\n", max_D_error, max_DD_error );
 }
 
 // ============================================================================
@@ -1243,175 +1365,195 @@ int main()
   // ==========================================================================
   // CONVERGENCE TESTS - ALL SPLINE TYPES FOR 5 DIFFERENT TEST FUNCTIONS
   // ==========================================================================
-  
-  print_header("CONVERGENCE ANALYSIS - 5 TEST FUNCTIONS");
-  
+
+  print_header( "CONVERGENCE ANALYSIS - 5 TEST FUNCTIONS" );
+
   // Test each function
-  integer SZ = static_cast<integer>(test_functions.size());
-  for (integer func_idx = 0; func_idx < SZ; ++func_idx) {
-    const auto& test_func = test_functions[func_idx];
-    
-    fmt::print(fg(fmt::color::magenta) | fmt::emphasis::bold,
-               "\n\n🔬 TEST FUNCTION {}: {}\n", func_idx + 1, test_func.name);
-    
+  integer SZ = static_cast<integer>( test_functions.size() );
+  for ( integer func_idx = 0; func_idx < SZ; ++func_idx )
+  {
+    const auto & test_func = test_functions[func_idx];
+
+    fmt::print(
+      fg( fmt::color::magenta ) | fmt::emphasis::bold,
+      "\n\n🔬 TEST FUNCTION {}: {}\n",
+      func_idx + 1,
+      test_func.name );
+
     // Test uniform mesh convergence - ALL TYPES
-    fmt::print(fg(fmt::color::cyan), "\n📈 UNIFORM MESH CONVERGENCE:\n");
-    
+    fmt::print( fg( fmt::color::cyan ), "\n📈 UNIFORM MESH CONVERGENCE:\n" );
+
     vector<ConvergenceResult> uniform_results;
-    
+
     // Test ALL spline types on uniform mesh
-    uniform_results.push_back(test_convergence<Splines::LinearSpline>(
-        "Linear", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    uniform_results.push_back(test_convergence<Splines::ConstantSpline>(
-        "Constant", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    uniform_results.push_back(test_convergence<Splines::CubicSpline>(
-        "Cubic", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    uniform_results.push_back(test_convergence<Splines::AkimaSpline>(
-        "Akima", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    uniform_results.push_back(test_convergence<Splines::BesselSpline>(
-        "Bessel", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    uniform_results.push_back(test_convergence<Splines::PchipSpline>(
-        "Pchip", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    uniform_results.push_back(test_convergence<Splines::QuinticSpline>(
-        "Quintic", test_func.name, true, test_func.a, test_func.b, test_func.func));
-    
-    print_convergence_table_for_test(uniform_results, "UNIFORM", test_func, func_idx);
-    
+    uniform_results.push_back(
+      test_convergence<
+        Splines::LinearSpline>( "Linear", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<
+        Splines::ConstantSpline>( "Constant", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<
+        Splines::CubicSpline>( "Cubic", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<
+        Splines::AkimaSpline>( "Akima", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<
+        Splines::BesselSpline>( "Bessel", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<
+        Splines::PchipSpline>( "Pchip", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<
+        Splines::QuinticSpline>( "Quintic", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+
+    print_convergence_table_for_test( uniform_results, "UNIFORM", test_func, func_idx );
+
     // Test non-uniform mesh convergence - ALL TYPES
-    fmt::print(fg(fmt::color::cyan), "\n📈 NON-UNIFORM MESH CONVERGENCE:\n");
-    
+    fmt::print( fg( fmt::color::cyan ), "\n📈 NON-UNIFORM MESH CONVERGENCE:\n" );
+
     vector<ConvergenceResult> nonuniform_results;
-    
+
     // Test ALL spline types on non-uniform mesh
-    nonuniform_results.push_back(test_convergence<Splines::LinearSpline>(
-        "Linear", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    nonuniform_results.push_back(test_convergence<Splines::ConstantSpline>(
-        "Constant", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    nonuniform_results.push_back(test_convergence<Splines::CubicSpline>(
-        "Cubic", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    nonuniform_results.push_back(test_convergence<Splines::AkimaSpline>(
-        "Akima", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    nonuniform_results.push_back(test_convergence<Splines::BesselSpline>(
-        "Bessel", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    nonuniform_results.push_back(test_convergence<Splines::PchipSpline>(
-        "Pchip", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    nonuniform_results.push_back(test_convergence<Splines::QuinticSpline>(
-        "Quintic", test_func.name, false, test_func.a, test_func.b, test_func.func));
-    
-    print_convergence_table_for_test(nonuniform_results, "NON-UNIFORM", test_func, func_idx);
-    
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::LinearSpline>( "Linear", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::ConstantSpline>( "Constant", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::CubicSpline>( "Cubic", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::AkimaSpline>( "Akima", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::BesselSpline>( "Bessel", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::PchipSpline>( "Pchip", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<
+        Splines::QuinticSpline>( "Quintic", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+
+    print_convergence_table_for_test( nonuniform_results, "NON-UNIFORM", test_func, func_idx );
+
     // Test derivative accuracy for this function (only for selected splines)
-    if (func_idx == SZ-1) {  // Test only for the last function (exp+trig)
-      fmt::print(fg(fmt::color::magenta), "\n🔍 DERIVATIVE ACCURACY FOR {}:\n", test_func.name);
-      
+    if ( func_idx == SZ - 1 )
+    {  // Test only for the last function (exp+trig)
+      fmt::print( fg( fmt::color::magenta ), "\n🔍 DERIVATIVE ACCURACY FOR {}:\n", test_func.name );
+
       // Test derivative accuracy for different spline types
-      test_derivative_accuracy_for_function(test_func, "Cubic", new Splines::CubicSpline());
-      test_derivative_accuracy_for_function(test_func, "Bessel", new Splines::BesselSpline());
-      test_derivative_accuracy_for_function(test_func, "Quintic", new Splines::QuinticSpline());
+      test_derivative_accuracy_for_function( test_func, "Cubic", new Splines::CubicSpline() );
+      test_derivative_accuracy_for_function( test_func, "Bessel", new Splines::BesselSpline() );
+      test_derivative_accuracy_for_function( test_func, "Quintic", new Splines::QuinticSpline() );
     }
   }
-  
+
   // ========================================================================
   // GLOBAL SUMMARY AND THEORETICAL EXPECTATIONS
   // ========================================================================
-  
-  print_header("GLOBAL SUMMARY AND THEORETICAL EXPECTATIONS");
-  
-  fmt::print(fg(fmt::color::cyan),
-      "\n"
-      "THEORETICAL CONVERGENCE ORDERS SUMMARY:\n"
-      "  • Linear splines:     O(h²) for function, O(h) for derivative\n"
-      "  • Constant splines:   O(h)  for function (piecewise constant)\n"
-      "  • Cubic splines:      O(h⁴) for function, O(h³) for derivative\n"
-      "  • Akima splines:      O(h²) for function, O(h) for derivative\n"
-      "  • Bessel splines:     Similar to Cubic splines\n"
-      "  • Pchip splines:      O(h⁴) for function (shape-preserving)\n"
-      "  • Quintic splines:    O(h⁶) for function, O(h⁵) for derivative\n"
-      "\n"
-      "EXACT INTERPOLATION PROPERTIES:\n"
-      "  • Linear splines:     Exact for polynomials of degree ≤ 1\n"
-      "  • Cubic splines:      Exact for polynomials of degree ≤ 3\n"
-      "  • Quintic splines:    Exact for polynomials of degree ≤ 5\n"
-      "\n"
-      "NON-UNIFORM MESH EFFECTS:\n"
-      "  • Non-uniform meshes generally maintain theoretical orders\n"
-      "  • May affect constant factors in error bounds\n"
-      "  • Shape-preserving splines (Pchip, Akima) may be more sensitive\n"
-  );
-  
+
+  print_header( "GLOBAL SUMMARY AND THEORETICAL EXPECTATIONS" );
+
+  fmt::print(
+    fg( fmt::color::cyan ),
+    "\n"
+    "THEORETICAL CONVERGENCE ORDERS SUMMARY:\n"
+    "  • Linear splines:     O(h²) for function, O(h) for derivative\n"
+    "  • Constant splines:   O(h)  for function (piecewise constant)\n"
+    "  • Cubic splines:      O(h⁴) for function, O(h³) for derivative\n"
+    "  • Akima splines:      O(h²) for function, O(h) for derivative\n"
+    "  • Bessel splines:     Similar to Cubic splines\n"
+    "  • Pchip splines:      O(h⁴) for function (shape-preserving)\n"
+    "  • Quintic splines:    O(h⁶) for function, O(h⁵) for derivative\n"
+    "\n"
+    "EXACT INTERPOLATION PROPERTIES:\n"
+    "  • Linear splines:     Exact for polynomials of degree ≤ 1\n"
+    "  • Cubic splines:      Exact for polynomials of degree ≤ 3\n"
+    "  • Quintic splines:    Exact for polynomials of degree ≤ 5\n"
+    "\n"
+    "NON-UNIFORM MESH EFFECTS:\n"
+    "  • Non-uniform meshes generally maintain theoretical orders\n"
+    "  • May affect constant factors in error bounds\n"
+    "  • Shape-preserving splines (Pchip, Akima) may be more sensitive\n" );
+
   // ========================================================================
   // SPECIAL NOTES ON NON-UNIFORM MESH CONVERGENCE
   // ========================================================================
-  
-  print_header("SPECIAL NOTES ON NON-UNIFORM MESH CONVERGENCE");
-  
-  fmt::print(fg(fmt::color::cyan),
-      "\n"
-      "IMPROVEMENTS IN NON-UNIFORM MESH CONVERGENCE TESTING:\n"
-      "  1. Hierarchical refinement: Start from a base mesh and refine by inserting midpoints\n"
-      "  2. Controlled h-ratio: Each refinement step approximately halves the mesh size\n"
-      "  3. Accurate mesh size computation: Use average interval length instead of 1/N\n"
-      "  4. Chebyshev-like base mesh: Ensures genuine non-uniformity with clustering at boundaries\n"
-      "\n"
-      "COMPARISON METHODOLOGY:\n"
-      "  • Uniform mesh: N = 5, 9, 17, 33, 65, 129, 257 points\n"
-      "  • Non-uniform mesh: Same sequence via hierarchical refinement\n"
-      "  • Mesh size h computed as average interval length\n"
-      "  • Order computed as log(error₁/error₂)/log(h₁/h₂)\n"
-      "\n"
-      "EXPECTED RESULTS:\n"
-      "  • Orders should be similar between uniform and non-uniform meshes\n"
-      "  • Non-uniform may show slightly different orders due to point distribution\n"
-      "  • Exact interpolation properties should hold for both mesh types\n"
-  );
-  
+
+  print_header( "SPECIAL NOTES ON NON-UNIFORM MESH CONVERGENCE" );
+
+  fmt::print(
+    fg( fmt::color::cyan ),
+    "\n"
+    "IMPROVEMENTS IN NON-UNIFORM MESH CONVERGENCE TESTING:\n"
+    "  1. Hierarchical refinement: Start from a base mesh and refine by inserting midpoints\n"
+    "  2. Controlled h-ratio: Each refinement step approximately halves the mesh size\n"
+    "  3. Accurate mesh size computation: Use average interval length instead of 1/N\n"
+    "  4. Chebyshev-like base mesh: Ensures genuine non-uniformity with clustering at boundaries\n"
+    "\n"
+    "COMPARISON METHODOLOGY:\n"
+    "  • Uniform mesh: N = 5, 9, 17, 33, 65, 129, 257 points\n"
+    "  • Non-uniform mesh: Same sequence via hierarchical refinement\n"
+    "  • Mesh size h computed as average interval length\n"
+    "  • Order computed as log(error₁/error₂)/log(h₁/h₂)\n"
+    "\n"
+    "EXPECTED RESULTS:\n"
+    "  • Orders should be similar between uniform and non-uniform meshes\n"
+    "  • Non-uniform may show slightly different orders due to point distribution\n"
+    "  • Exact interpolation properties should hold for both mesh types\n" );
+
   // ========================================================================
   // SPECIAL NOTES
   // ========================================================================
-  
-  print_header("SPECIAL NOTES");
-  
-  fmt::print(fg(fmt::color::cyan),
-      "\n"
-      "NOTES ON TEST FUNCTIONS:\n"
-      "  1. Polynomial deg 1: Tests exact interpolation capability\n"
-      "  2. Polynomial deg 2: Tests quadratic approximation\n"
-      "  3. Polynomial deg 3: Tests cubic exact interpolation\n"
-      "  4. Polynomial deg 4: Tests beyond cubic interpolation\n"
-      "  5. Exp + sin(2x): Tests convergence for non-polynomial functions\n"
-      "\n"
-      "INTERPRETING RESULTS:\n"
-      "  • 'INF' order means error reached machine precision (exact interpolation)\n"
-      "  • Orders near theoretical values indicate proper implementation\n"
-      "  • Lower orders may indicate issues or limitations of the method\n"
-      "  • Non-uniform mesh results should be comparable to uniform mesh\n"
-      "  • Mesh size column shows actual average interval length\n"
-  );
+
+  print_header( "SPECIAL NOTES" );
+
+  fmt::print(
+    fg( fmt::color::cyan ),
+    "\n"
+    "NOTES ON TEST FUNCTIONS:\n"
+    "  1. Polynomial deg 1: Tests exact interpolation capability\n"
+    "  2. Polynomial deg 2: Tests quadratic approximation\n"
+    "  3. Polynomial deg 3: Tests cubic exact interpolation\n"
+    "  4. Polynomial deg 4: Tests beyond cubic interpolation\n"
+    "  5. Exp + sin(2x): Tests convergence for non-polynomial functions\n"
+    "\n"
+    "INTERPRETING RESULTS:\n"
+    "  • 'INF' order means error reached machine precision (exact interpolation)\n"
+    "  • Orders near theoretical values indicate proper implementation\n"
+    "  • Lower orders may indicate issues or limitations of the method\n"
+    "  • Non-uniform mesh results should be comparable to uniform mesh\n"
+    "  • Mesh size column shows actual average interval length\n" );
 
   print_header( "ALL TESTS COMPLETED SUCCESSFULLY" );
-  
+
   fmt::print( fg( fmt::color::light_green ) | fmt::emphasis::bold, "\n🎉 All spline analyses completed! 🎉\n" );
-  fmt::print( fg( fmt::color::gray ), 
-      "Summary:\n"
-      "  • Original 6 datasets analyzed and results saved to 'out/' directory\n"
-      "  • Convergence analysis completed for 5 different test functions\n"
-      "  • 7 spline types tested on both uniform and non-uniform meshes\n"
-      "  • Improved non-uniform convergence test with hierarchical refinement\n"
-      "  • Tables show error vs mesh refinement and estimated convergence orders\n"
-      "  • Derivative accuracy verified for key functions\n"
-      "  • Theoretical expectations compared with numerical results\n\n" );
+  fmt::print(
+    fg( fmt::color::gray ),
+    "Summary:\n"
+    "  • Original 6 datasets analyzed and results saved to 'out/' directory\n"
+    "  • Convergence analysis completed for 5 different test functions\n"
+    "  • 7 spline types tested on both uniform and non-uniform meshes\n"
+    "  • Improved non-uniform convergence test with hierarchical refinement\n"
+    "  • Tables show error vs mesh refinement and estimated convergence orders\n"
+    "  • Derivative accuracy verified for key functions\n"
+    "  • Theoretical expectations compared with numerical results\n\n" );
 
   return 0;
 }

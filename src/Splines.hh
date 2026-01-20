@@ -270,7 +270,7 @@ namespace Splines
     E = DP0;
     F = P0;
   }
-  
+
   real_type bilinear3( real_type const p[4], real_type const M[4][4], real_type const q[4] );
 
   real_type bilinear5( real_type const p[6], real_type const M[6][6], real_type const q[6] );
@@ -340,7 +340,7 @@ namespace Splines
 
     return flag;
   }
-}
+}  // namespace Splines
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -348,7 +348,8 @@ namespace Splines
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-namespace Splines {
+namespace Splines
+{
 
   /*\
    |   ____        _ _
@@ -1177,8 +1178,9 @@ namespace Splines {
 
 #include "Splines/SplineSurf.hxx"
 
-
 #include "Splines/SplineBilinear.hxx"
+
+#include "Splines/SplineBiCubicBase.hxx"
 #include "Splines/SplineBiCubic.hxx"
 #include "Splines/SplineAkima2D.hxx"
 #include "Splines/SplineBiQuintic.hxx"
