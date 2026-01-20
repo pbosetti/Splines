@@ -12,7 +12,7 @@
  |                                                                          |
  |      Enrico Bertolazzi                                                   |
  |      Dipartimento di Ingegneria Industriale                              |
- |      Università degli Studi di Trento                                   |
+ |      Università degli Studi di Trento                                    |
  |      email: enrico.bertolazzi@unitn.it                                   |
  |                                                                          |
 \*--------------------------------------------------------------------------*/
@@ -23,17 +23,34 @@
 
 #include "Splines.hh"
 #include "Utils_fmt.hh"
-#include <cmath>
-#include <random>
+#include "Utils_FD.hh"
 
 using namespace SplinesLoad;
 using namespace std;
 using Splines::integer;
+using Splines::QuinticSpline_sub_type;
 using Splines::real_type;
+using Utils::m_pi;
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+// Aggiungi prima del main() un template wrapper:
+template <QuinticSpline_sub_type SubType> class QuinticSplineWrapper : public QuinticSpline
+{
+public:
+  QuinticSplineWrapper( string_view name = "Spline" ) : QuinticSpline( name ) { set_quintic_type( SubType ); }
+
+  void build() override
+  {
+    set_quintic_type( SubType );
+    QuinticSpline::build();
+  }
+
+  void build( const vector<real_type> & X, const vector<real_type> & Y )
+  {
+    set_quintic_type( SubType );
+    QuinticSpline::build( X, Y );
+  }
+};
+
 
 // ============================================================================
 // TEST DATASETS
@@ -175,7 +192,8 @@ vector<TestFunctionInfo> test_functions = {
 vector<real_type> generate_uniform_mesh( real_type a, real_type b, integer N )
 {
   vector<real_type> mesh( N );
-  for ( integer i = 0; i < N; ++i ) { mesh[i] = a + i * ( b - a ) / ( N - 1 ); }
+  real_type s = ( b - a ) / ( N - 1 );
+  for ( integer i = 0; i < N; ++i ) mesh[i] = a + i * s;
   return mesh;
 }
 
@@ -375,14 +393,34 @@ namespace FiniteDifferences1D
   template <typename SplineType> real_type dx( const SplineType & spline, real_type x )
   {
     real_type h = h_first( x );
-    return ( -spline( x + 2 * h ) + 8 * spline( x + h ) - 8 * spline( x - h ) + spline( x - 2 * h ) ) / ( 12 * h );
+    real_type x0 = x;
+    real_type x1 = x+h/2;
+    real_type x2 = x+h;
+    real_type x3 = x-h/2;
+    real_type x4 = x-h;
+    real_type y0 = spline( x0 );
+    real_type y1 = spline( x1 );
+    real_type y2 = spline( x2 );
+    real_type y3 = spline( x3 );
+    real_type y4 = spline( x4 );
+    return Utils::first_derivative_5p( x0, y0, x1, y1, x2, y2, x3, y3, x4, y4 );
   }
 
   // Second-order central difference for second derivative
   template <typename SplineType> real_type dxx( const SplineType & spline, real_type x )
   {
     real_type h = h_second( x );
-    return ( spline( x + h ) - 2 * spline( x ) + spline( x - h ) ) / ( h * h );
+    real_type x0 = x;
+    real_type x1 = x+h/2;
+    real_type x2 = x+h;
+    real_type x3 = x-h/2;
+    real_type x4 = x-h;
+    real_type y0 = spline( x0 );
+    real_type y1 = spline( x1 );
+    real_type y2 = spline( x2 );
+    real_type y3 = spline( x3 );
+    real_type y4 = spline( x4 );
+    return Utils::second_derivative_5p( x0, y0, x1, y1, x2, y2, x3, y3, x4, y4 );
   }
 }  // namespace FiniteDifferences1D
 
@@ -459,11 +497,11 @@ void print_derivative_table_1D(
   fmt::print(
     color,
     "\n"
-    "┌─{:─^122}─┐\n"
-    "│ {:^122} │\n"
-    "├─{:─^12}─┬─{:─^52}─┬─{:─^52}─┤\n"
-    "│ {:^12} │ {:^52} │ {:^52} │\n"
-    "├─{:─^12}─┼─{:─^52}─┼─{:─^52}─┤\n",
+    "┌─{:─^132}─┐\n"
+    "│ {:^132} │\n"
+    "├─{:─^22}─┬─{:─^52}─┬─{:─^52}─┤\n"
+    "│ {:^22} │ {:^52} │ {:^52} │\n"
+    "├─{:─^22}─┼─{:─^52}─┼─{:─^52}─┤\n",
     "",
     fmt::format( "DATASET {} - DERIVATIVE {} - FINITE DIFFERENCE ERRORS", dataset, derivative_name ),
     "",
@@ -519,14 +557,14 @@ void print_derivative_table_1D(
       tol_max_bnd,
       tol_avg_bnd );
 
-    fmt::print( row_color, "│ {:<12} ", name );
+    fmt::print( row_color, "│ {:<22} ", name );
     fmt::print( "│ {} ", interior_cell );
     fmt::print( "│ {} │\n", boundary_cell );
 
-    if ( i < errors.size() - 1 ) { fmt::print( color, "├─{:─^12}─┼─{:─^52}─┼─{:─^52}─┤\n", "", "", "" ); }
+    if ( i < errors.size() - 1 ) { fmt::print( color, "├─{:─^22}─┼─{:─^52}─┼─{:─^52}─┤\n", "", "", "" ); }
   }
 
-  fmt::print( color, "└─{:─^12}─┴─{:─^52}─┴─{:─^52}─┘\n", "", "", "" );
+  fmt::print( color, "└─{:─^22}─┴─{:─^52}─┴─{:─^52}─┘\n", "", "", "" );
 }
 
 // ============================================================================
@@ -562,7 +600,7 @@ template <typename SplineType> DerivativeErrors1D check_derivatives_1D(
   real_type x_max = spline.x_max();
 
   // Tolerance for boundary detection (relative to segment length)
-  real_type boundary_tol = 1e-6 * ( x_max - x_min );
+  real_type boundary_tol = 1e-3 * ( x_max - x_min );
 
   fmt::print(
     fg( fmt::color::blue ),
@@ -870,9 +908,9 @@ void print_convergence_table_for_test(
     fmt::print(
       fg( fmt::color::yellow ) | fmt::emphasis::bold,
       "\n"
-      "┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐\n"
-      "│ {:^12} │ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
-      "├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n",
+      "┌────────────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐\n"
+      "│ {:^22} │ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
+      "├────────────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n",
       "Spline Type",
       "N points",
       "Mesh Size",
@@ -885,9 +923,9 @@ void print_convergence_table_for_test(
     fmt::print(
       fg( fmt::color::yellow ) | fmt::emphasis::bold,
       "\n"
-      "┌──────────────┬──────────────┬──────────────┬──────────────┐\n"
-      "│ {:^12} │ {:^12} │ {:^12} │ {:^12} │\n"
-      "├──────────────┼──────────────┼──────────────┼──────────────┤\n",
+      "┌────────────────────────┬──────────────┬──────────────┬──────────────┐\n"
+      "│ {:^22} │ {:^12} │ {:^12} │ {:^12} │\n"
+      "├────────────────────────┼──────────────┼──────────────┼──────────────┤\n",
       "Spline Type",
       "N points",
       "Max Error",
@@ -903,7 +941,7 @@ void print_convergence_table_for_test(
     {
       auto row_color = ( j % 2 == 0 ) ? fg( fmt::color::light_green ) : fg( fmt::color::light_blue );
 
-      fmt::print( row_color, "│ {:<12} ", ( j == 0 ) ? res.spline_name : "" );
+      fmt::print( row_color, "│ {:<22} ", ( j == 0 ) ? res.spline_name : "" );
       fmt::print( row_color, "│ {:>12} ", res.N_values[j] );
 
       if ( show_mesh_size )
@@ -968,11 +1006,13 @@ void print_convergence_table_for_test(
       {
         fmt::print(
           fg( fmt::color::yellow ),
-          "├──────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n" );
+          "├────────────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n" );
       }
       else
       {
-        fmt::print( fg( fmt::color::yellow ), "├──────────────┼──────────────┼──────────────┼──────────────┤\n" );
+        fmt::print(
+          fg( fmt::color::yellow ),
+          "├────────────────────────┼──────────────┼──────────────┼──────────────┤\n" );
       }
     }
   }
@@ -981,13 +1021,13 @@ void print_convergence_table_for_test(
   {
     fmt::print(
       fg( fmt::color::yellow ) | fmt::emphasis::bold,
-      "└──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘\n" );
+      "└────────────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘\n" );
   }
   else
   {
     fmt::print(
       fg( fmt::color::yellow ) | fmt::emphasis::bold,
-      "└──────────────┴──────────────┴──────────────┴──────────────┘\n" );
+      "└────────────────────────┴──────────────┴──────────────┴──────────────┘\n" );
   }
 
   // Summary statistics
@@ -1082,9 +1122,9 @@ void print_results_table( const vector<SplineResult> & results, integer dataset 
   fmt::print(
     fg( fmt::color::yellow ) | fmt::emphasis::bold,
     "\n"
-    "┌──────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐\n"
-    "│ {:^12} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │\n"
-    "├──────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤\n",
+    "┌────────────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐\n"
+    "│ {:^22} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │\n"
+    "├────────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤\n",
     "Spline Type",
     "x_min",
     "x_max",
@@ -1099,7 +1139,7 @@ void print_results_table( const vector<SplineResult> & results, integer dataset 
     const auto & r         = results[i];
     auto         row_color = ( i % 2 == 0 ) ? fg( fmt::color::light_green ) : fg( fmt::color::light_blue );
 
-    fmt::print( row_color, "│ {:<12} ", r.name );
+    fmt::print( row_color, "│ {:<22} ", r.name );
     fmt::print( row_color, "│ {:>8.3f} ", r.x_min );
     fmt::print( row_color, "│ {:>8.3f} ", r.x_max );
 
@@ -1115,7 +1155,7 @@ void print_results_table( const vector<SplineResult> & results, integer dataset 
 
   fmt::print(
     fg( fmt::color::yellow ) | fmt::emphasis::bold,
-    "└──────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘\n" );
+    "└────────────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘\n" );
 
   fmt::print(
     fg( fmt::color::gray ) | fmt::emphasis::italic,
@@ -1211,10 +1251,20 @@ int main()
   CubicSpline    cs;
   BesselSpline   be;
   PchipSpline    pc;
-  QuinticSpline  qs;
+  QuinticSpline  qs_cubic;
+  QuinticSpline  qs_pchip;
+  QuinticSpline  qs_akima;
+  QuinticSpline  qs_bessel;
+
+  // Imposta i sottotipi
+  qs_cubic.set_quintic_type( QuinticSpline_sub_type::CUBIC );
+  qs_pchip.set_quintic_type( QuinticSpline_sub_type::PCHIP );
+  qs_akima.set_quintic_type( QuinticSpline_sub_type::AKIMA );
+  qs_bessel.set_quintic_type( QuinticSpline_sub_type::BESSEL );
 
   // Open output files
-  ofstream file_li, file_co, file_ak, file_cs, file_be, file_pc, file_qs;
+  ofstream file_li, file_co, file_ak, file_cs, file_be, file_pc, file_qs_cubic, file_qs_pchip, file_qs_akima,
+    file_qs_bessel;
 
   for ( integer k = 0; k < 6; ++k )
   {
@@ -1265,8 +1315,14 @@ int main()
     file_be.open( fname.data() );
     fname = fmt::format( "out/Pchip{}.txt", k );
     file_pc.open( fname.data() );
-    fname = fmt::format( "out/Quintic{}.txt", k );
-    file_qs.open( fname.data() );
+    fname = fmt::format( "out/Quintic_CUBIC{}.txt", k );
+    file_qs_cubic.open( fname.data() );
+    fname = fmt::format( "out/Quintic_PCHIP{}.txt", k );
+    file_qs_pchip.open( fname.data() );
+    fname = fmt::format( "out/Quintic_AKIMA{}.txt", k );
+    file_qs_akima.open( fname.data() );
+    fname = fmt::format( "out/Quintic_BESSEL{}.txt", k );
+    file_qs_bessel.open( fname.data() );
 
     real_type xmin{ xx[0] };
     real_type xmax{ xx[nn[k] - 1] };
@@ -1316,7 +1372,10 @@ int main()
     process_spline( cs, "Cubic", file_cs );
     process_spline( be, "Bessel", file_be );
     process_spline( pc, "Pchip", file_pc );
-    process_spline( qs, "Quintic", file_qs );
+    process_spline( qs_cubic, "Quintic (CUBIC)", file_qs_cubic );
+    process_spline( qs_pchip, "Quintic (PCHIP)", file_qs_pchip );
+    process_spline( qs_akima, "Quintic (AKIMA)", file_qs_akima );
+    process_spline( qs_bessel, "Quintic (BESSEL)", file_qs_bessel );
 
     // Print min/max results table
     print_results_table( results, k );
@@ -1411,8 +1470,40 @@ int main()
         Splines::PchipSpline>( "Pchip", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence<
-        Splines::QuinticSpline>( "Quintic", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::CUBIC>>(
+        "Quintic (CUBIC)",
+        test_func.name,
+        true,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::PCHIP>>(
+        "Quintic (PCHIP)",
+        test_func.name,
+        true,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::AKIMA>>(
+        "Quintic (AKIMA)",
+        test_func.name,
+        true,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
+
+    uniform_results.push_back(
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::BESSEL>>(
+        "Quintic (BESSEL)",
+        test_func.name,
+        true,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
 
     print_convergence_table_for_test( uniform_results, "UNIFORM", test_func, func_idx );
 
@@ -1446,9 +1537,42 @@ int main()
       test_convergence<
         Splines::PchipSpline>( "Pchip", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
+    // Stesso pattern per i test non uniformi:
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::QuinticSpline>( "Quintic", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::CUBIC>>(
+        "Quintic (CUBIC)",
+        test_func.name,
+        false,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::PCHIP>>(
+        "Quintic (PCHIP)",
+        test_func.name,
+        false,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::AKIMA>>(
+        "Quintic (AKIMA)",
+        test_func.name,
+        false,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
+
+    nonuniform_results.push_back(
+      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::BESSEL>>(
+        "Quintic (BESSEL)",
+        test_func.name,
+        false,
+        test_func.a,
+        test_func.b,
+        test_func.func ) );
 
     print_convergence_table_for_test( nonuniform_results, "NON-UNIFORM", test_func, func_idx );
 

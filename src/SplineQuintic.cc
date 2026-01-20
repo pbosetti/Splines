@@ -232,13 +232,11 @@ namespace Splines
       case QuinticSpline_sub_type::CUBIC:
         CubicSpline_build( X, Y, Yp, npts, CubicSpline_BC::EXTRAPOLATE, CubicSpline_BC::EXTRAPOLATE );
         break;
-      case QuinticSpline_sub_type::PCHIP:
-        Pchip_build( X, Y, Yp, npts );
-        break;
+      case QuinticSpline_sub_type::PCHIP: Pchip_build( X, Y, Yp, npts ); break;
       case QuinticSpline_sub_type::AKIMA:
       {
         Malloc_real mem( "Quintic_build::work memory" );
-        AkimaSpline::build( X, Y, Yp, mem.malloc( npts ), npts );
+        Akima_build( X, Y, Yp, mem.malloc( npts ), npts );
         mem.free();
       }
       break;
