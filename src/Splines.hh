@@ -36,6 +36,8 @@
 
 #include "SplinesConfig.hh"
 #include "Utils_search_intervals2.hh"
+#include "Utils_FD.hh"
+#include "Utils_TridiagonalSolver.hh"
 
 //!
 //! Namespace of Splines library
@@ -1183,6 +1185,8 @@ namespace Splines
 #include "Splines/SplineBiCubicBase.hxx"
 #include "Splines/SplineBiCubic.hxx"
 #include "Splines/SplineAkima2D.hxx"
+
+#include "Splines/SplineBiQuinticBase.hxx"
 #include "Splines/SplineBiQuintic.hxx"
 
 #include "Splines/SplineVec.hxx"

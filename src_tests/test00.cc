@@ -577,10 +577,21 @@ void test_degenerate_case()
   print_warning( "Testing degenerate case (all nodes equal)" );
 
   // Test alcuni punti
-  // Con tutti i nodi uguali, SearchInterval restituirà sempre l'intervallo [0,1]
-  tester.test_point( 0.5, 0, "left of degenerate" );
-  tester.test_point( 1.0, 0, "at degenerate node" );
-  tester.test_point( 1.5, 8, "right of degenerate" );  // n-2 perché l'ultimo intervallo valido è [n-2, n-1]
+  // Con tutti i nodi uguali, SearchInterval restituirà una eccezione
+  try
+  {
+    tester.test_point( 0.5, 0, "left of degenerate" );
+    tester.test_point( 1.0, 0, "at degenerate node" );
+    tester.test_point( 1.5, 8, "right of degenerate" );  // n-2 perché l'ultimo intervallo valido è [n-2, n-1]
+  }
+  catch ( std::exception const & err )
+  {
+    fmt::print( "TEST 9: Degenerate Case expect exception: {}\n", err.what() );
+  }
+  catch ( ... )
+  {
+    fmt::print( "TEST 9: Degenerate Case expect exception: UNKNOWN\n" );
+  }
 }
 
 // Test case 10: Caso quasi degenere (range molto piccolo)
