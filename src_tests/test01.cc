@@ -192,7 +192,7 @@ vector<TestFunctionInfo> test_functions = {
 vector<real_type> generate_uniform_mesh( real_type a, real_type b, integer N )
 {
   vector<real_type> mesh( N );
-  real_type s = ( b - a ) / ( N - 1 );
+  real_type         s = ( b - a ) / ( N - 1 );
   for ( integer i = 0; i < N; ++i ) mesh[i] = a + i * s;
   return mesh;
 }
@@ -392,12 +392,12 @@ namespace FiniteDifferences1D
   // Fourth-order central difference for first derivative
   template <typename SplineType> real_type dx( const SplineType & spline, real_type x )
   {
-    real_type h = h_first( x );
+    real_type h  = h_first( x );
     real_type x0 = x;
-    real_type x1 = x+h/2;
-    real_type x2 = x+h;
-    real_type x3 = x-h/2;
-    real_type x4 = x-h;
+    real_type x1 = x + h / 2;
+    real_type x2 = x + h;
+    real_type x3 = x - h / 2;
+    real_type x4 = x - h;
     real_type y0 = spline( x0 );
     real_type y1 = spline( x1 );
     real_type y2 = spline( x2 );
@@ -409,12 +409,12 @@ namespace FiniteDifferences1D
   // Second-order central difference for second derivative
   template <typename SplineType> real_type dxx( const SplineType & spline, real_type x )
   {
-    real_type h = h_second( x );
+    real_type h  = h_second( x );
     real_type x0 = x;
-    real_type x1 = x+h/2;
-    real_type x2 = x+h;
-    real_type x3 = x-h/2;
-    real_type x4 = x-h;
+    real_type x1 = x + h / 2;
+    real_type x2 = x + h;
+    real_type x3 = x - h / 2;
+    real_type x4 = x - h;
     real_type y0 = spline( x0 );
     real_type y1 = spline( x1 );
     real_type y2 = spline( x2 );

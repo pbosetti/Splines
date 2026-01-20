@@ -34,67 +34,56 @@
 namespace Splines
 {
 
+
   inline void Akima_build(
-    real_type const X[],
+    real_type const X[],  // puntatori ai dati
     real_type const Y[],
     real_type       Yp[],
-    real_type       m[],  // work vector dimension N
-    integer         N )
+    real_type       m[],
+    int             N )
   {
-    UTILS_ASSERT( N >= 2, "Akima::build require at least 2 points" );
+    assert( N >= 2 && "Akima_build requires at least 2 points" );
 
     if ( N == 2 )
-    {  // solo 2 punti, niente da fare
+    {
       Yp[0] = Yp[1] = ( Y[1] - Y[0] ) / ( X[1] - X[0] );
       return;
     }
 
-    integer nn = N - 2;
+    const int n = N - 1;
+    
+    for ( integer i = 0; i < n; ++i )
+      m[i] = (Y[i+1]-Y[i])/(X[i+1]-X[i]);
 
-    // 1. Calcola le pendenze m_i = (Y[i+1] - Y[i]) / (X[i+1] - X[i])
-    for ( integer i = 0; i <= nn; ++i )
+    auto slope = [&]( int i ) -> real_type
     {
-      UTILS_ASSERT(
-        X[i + 1] > X[i],
-        "Akima::build, X must be strictly increasing X[{}] = {}, X[{}] = {}",
-        i,
-        X[i],
-        i + 1,
-        X[i + 1] );
-      m[i] = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
-    }
+      if ( i == -2 ) return 2 * m[0] - m[1];
+      if ( i == -1 ) return 2 * ( 2 * m[0] - m[1] ) - m[0];
+      if ( i >= 0 && i <= n - 1 ) return m[i];
+      if ( i == n ) return 2 * m[n - 1] - m[n - 2];
+      if ( i == n + 1 ) return 2 * ( 2 * m[n - 1] - m[n - 2] ) - m[n - 1];
+      return 0.0;
+    };
 
-    // 2. Calcolo epsi
-    real_type epsi = 0;
-    for ( integer i = 0; i < nn; ++i )
+    real_type m_i   = slope( 0 );
+    real_type m_im1 = slope( 0 - 1 );
+    real_type m_im2 = slope( 0 - 2 );
+    real_type m_ip1 = slope( 0 + 1 );
+    for ( integer i = 0; i <= n; ++i )
     {
-      real_type const dm = std::abs( m[i + 1] - m[i] );
-      if ( dm > epsi ) epsi = dm;
+      real_type w1    = std::abs( m_ip1 - m_i ) + 0.5 * std::abs( m_ip1 + m_i );
+      real_type w2    = std::abs( m_im1 - m_im2 ) + 0.5 * std::abs( m_im1 + m_im2 );
+      real_type sum_w = w1 + w2;
+
+      if ( sum_w > 1e-12 )
+        Yp[i] = ( w1 * m_im1 + w2 * m_i ) / sum_w;
+      else
+        Yp[i] = 0.5 * ( m_im1 + m_i );  // fallback stabile
+      m_im2 = m_im1;
+      m_im1 = m_i;
+      m_i   = m_ip1;
+      m_ip1 = slope( i + 2 );
     }
-    epsi *= 1E-8;
-
-    // 3. Calcola le derivate nei punti interni (i = 1..N-2)
-    for ( integer i = 1; i <= nn; ++i )
-    {
-      // Estrapola le pendenze se necessario (ai bordi)
-      real_type const m_im2 = ( i >= 2 ) ? m[i - 2] : 2 * m[i - 1] - m[i];  // m_{i-2}
-      real_type const m_im1 = m[i - 1];                                     // m_{i-1}
-      real_type const m_i   = m[i];                                         // m_i
-      real_type const m_ip1 = ( i < nn ) ? m[i + 1] : 2 * m[i] - m[i - 1];  // m_{i+1}
-
-      // Pesatura di Akima (come in MATLAB makima)
-      // https://blogs.mathworks.com/cleve/2019/04/29/makima-piecewise-cubic-interpolation/#d9a97978-0b09-4a1f-a6a5-504d088631d0
-      real_type const w_left  = std::abs( m_ip1 - m_i ) + std::abs( m_ip1 + m_i ) / 2;
-      real_type const w_right = std::abs( m_im1 - m_im2 ) + std::abs( m_im1 + m_im2 ) / 2;
-      real_type const sum_w   = w_left + w_right;
-
-      Yp[i] = sum_w > epsi ? ( w_right * m_im1 + w_left * m_i ) / sum_w : 0.5 * ( m_im1 + m_i );  // Caso speciale
-    }
-
-    // 4. Derivate ai bordi (i=0 e i=N-1)
-    // Estrapolazione quadratica
-    Yp[0]     = m[0] + ( m[0] - m[1] ) * ( X[0] - X[1] ) / ( X[2] - X[0] );
-    Yp[N - 1] = m[N - 2] + ( m[N - 2] - m[N - 3] ) * ( X[N - 1] - X[N - 2] ) / ( X[N - 1] - X[N - 3] );
   }
 
   //!
@@ -194,8 +183,7 @@ namespace Splines
             res += ' ';
           };
           return res;
-        }()
-      );
+        }() );
 
       this->build( x, y );
     }

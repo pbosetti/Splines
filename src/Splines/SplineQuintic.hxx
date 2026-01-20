@@ -56,7 +56,9 @@ namespace Splines
     real_type const              Y[],
     real_type                    Yp[],
     real_type                    Ypp[],
-    integer const                npts );
+    integer const                npts,
+    real_type                    bcl = 0.0,
+    real_type                    bcr = 0.0 );
 
   //! Quintic spline class
   class QuinticSpline : public QuinticSplineBase

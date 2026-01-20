@@ -33,6 +33,84 @@
 
 namespace Splines
 {
+
+  /**
+   * @brief Bessel cubic derivative reconstruction (true order 3).
+   *
+   * First derivatives computed as derivatives of the local cubic
+   * interpolating polynomial (4 points).
+   *
+   * Requirements:
+   *  - X strictly monotonic
+   *  - npts >= 4
+   */
+  inline void Bessel_build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts )
+  {
+    UTILS_ASSERT( npts >= 2, "Bessel_build: npts={} >= 2 required\n", npts );
+
+    if ( npts == 2 )
+    {  // solo 2 punti, niente da fare
+      Yp[0] = Yp[1] = ( Y[1] - Y[0] ) / ( X[1] - X[0] );
+      return;
+    }
+
+    // ---- left boundary ----
+    if ( npts <= 3 )
+    {
+      Yp[0] = Utils::first_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
+      Yp[1] = Utils::first_derivative_3p( X[1], Y[1], X[2], Y[2], X[0], Y[0] );
+    }
+    else
+    {
+      Yp[0] = Utils::first_derivative_4p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3] );
+      Yp[1] = Utils::first_derivative_4p( X[1], Y[1], X[2], Y[2], X[3], Y[3], X[0], Y[0] );
+    }
+
+    // ---- interior points ----
+    for ( integer i = 2; i < npts - 2; ++i )
+      Yp[i] = Utils::first_derivative_5p(
+        X[i - 0],
+        Y[i - 0],
+        X[i + 1],
+        Y[i + 1],
+        X[i - 1],
+        Y[i - 1],
+        X[i + 2],
+        Y[i + 2],
+        X[i - 2],
+        Y[i - 2] );
+
+    // ---- right boundary ----
+    if ( npts <= 3 )
+    {
+      Yp[npts - 1] =
+        Utils::first_derivative_3p( X[npts - 1], Y[npts - 1], X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3] );
+      Yp[npts - 2] =
+        Utils::first_derivative_3p( X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3], X[npts - 1], Y[npts - 1] );
+    }
+    else
+    {
+      Yp[npts - 1] = Utils::first_derivative_4p(
+        X[npts - 1],
+        Y[npts - 1],
+        X[npts - 2],
+        Y[npts - 2],
+        X[npts - 3],
+        Y[npts - 3],
+        X[npts - 4],
+        Y[npts - 4] );
+      Yp[npts - 2] = Utils::first_derivative_4p(
+        X[npts - 2],
+        Y[npts - 2],
+        X[npts - 3],
+        Y[npts - 3],
+        X[npts - 4],
+        Y[npts - 4],
+        X[npts - 1],
+        Y[npts - 1] );
+    }
+  }
+
   //!
   //! Bessel spline class
   //!
@@ -41,45 +119,6 @@ namespace Splines
   public:
     using CubicSplineBase::build;
     using CubicSplineBase::reserve;
-
-    static void build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts )
-    {
-      UTILS_ASSERT( npts >= 2, "Bessel::build, npts={} must be >= 2\n", npts );
-
-      integer const n{ npts - 1 };
-
-      Malloc_real mem( "Bessel::build" );
-      real_type * m{ mem.malloc( npts ) };
-
-      // calcolo slopes
-      for ( integer i = 0; i < n; ++i ) m[i] = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
-
-      if ( npts == 2 )
-      {  // caso speciale 2 o 3 punti
-
-        Yp[0] = Yp[1] = m[0];
-      }
-      else if ( npts == 3 )
-      {  // caso speciale 2 o 3 punti
-
-        Yp[0] = m[0];
-        Yp[n] = m[1];
-      }
-      else
-      {
-        for ( integer i = 1; i < n; ++i )
-        {
-          real_type const DL{ X[i] - X[i - 1] };
-          real_type const DR{ X[i + 1] - X[i] };
-          Yp[i] = ( DR * m[i - 1] + DL * m[i] ) / ( DL + DR );
-        }
-
-        Yp[0] = 1.5 * m[0] - 0.5 * m[1];
-        Yp[n] = 1.5 * m[n - 1] - 0.5 * m[n - 2];
-      }
-
-      mem.free();
-    }
 
     //!
     //! Build an empty spline of `BesselSpline` type
@@ -112,7 +151,7 @@ namespace Splines
       {
         // cerca intervallo monotono strettamente crescente
         for ( ++iend; iend < m_npts && m_X[iend - 1] < m_X[iend]; ++iend ) {}
-        BesselSpline::build( m_X + ibegin, m_Y + ibegin, m_Yp + ibegin, iend - ibegin );
+        Bessel_build( m_X + ibegin, m_Y + ibegin, m_Yp + ibegin, iend - ibegin );
         ibegin = iend;
       } while ( iend < m_npts );
 

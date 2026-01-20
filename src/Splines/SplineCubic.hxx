@@ -79,6 +79,7 @@ namespace Splines
     real_type const      X[],
     real_type const      Y[],
     real_type            Yp[],
+    real_type            Ypp[],
     integer const        npts,
     CubicSpline_BC const bc0,
     CubicSpline_BC const bcn )
@@ -115,17 +116,18 @@ namespace Splines
 
       sub( i - 1 ) = HL / HH;  // Coefficiente L_i
       super( i )   = HR / HH;  // Coefficiente U_i
-      diag( i )    = 2.0;      // Diagonale principale
+      diag( i )    = 2;        // Diagonale principale
 
       // Termine noto: derivata seconda approssimata
       // rhs(i) = 6 * [f[x_i, x_{i+1}] - f[x_{i-1}, x_i]] / (h_{i-1} + h_i)
       real_type const slope_L = DY( i - 1 ) / HL;
       real_type const slope_R = DY( i ) / HR;
-      rhs( i )                = 6.0 * ( slope_R - slope_L ) / HH;
+      rhs( i )                = 6 * ( slope_R - slope_L ) / HH;
     }
 
     // Variabili per elementi extra-diagonali (usate solo per NOT_A_KNOT)
-    real_type UU{ 0 }, LL{ 0 };
+    real_type UU = 0;
+    real_type LL = 0;
 
     // --- 3. Applicazione condizioni al contorno iniziali (x = X[0]) ---
     switch ( bc0 )
@@ -135,17 +137,20 @@ namespace Splines
          * Estrapolazione: calcola Z[0] usando differenze finite di ordine superiore
          * basate sul numero di punti disponibili (2-5 punti)
          */
-        diag( 0 )  = 1.0;
-        super( 0 ) = 0.0;
+        diag( 0 )  = 1;
+        super( 0 ) = 0;
 
-        if ( npts == 2 )
-          rhs( 0 ) = 0.0;
-        else if ( npts == 3 )
-          rhs( 0 ) = Utils::second_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
-        else if ( npts == 4 )
-          rhs( 0 ) = Utils::second_derivative_4p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3] );
-        else
-          rhs( 0 ) = Utils::second_derivative_5p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3], X[4], Y[4] );
+        switch ( npts )
+        {
+          case 2: rhs( 0 ) = 0; break;
+          case 3:
+          case 4: rhs( 0 ) = Utils::second_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] ); break;
+          case 5:
+          case 6: rhs( 0 ) = Utils::second_derivative_4p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3] ); break;
+          default:
+            rhs( 0 ) = Utils::second_derivative_5p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3], X[4], Y[4] );
+            break;
+        }
         break;
 
       case CubicSpline_BC::NATURAL:
@@ -153,9 +158,9 @@ namespace Splines
          * Natural spline: Z[0] = 0 (derivata seconda nulla)
          * Minimizza la curvatura totale della spline
          */
-        diag( 0 )  = 1.0;
-        super( 0 ) = 0.0;
-        rhs( 0 )   = 0.0;
+        diag( 0 )  = 1;
+        super( 0 ) = 0;
+        rhs( 0 )   = 0;
         break;
 
       case CubicSpline_BC::PARABOLIC_RUNOUT:
@@ -163,9 +168,9 @@ namespace Splines
          * Parabolic runout: Z[0] = Z[1]
          * Implica che la derivata terza è nulla al bordo
          */
-        diag( 0 )  = 1.0;
-        super( 0 ) = -1.0;
-        rhs( 0 )   = 0.0;
+        diag( 0 )  = 1;
+        super( 0 ) = -1;
+        rhs( 0 )   = 0;
         break;
 
       case CubicSpline_BC::NOT_A_KNOT:
@@ -176,10 +181,10 @@ namespace Splines
          */
         {
           real_type const r = DX( 0 ) / DX( 1 );
-          diag( 0 )         = 1.0;
-          super( 0 )        = -( 1.0 + r );
+          diag( 0 )         = 1;
+          super( 0 )        = -( 1 + r );
           UU                = r;  // Elemento extra-diagonale in posizione (0,2)
-          rhs( 0 )          = 0.0;
+          rhs( 0 )          = 0;
         }
         break;
     }
@@ -194,37 +199,42 @@ namespace Splines
         diag( n )    = 1.0;
         sub( n - 1 ) = 0.0;
 
-        if ( npts == 2 )
-          rhs( n ) = 0.0;
-        else if ( npts == 3 )
-          rhs( n ) = Utils::second_derivative_3p( X[n], Y[n], X[n - 1], Y[n - 1], X[n - 2], Y[n - 2] );
-        else if ( npts == 4 )
-          rhs(
-            n ) = Utils::second_derivative_4p( X[n], Y[n], X[n - 1], Y[n - 1], X[n - 2], Y[n - 2], X[n - 3], Y[n - 3] );
-        else
-          rhs( n ) = Utils::second_derivative_5p(
-            X[n],
-            Y[n],
-            X[n - 1],
-            Y[n - 1],
-            X[n - 2],
-            Y[n - 2],
-            X[n - 3],
-            Y[n - 3],
-            X[n - 4],
-            Y[n - 4] );
+        switch ( npts )
+        {
+          case 2: rhs( n ) = 0; break;
+          case 3:
+          case 4: rhs( n ) = Utils::second_derivative_3p( X[n], Y[n], X[n - 1], Y[n - 1], X[n - 2], Y[n - 2] ); break;
+          case 5:
+          case 6:
+            rhs( n ) =
+              Utils::second_derivative_4p( X[n], Y[n], X[n - 1], Y[n - 1], X[n - 2], Y[n - 2], X[n - 3], Y[n - 3] );
+            break;
+          default:
+            rhs( n ) = Utils::second_derivative_5p(
+              X[n],
+              Y[n],
+              X[n - 1],
+              Y[n - 1],
+              X[n - 2],
+              Y[n - 2],
+              X[n - 3],
+              Y[n - 3],
+              X[n - 4],
+              Y[n - 4] );
+            break;
+        }
         break;
 
       case CubicSpline_BC::NATURAL:
-        diag( n )    = 1.0;
-        sub( n - 1 ) = 0.0;
-        rhs( n )     = 0.0;
+        diag( n )    = 1;
+        sub( n - 1 ) = 0;
+        rhs( n )     = 0;
         break;
 
       case CubicSpline_BC::PARABOLIC_RUNOUT:
-        diag( n )    = 1.0;
-        sub( n - 1 ) = -1.0;
-        rhs( n )     = 0.0;
+        diag( n )    = 1;
+        sub( n - 1 ) = -1;
+        rhs( n )     = 0;
         break;
 
       case CubicSpline_BC::NOT_A_KNOT:
@@ -233,10 +243,10 @@ namespace Splines
          */
         {
           real_type const r = DX( n - 2 ) / DX( n - 1 );
-          diag( n )         = 1.0;
-          sub( n - 1 )      = -( 1.0 + r );
+          diag( n )         = 1;
+          sub( n - 1 )      = -( 1 + r );
           LL                = r;  // Elemento extra-diagonale in posizione (n,n-2)
-          rhs( n )          = 0.0;
+          rhs( n )          = 0;
         }
         break;
     }
@@ -290,6 +300,7 @@ namespace Splines
      * Derivata dall'integrazione della derivata seconda
      */
     Yp[n] = Yp[n - 1] + DX( n - 1 ) * ( Z( n - 1 ) + Z( n ) ) * 0.5;
+    if ( Ypp != nullptr ) std::copy_n( Z.data(), npts, Ypp );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -424,6 +435,7 @@ namespace Splines
           m_X + ibegin,   // Puntatore ai dati X del segmento
           m_Y + ibegin,   // Puntatore ai dati Y del segmento
           m_Yp + ibegin,  // Puntatore alle derivate del segmento
+          nullptr,        // non serve farsi dare le derivate seconde
           iend - ibegin,  // Numero di punti nel segmento
           seg_bc0,        // BC iniziale del segmento
           seg_bcn         // BC finale del segmento

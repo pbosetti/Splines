@@ -83,8 +83,8 @@ namespace Splines
     integer const n{ npts - 1 };
 
     // function definition is ok, go on.
-    real_type h1{ X[1] - X[0] };
-    real_type del1{ ( Y[1] - Y[0] ) / h1 };
+    real_type h1   = X[1] - X[0];
+    real_type del1 = ( Y[1] - Y[0] ) / h1;
 
     // special case n=2 -- use linear interpolation.
     if ( n == 1 )
@@ -93,8 +93,8 @@ namespace Splines
       return;
     }
 
-    real_type h2{ X[2] - X[1] };
-    real_type del2{ ( Y[2] - Y[1] ) / h2 };
+    real_type h2   = X[2] - X[1];
+    real_type del2 = ( Y[2] - Y[1] ) / h2;
 
     // Set Yp[0] via non-centered three-point formula, adjusted to be shape-preserving.
     real_type hsum{ h1 + h2 };
