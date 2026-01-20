@@ -51,9 +51,8 @@ namespace Splines
     }
 
     const int n = N - 1;
-    
-    for ( integer i = 0; i < n; ++i )
-      m[i] = (Y[i+1]-Y[i])/(X[i+1]-X[i]);
+
+    for ( integer i = 0; i < n; ++i ) m[i] = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
 
     auto slope = [&]( int i ) -> real_type
     {

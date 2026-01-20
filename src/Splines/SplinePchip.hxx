@@ -31,128 +31,177 @@
 
 namespace Splines
 {
-
-  namespace
-  {
-    static real_type max_abs( real_type const a, real_type const b )
-    {
-      real_type res{ std::abs( a ) };
-      if ( res < std::abs( b ) ) res = std::abs( b );
-      return res;
-    }
-
-    static real_type min_abs( real_type const a, real_type const b )
-    {
-      real_type res{ std::abs( a ) };
-      if ( res > std::abs( b ) ) res = std::abs( b );
-      return res;
-    }
-
-    static int signTest( real_type const a, real_type const b )
-    {
-      int sa{ 0 };
-      int sb{ 0 };
-      if ( a > 0 )
-        sa = 1;
-      else if ( a < 0 )
-        sa = -1;
-      if ( b > 0 )
-        sb = 1;
-      else if ( b < 0 )
-        sb = -1;
-      return sa * sb;
-    }
-  }  // namespace
-
-  //!
-  //! References:
-  //! ==========
-  //!
-  //! F.N. Fritsch, R.E. Carlson:
-  //! Monotone Piecewise Cubic Interpolation,
-  //! SIAM J. Numer. Anal. Vol 17, No. 2, April 1980
-  //!
-  //! F.N. Fritsch and J. Butland:
-  //! A method for constructing local monotone piecewise cubic interpolants,
-  //! SIAM Journal on Scientific and Statistical Computing 5, 2 (June 1984), pp. 300-304.
-  //!
+  /*!
+   * \brief Computes derivatives for a Monotone Piecewise Cubic Interpolation (PCHIP).
+   *
+   * This function constructs the first derivatives \f$ d_k \f$ at the data points such that
+   * the resulting piecewise cubic Hermite spline preserves the monotonicity of the given data.
+   * Unlike a natural cubic spline, PCHIP avoids "overshoots" and oscillations locally.
+   *
+   * \details
+   * The algorithm calculates the derivatives \f$ Y'_k \f$ based on the secant slopes between points.
+   *
+   * <b>Interior Points:</b>
+   * For interior points \f$ k \f$, the derivative is computed using a weighted harmonic mean
+   * of the adjacent secant slopes \f$ \delta_{k-1} \f$ and \f$ \delta_k \f$.
+   * - If \f$ \delta_{k-1} \f$ and \f$ \delta_k \f$ have opposite signs (or one is zero),
+   * the derivative \f$ d_k \f$ is set to 0 (local extremum).
+   * - If they have the same sign, the derivative is determined by the Fritsch-Butland formula
+   * (modified by Brodlie) to ensure strict monotonicity.
+   *
+   * The formula for the weighted harmonic mean is:
+   * \f[
+   * d_k = \frac{\delta_{k-1} \cdot \delta_k}{\alpha \delta_k + \beta \delta_{k-1}}
+   * \f]
+   * where weights \f$ \alpha, \beta \f$ depend on the interval lengths \f$ h_{k-1}, h_k \f$.
+   *
+   * <b>Boundary Points:</b>
+   * Derivatives at the endpoints (start and end) are computed using a non-centered three-point
+   * formula that is subsequently adjusted (clamped) to enforce monotonicity constraints if necessary.
+   *
+   * \param[in]  X    Array of x-coordinates (must be strictly increasing).
+   * \param[in]  Y    Array of y-coordinates.
+   * \param[out] Yp   Output array for the computed derivatives (must be allocated with size npts).
+   * \param[in]  npts Number of points (dimension of arrays). Must be >= 2.
+   *
+   * \note
+   * This implementation uses a sliding window approach to minimize memory access overhead
+   * and redundant calculations.
+   *
+   * \references
+   * - F.N. Fritsch, R.E. Carlson: <i>Monotone Piecewise Cubic Interpolation</i>,
+   * SIAM J. Numer. Anal. Vol 17, No. 2, April 1980.
+   * - F.N. Fritsch and J. Butland: <i>A method for constructing local monotone piecewise cubic interpolants</i>,
+   * SIAM Journal on Scientific and Statistical Computing 5, 2 (June 1984), pp. 300-304.
+   */
   inline void Pchip_build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts )
   {
     UTILS_ASSERT( npts >= 2, "Pchip_build, npts={} must be >= 2\n", npts );
 
-    integer const n{ npts - 1 };
+    integer const n = npts - 1;  // Index of the last point
 
-    // function definition is ok, go on.
-    real_type h1   = X[1] - X[0];
-    real_type del1 = ( Y[1] - Y[0] ) / h1;
+    // Helper lambda: returns 1 if signs match, -1 if opposite, 0 if either is zero.
+    auto sign_test = []( real_type const a, real_type const b ) -> int
+    {
+      if ( a * b > 0 ) return 1;
+      return ( a == 0 || b == 0 ) ? 0 : -1;
+    };
 
-    // special case n=2 -- use linear interpolation.
+    // Initialize first interval variables
+    real_type h_cur   = X[1] - X[0];
+    real_type del_cur = ( Y[1] - Y[0] ) / h_cur;
+
+    // Special case: only 2 points (Linear Interpolation)
     if ( n == 1 )
     {
-      Yp[0] = Yp[1] = del1;
+      Yp[0] = Yp[1] = del_cur;
       return;
     }
 
-    real_type h2   = X[2] - X[1];
-    real_type del2 = ( Y[2] - Y[1] ) / h2;
+    /* -----------------------------------------------------------
+     * 1. Left Boundary (Start Point)
+     * Use non-centered 3-point formula, then adjust for shape.
+     * ----------------------------------------------------------- */
+    real_type h_next   = X[2] - X[1];
+    real_type del_next = ( Y[2] - Y[1] ) / h_next;
 
-    // Set Yp[0] via non-centered three-point formula, adjusted to be shape-preserving.
-    real_type hsum{ h1 + h2 };
-    real_type w1{ 1 + h1 / hsum };
-    real_type w2{ -h1 / hsum };
-    Yp[0] = w1 * del1 + w2 * del2;
-    real_type dmin, dmax;
-    if ( signTest( Yp[0], del1 ) <= 0 ) { Yp[0] = 0; }
-    else if ( signTest( del1, del2 ) < 0 )
+    real_type h_sum = h_cur + h_next;
+    // Weights for the non-centered formula
+    real_type w1 = ( h_cur + h_sum ) / h_sum;
+    real_type w2 = -h_cur / h_sum;
+
+    Yp[0] = w1 * del_cur + w2 * del_next;
+
+    // Check monotonicity constraints for the start point
+    if ( sign_test( Yp[0], del_cur ) <= 0 ) { Yp[0] = 0; }
+    else if ( sign_test( del_cur, del_next ) < 0 )
     {
-      // NEED DO THIS CHECK ONLY IF MONOTONICITY SWITCHES.
-      dmax = 3 * del1;
+      // If convexity changes, clamp the derivative to prevent overshoot
+      real_type const dmax = 3 * del_cur;
       if ( std::abs( Yp[0] ) > std::abs( dmax ) ) Yp[0] = dmax;
     }
 
-    // loop through interior points.
+    /* -----------------------------------------------------------
+     * 2. Interior Points Loop
+     * Uses a sliding window: prev -> cur -> next
+     * ----------------------------------------------------------- */
+    real_type h_prev   = h_cur;
+    real_type del_prev = del_cur;
+
+    // Shift current to next for the start of the loop
+    h_cur   = h_next;
+    del_cur = del_next;
+
     for ( integer i = 1; i < n; ++i )
     {
-      if ( i > 1 )
+      // Prefetch 'next' values if not at the second-to-last point
+      if ( i < n - 1 )
       {
-        h1   = h2;
-        h2   = X[i + 1] - X[i];
-        hsum = h1 + h2;
-        del1 = del2;
-        del2 = ( Y[i + 1] - Y[i] ) / h2;
+        h_next   = X[i + 1] - X[i];
+        del_next = ( Y[i + 1] - Y[i] ) / h_next;
       }
-      // set Yp[i]=0 unless data are strictly monotonic.
-      Yp[i] = 0;
-      // count number of changes in direction of monotonicity.
-      switch ( signTest( del1, del2 ) )
+
+      // Check the relationship between adjacent slopes
+      int const sign_prod = sign_test( del_prev, del_cur );
+
+      if ( sign_prod > 0 )
       {
-        case -1:
-          if ( Utils::is_zero( del2 ) ) break;
-          break;
-        case 0: break;
-        case 1:  // use brodlie modification of butland formula.
-          w1   = ( 1 + h1 / hsum ) / 3;
-          w2   = ( 1 + h2 / hsum ) / 3;
-          dmax = max_abs( del1, del2 );
-          dmin = min_abs( del1, del2 );
-          real_type const drat1{ del1 / dmax };
-          real_type const drat2{ del2 / dmax };
-          Yp[i] = dmin / ( w1 * drat1 + w2 * drat2 );
-          break;
+        // Case: Strict Monotonicity (Same signs)
+        // Use Brodlie modification of Fritsch-Butland formula (Weighted Harmonic Mean)
+        real_type const sum_h = h_prev + h_cur;
+
+        // Calculate weights based on interval lengths
+        real_type const wa = ( h_prev + 2 * h_cur ) / ( 3 * sum_h );
+        real_type const wb = ( 2 * h_prev + h_cur ) / ( 3 * sum_h );
+
+        // Harmonic mean avoids division by zero implicitly
+        Yp[i] = ( del_prev * del_cur ) / ( wa * del_cur + wb * del_prev );
+      }
+      else
+      {
+        // Case: Local Extremum (Opposite signs) or Plateau (Zero slope)
+        // Derivative must be zero to preserve monotonicity
+        Yp[i] = 0;
+      }
+
+      // Slide the window for the next iteration
+      if ( i < n - 1 )
+      {
+        h_prev   = h_cur;
+        del_prev = del_cur;
+        h_cur    = h_next;
+        del_cur  = del_next;
       }
     }
-    // set Yp[n] via non-centered three-point formula, adjusted to be shape-preserving.
-    w1    = -h2 / hsum;
-    w2    = ( h2 + hsum ) / hsum;
-    Yp[n] = w1 * del1 + w2 * del2;
-    if ( signTest( Yp[n], del2 ) <= 0 ) { Yp[n] = 0; }
-    else if ( signTest( del1, del2 ) < 0 )
+
+    /* -----------------------------------------------------------
+     * 3. Right Boundary (End Point)
+     * Re-evaluation of last intervals required for the 3-point formula.
+     * Note: h_prev and del_prev currently hold values for interval [n-1, n].
+     * We need interval [n-2, n-1] as well.
+     * ----------------------------------------------------------- */
+
+    // Retriev last interval (already in h_prev, but explicit for clarity)
+    real_type const h_last   = X[n] - X[n - 1];
+    real_type const del_last = ( Y[n] - Y[n - 1] ) / h_last;
+
+    // Retrieve second-to-last interval
+    real_type const h_prev_last   = X[n - 1] - X[n - 2];
+    real_type const del_prev_last = ( Y[n - 1] - Y[n - 2] ) / h_prev_last;
+
+    h_sum = h_last + h_prev_last;
+    w1    = -h_last / h_sum;
+    w2    = ( h_last + h_sum ) / h_sum;
+
+    Yp[n] = w1 * del_prev_last + w2 * del_last;
+
+    // Check monotonicity constraints for the end point
+    if ( sign_test( Yp[n], del_last ) <= 0 ) { Yp[n] = 0; }
+    else if ( sign_test( del_prev_last, del_last ) < 0 )
     {
-      // need do this check only if monotonicity switches.
-      dmax = 3 * del2;
+      real_type const dmax = 3 * del_last;
       if ( std::abs( Yp[n] ) > std::abs( dmax ) ) Yp[n] = dmax;
     }
-    // cout << "ierr = " << ierr << '\n';
   }
 
   //! Pchip (Piecewise Cubic Hermite Interpolating Polynomial) spline class

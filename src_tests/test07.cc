@@ -1,9 +1,6 @@
 /*--------------------------------------------------------------------------*\
  |                                                                          |
- |  Spline Library Tests                                                    |
- |  Combined and Enhanced Version                                           |
- |                                                                          |
- |  Copyright (C) 2016-2023                                                 |
+ |  Copyright (C) 2026                                                      |
  |                                                                          |
  |         , __                 , __                                        |
  |        /|/  \               /|/  \                                       |

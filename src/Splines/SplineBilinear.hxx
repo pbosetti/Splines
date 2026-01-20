@@ -34,12 +34,12 @@ namespace Splines
   //! bilinear spline base class
   class BilinearSpline : public SplineSurf
   {
+    using SplineSurf::ipos_C;  // Accesso esplicito per chiarezza
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
     using SplineSurf::m_X;
     using SplineSurf::m_Y;
     using SplineSurf::m_Z;
-    using SplineSurf::ipos_C; // Accesso esplicito per chiarezza
 
     void make_spline() override
     {
@@ -49,7 +49,9 @@ namespace Splines
 
     // Helper per ottenere i 4 valori Z della cella corrente
     // Ottimizzabile ulteriormente se si conosce lo stride di memoria di m_Z
-    inline void get_Z_patch( integer i, integer j, real_type& Z00, real_type& Z10, real_type& Z01, real_type& Z11 ) const {
+    inline void get_Z_patch( integer i, integer j, real_type & Z00, real_type & Z10, real_type & Z01, real_type & Z11 )
+      const
+    {
       Z00 = m_Z[ipos_C( i, j )];
       Z10 = m_Z[ipos_C( i + 1, j )];
       Z01 = m_Z[ipos_C( i, j + 1 )];
@@ -84,14 +86,15 @@ namespace Splines
       // Ottimizzazione: Moltiplicazione inversa invece di divisione
       real_type const DX = m_X[i + 1] - m_X[i];
       real_type const DY = m_Y[j + 1] - m_Y[j];
-      real_type const u  = ( X.second - m_X[i] ) / DX; // Il compilatore qui usa l'inverso se ottimizza bene, ma DX serve
-      real_type const v  = ( Y.second - m_Y[j] ) / DY;
-      
+      real_type const u  = ( X.second - m_X[i] ) /
+                          DX;  // Il compilatore qui usa l'inverso se ottimizza bene, ma DX serve
+      real_type const v = ( Y.second - m_Y[j] ) / DY;
+
       real_type const u1 = 1 - u;
       real_type const v1 = 1 - v;
 
       real_type Z00, Z10, Z01, Z11;
-      get_Z_patch(i, j, Z00, Z10, Z01, Z11);
+      get_Z_patch( i, j, Z00, Z10, Z01, Z11 );
 
       return u1 * ( Z00 * v1 + Z01 * v ) + u * ( Z10 * v1 + Z11 * v );
     }
@@ -111,7 +114,7 @@ namespace Splines
       real_type const v  = ( Y.second - m_Y[j] ) / DY;
 
       real_type Z00, Z10, Z01, Z11;
-      get_Z_patch(i, j, Z00, Z10, Z01, Z11);
+      get_Z_patch( i, j, Z00, Z10, Z01, Z11 );
 
       return ( ( Z10 - Z00 ) * ( 1 - v ) + ( Z11 - Z01 ) * v ) / DX;
     }
@@ -131,7 +134,7 @@ namespace Splines
       real_type const u  = ( X.second - m_X[i] ) / DX;
 
       real_type Z00, Z10, Z01, Z11;
-      get_Z_patch(i, j, Z00, Z10, Z01, Z11);
+      get_Z_patch( i, j, Z00, Z10, Z01, Z11 );
 
       return ( ( Z01 - Z00 ) * ( 1 - u ) + ( Z11 - Z10 ) * u ) / DY;
     }
@@ -148,7 +151,7 @@ namespace Splines
 
       real_type const DX = m_X[i + 1] - m_X[i];
       real_type const DY = m_Y[j + 1] - m_Y[j];
-      
+
       // Ottimizzazione: Calcolo inversi
       real_type const invDX = 1.0 / DX;
       real_type const invDY = 1.0 / DY;
@@ -159,23 +162,23 @@ namespace Splines
       real_type const v1 = 1 - v;
 
       real_type Z00, Z10, Z01, Z11;
-      get_Z_patch(i, j, Z00, Z10, Z01, Z11);
+      get_Z_patch( i, j, Z00, Z10, Z01, Z11 );
 
       // Value
       // Riordino per minimizzare operazioni: interpolazione bilineare standard
       real_type const c0 = Z00 * v1 + Z01 * v;
       real_type const c1 = Z10 * v1 + Z11 * v;
-      d[0] = u1 * c0 + u * c1;
+      d[0]               = u1 * c0 + u * c1;
 
       // Dx
-      d[1] = (c1 - c0) * invDX; 
+      d[1] = ( c1 - c0 ) * invDX;
       // Nota: (c1 - c0) equivale a v1*(Z10-Z00) + v*(Z11-Z01)
 
       // Dy
       // Derivata rispetto a Y interpolata lungo X
       real_type const dZ_dy_0 = Z01 - Z00;
       real_type const dZ_dy_1 = Z11 - Z10;
-      d[2] = ( u1 * dZ_dy_0 + u * dZ_dy_1 ) * invDY;
+      d[2]                    = ( u1 * dZ_dy_0 + u * dZ_dy_1 ) * invDY;
     }
 
     //! Compute value and all derivatives up to second order at (x,y)
@@ -192,21 +195,21 @@ namespace Splines
 
       real_type const DX = m_X[i + 1] - m_X[i];
       real_type const DY = m_Y[j + 1] - m_Y[j];
-      
-      real_type Z00, Z10, Z01, Z11;
-      get_Z_patch(i, j, Z00, Z10, Z01, Z11);
 
-      dd[3] = 0; // Dxx
-      dd[4] = (Z11 - Z10 - Z01 + Z00) / (DX * DY); // Dxy
-      dd[5] = 0; // Dyy
+      real_type Z00, Z10, Z01, Z11;
+      get_Z_patch( i, j, Z00, Z10, Z01, Z11 );
+
+      dd[3] = 0;                                        // Dxx
+      dd[4] = ( Z11 - Z10 - Z01 + Z00 ) / ( DX * DY );  // Dxy
+      dd[5] = 0;                                        // Dyy
     }
 
     //! Second derivatives
     real_type Dxx( real_type const, real_type const ) const override { return 0; }
-    
+
     // FIX MATEMATICO
-    real_type Dxy( real_type const x, real_type const y ) const override 
-    { 
+    real_type Dxy( real_type const x, real_type const y ) const override
+    {
       std::pair<integer, real_type> X( 0, x ), Y( 0, y );
       m_search_x.find( X );
       m_search_y.find( Y );
@@ -215,13 +218,13 @@ namespace Splines
 
       real_type const DX = m_X[i + 1] - m_X[i];
       real_type const DY = m_Y[j + 1] - m_Y[j];
-      
+
       real_type Z00, Z10, Z01, Z11;
-      get_Z_patch(i, j, Z00, Z10, Z01, Z11);
-      
-      return (Z11 - Z10 - Z01 + Z00) / (DX * DY);
+      get_Z_patch( i, j, Z00, Z10, Z01, Z11 );
+
+      return ( Z11 - Z10 - Z01 + Z00 ) / ( DX * DY );
     }
-    
+
     real_type Dyy( real_type const, real_type const ) const override { return 0; }
 
 #ifdef AUTODIFF_SUPPORT
@@ -252,8 +255,8 @@ namespace Splines
       DD( val( x ), val( y ), dd );
 
       dual2nd res{ dd[0] };
-      res.grad = dd[1] * x.grad + dd[2] * y.grad;
-      res.grad.grad = 2 * dd[4] * val(x.grad) * val(y.grad) + dd[1] * x.grad.grad + dd[2] * y.grad.grad;
+      res.grad      = dd[1] * x.grad + dd[2] * y.grad;
+      res.grad.grad = 2 * dd[4] * val( x.grad ) * val( y.grad ) + dd[1] * x.grad.grad + dd[2] * y.grad.grad;
 
       return res;
     }

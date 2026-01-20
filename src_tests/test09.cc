@@ -1,4 +1,24 @@
-// test_splines_1d.cpp
+/*--------------------------------------------------------------------------*\
+ |                                                                          |
+ |  Copyright (C) 2026                                                      |
+ |                                                                          |
+ |         , __                 , __                                        |
+ |        /|/  \               /|/  \                                       |
+ |         | __/ _   ,_         | __/ _   ,_                                |
+ |         |   \|/  /  |  |   | |   \|/  /  |  |   |                        |
+ |         |(__/|__/   |_/ \_/|/|(__/|__/   |_/ \_/|/                       |
+ |                           /|                   /|                        |
+ |                           \|                   \|                        |
+ |                                                                          |
+ |      Enrico Bertolazzi                                                   |
+ |      Dipartimento di Ingegneria Industriale                              |
+ |      Università degli Studi di Trento                                    |
+ |      email: enrico.bertolazzi@unitn.it                                   |
+ |                                                                          |
+\*--------------------------------------------------------------------------*/
+
+// test09.cc
+
 #include "Splines.hh"
 #include <iostream>
 #include <vector>

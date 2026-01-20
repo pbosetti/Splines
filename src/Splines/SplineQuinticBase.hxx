@@ -132,15 +132,15 @@ namespace Splines
       PolynomialRoots::Quartic q;
       for ( integer i = 1; i < m_npts; ++i )
       {
-        real_type const & X0{ m_X[i - 1] };
-        real_type const & X1{ m_X[i] };
-        real_type const & P0{ m_Y[i - 1] };
-        real_type const & P1{ m_Y[i] };
-        real_type const & DP0{ m_Yp[i - 1] };
-        real_type const & DP1{ m_Yp[i] };
-        real_type const & DDP0{ m_Ypp[i - 1] };
-        real_type const & DDP1{ m_Ypp[i] };
-        real_type const   H{ X1 - X0 };
+        real_type const & X0   = m_X[i - 1];
+        real_type const & X1   = m_X[i];
+        real_type const & P0   = m_Y[i - 1];
+        real_type const & P1   = m_Y[i];
+        real_type const & DP0  = m_Yp[i - 1];
+        real_type const & DP1  = m_Yp[i];
+        real_type const & DDP0 = m_Ypp[i - 1];
+        real_type const & DDP1 = m_Ypp[i];
+        real_type const   H    = X1 - X0;
         real_type         A, B, C, D, E, F;
         Hermite5_to_poly( H, P0, P1, DP0, DP1, DDP0, DDP1, A, B, C, D, E, F );
         q.setup( 5 * A, 4 * B, 3 * C, 2 * D, E );
@@ -210,15 +210,15 @@ namespace Splines
       PolynomialRoots::Quartic q;
       for ( integer i = 1; i < m_npts; ++i )
       {
-        real_type const & X0{ m_X[i - 1] };
-        real_type const & X1{ m_X[i] };
-        real_type const & P0{ m_Y[i - 1] };
-        real_type const & P1{ m_Y[i] };
-        real_type const & DP0{ m_Yp[i - 1] };
-        real_type const & DP1{ m_Yp[i] };
-        real_type const & DDP0{ m_Ypp[i - 1] };
-        real_type const & DDP1{ m_Ypp[i] };
-        real_type const   H{ X1 - X0 };
+        real_type const & X0   = m_X[i - 1];
+        real_type const & X1   = m_X[i];
+        real_type const & P0   = m_Y[i - 1];
+        real_type const & P1   = m_Y[i];
+        real_type const & DP0  = m_Yp[i - 1];
+        real_type const & DP1  = m_Yp[i];
+        real_type const & DDP0 = m_Ypp[i - 1];
+        real_type const & DDP1 = m_Ypp[i];
+        real_type const   H    = X1 - X0;
         real_type         A, B, C, D, E, F;
         Hermite5_to_poly( H, P0, P1, DP0, DP1, DDP0, DDP1, A, B, C, D, E, F );
         q.setup( 5 * A, 4 * B, 3 * C, 2 * D, E );
@@ -244,10 +244,10 @@ namespace Splines
         }
         if ( i + 1 >= m_npts ) continue;
         if ( std::abs( DP1 ) > ( m_X[i + 1] - m_X[i - 1] ) * epsi ) continue;
-        real_type const & X2{ m_X[i + 1] };
-        real_type const & P2{ m_Y[i + 1] };
-        real_type const & DP2{ m_Yp[i + 1] };
-        real_type const & DDP2{ m_Ypp[i + 1] };
+        real_type const & X2   = m_X[i + 1];
+        real_type const & P2   = m_Y[i + 1];
+        real_type const & DP2  = m_Yp[i + 1];
+        real_type const & DDP2 = m_Ypp[i + 1];
         real_type         A1, B1, C1, D1, E1, F1;
         Hermite5_to_poly( X2 - X1, P1, P2, DP1, DP2, DDP1, DDP2, A1, B1, C1, D1, E1, F1 );
         real_type DD = ( ( ( 20 * A * H ) + 12 * B ) * H + 6 * C ) * H + 2 * D;
@@ -280,7 +280,7 @@ namespace Splines
 
     void write_to_stream( std::ostream & s ) const override
     {
-      integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
+      integer const nseg = m_npts > 0 ? m_npts - 1 : 0;
       for ( integer i = 0; i < nseg; ++i )
         fmt::print(
           s,
@@ -307,9 +307,9 @@ namespace Splines
     void set_range( real_type const xmin, real_type const xmax )
     {
       UTILS_ASSERT( m_npts > 0, "QuinticSplineBase[{}]::set_range, empty spline", m_name );
-      real_type const L{ m_X[m_npts - 1] - m_X[0] };
-      real_type const newL{ xmax - xmin };
-      for ( integer i{ 0 }; i < m_npts; ++i )
+      real_type const L    = m_X[m_npts - 1] - m_X[0];
+      real_type const newL = xmax - xmin;
+      for ( integer i = 0; i < m_npts; ++i )
       {
         real_type const t = ( m_X[i] - m_X[0] ) / L;
         m_X[i]            = xmin + t * newL;
@@ -383,11 +383,11 @@ namespace Splines
     {
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
-      integer const   ni{ res.first };
-      real_type const X{ res.second };
+      integer const   ni = res.first;
+      real_type const X  = res.second;
+      real_type       dx = X - m_X[ni];
+      real_type       DX = m_X[ni + 1] - m_X[ni];
       real_type       base[6], base_D[6];
-      real_type       dx{ X - m_X[ni] };
-      real_type       DX{ m_X[ni + 1] - m_X[ni] };
       Hermite5( dx, DX, base );
       Hermite5_D( dx, DX, base_D );
 
@@ -402,11 +402,11 @@ namespace Splines
     {
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
-      integer const   ni{ res.first };
-      real_type const X{ res.second };
+      integer const   ni = res.first;
+      real_type const X  = res.second;
+      real_type       dx = X - m_X[ni];
+      real_type       DX = m_X[ni + 1] - m_X[ni];
       real_type       base[6], base_D[6], base_DD[6];
-      real_type       dx{ X - m_X[ni] };
-      real_type       DX{ m_X[ni + 1] - m_X[ni] };
       Hermite5( dx, DX, base );
       Hermite5_D( dx, DX, base_D );
       Hermite5_DD( dx, DX, base_DD );
@@ -491,8 +491,8 @@ namespace Splines
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
       real_type       base_D[6];
-      real_type const x0{ m_X[ni] };
-      real_type const H{ m_X[ni + 1] - x0 };
+      real_type const x0 = m_X[ni];
+      real_type const H  = m_X[ni + 1] - x0;
       Hermite5_D( x - x0, H, base_D );
       return base_D[0] * m_Y[ni] + base_D[1] * m_Y[ni + 1] + base_D[2] * m_Yp[ni] + base_D[3] * m_Yp[ni + 1] +
              base_D[4] * m_Ypp[ni] + base_D[5] * m_Ypp[ni + 1];
@@ -520,8 +520,8 @@ namespace Splines
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
       real_type       base_DDD[6];
-      real_type const x0{ m_X[i] };
-      real_type const H{ m_X[i + 1] - x0 };
+      real_type const x0 = m_X[i];
+      real_type const H  = m_X[i + 1] - x0;
       Hermite5_DDD( x - x0, H, base_DDD );
       return base_DDD[0] * m_Y[i] + base_DDD[1] * m_Y[i + 1] + base_DDD[2] * m_Yp[i] + base_DDD[3] * m_Yp[i + 1] +
              base_DDD[4] * m_Ypp[i] + base_DDD[5] * m_Ypp[i + 1];
@@ -535,8 +535,8 @@ namespace Splines
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
       real_type       base_DDDD[6];
-      real_type const x0{ m_X[ni] };
-      real_type const H{ m_X[ni + 1] - x0 };
+      real_type const x0 = m_X[ni];
+      real_type const H  = m_X[ni + 1] - x0;
       Hermite5_DDDD( x - x0, H, base_DDDD );
       return base_DDDD[0] * m_Y[ni] + base_DDDD[1] * m_Y[ni + 1] + base_DDDD[2] * m_Yp[ni] +
              base_DDDD[3] * m_Yp[ni + 1] + base_DDDD[4] * m_Ypp[ni] + base_DDDD[5] * m_Ypp[ni + 1];
@@ -550,8 +550,8 @@ namespace Splines
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
       real_type       base_DDDDD[6];
-      real_type const x0{ m_X[ni] };
-      real_type const H{ m_X[ni + 1] - x0 };
+      real_type const x0 = m_X[ni];
+      real_type const H  = m_X[ni + 1] - x0;
       Hermite5_DDDDD( x - x0, H, base_DDDDD );
       return base_DDDDD[0] * m_Y[ni] + base_DDDDD[1] * m_Y[ni + 1] + base_DDDDD[2] * m_Yp[ni] +
              base_DDDDD[3] * m_Yp[ni + 1] + base_DDDDD[4] * m_Ypp[ni] + base_DDDDD[5] * m_Ypp[ni + 1];
@@ -597,7 +597,7 @@ namespace Splines
 
       for ( integer i = 0; i < n; ++i )
       {
-        real_type const H{ m_X[i + 1] - m_X[i] };
+        real_type const H = m_X[i + 1] - m_X[i];
         real_type       a, b, c, d, e, f;
         Hermite5_to_poly( H, m_Y[i], m_Y[i + 1], m_Yp[i], m_Yp[i + 1], m_Ypp[i], m_Ypp[i + 1], a, b, c, d, e, f );
         if ( transpose )

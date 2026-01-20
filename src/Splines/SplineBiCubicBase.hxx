@@ -46,9 +46,9 @@ namespace Splines
   protected:
     Malloc_real m_mem_bicubic;
 
-    real_type * m_DX{ nullptr };
-    real_type * m_DY{ nullptr };
-    real_type * m_DXY{ nullptr };
+    real_type * m_DX  = nullptr;
+    real_type * m_DY  = nullptr;
+    real_type * m_DXY = nullptr;
 
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
@@ -64,10 +64,10 @@ namespace Splines
       //
       //  0    2
       //
-      integer const i0{ ipos_C( i, j ) };
-      integer const i1{ ipos_C( i, j + 1 ) };
-      integer const i2{ ipos_C( i + 1, j ) };
-      integer const i3{ ipos_C( i + 1, j + 1 ) };
+      integer const i0 = ipos_C( i, j );
+      integer const i1 = ipos_C( i, j + 1 );
+      integer const i2 = ipos_C( i + 1, j );
+      integer const i3 = ipos_C( i + 1, j + 1 );
 
       bili3[0][0] = m_Z[i0];
       bili3[0][1] = m_Z[i1];
@@ -143,13 +143,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3( dx, DX, u );
       Hermite3( dy, DY, v );
@@ -158,6 +158,7 @@ namespace Splines
 
       return bilinear3( u, bili3, v );
     }
+
     //!
     //! Evaluate spline with derivative at point \f$ (x,y) \f$
     //!
@@ -173,13 +174,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3( dx, DX, u );
       Hermite3_D( dx, DX, u_D );
@@ -205,13 +206,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3_D( dx, DX, u_D );
       Hermite3( dy, DY, v );
@@ -232,13 +233,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3( dx, DX, u );
       Hermite3_D( dy, DY, v_D );
@@ -255,8 +256,8 @@ namespace Splines
     //! - `d[1]` the value of the spline `x` derivative
     //! - `d[2]` the value of the spline `y` derivative
     //! - `d[3]` the value of the spline `x` second derivative
-    //! - `d[4]` the value of the spline `y` second derivative
-    //! - `d[5]` the value of the spline `xy` mixed derivative
+    //! - `d[4]` the value of the spline `xy` mixed derivative
+    //! - `d[5]` the value of the spline `y` second derivative
     //!
     void DD( real_type const x, real_type const y, real_type dd[6] ) const override
     {
@@ -266,17 +267,18 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3( dx, DX, u );
       Hermite3_D( dx, DX, u_D );
       Hermite3_DD( dx, DX, u_DD );
+
       Hermite3( dy, DY, v );
       Hermite3_D( dy, DY, v_D );
       Hermite3_DD( dy, DY, v_DD );
@@ -302,13 +304,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3_DD( dx, DX, u_DD );
       Hermite3( dy, DY, v );
@@ -329,13 +331,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3_D( dx, DX, u_D );
       Hermite3_D( dy, DY, v_D );
@@ -356,13 +358,13 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
+      integer const i = X.first;
+      integer const j = Y.first;
 
-      real_type const dx{ X.second - m_X[i] };
-      real_type const dy{ Y.second - m_Y[j] };
-      real_type const DX{ m_X[i + 1] - m_X[i] };
-      real_type const DY{ m_Y[j + 1] - m_Y[j] };
+      real_type const dx = X.second - m_X[i];
+      real_type const dy = Y.second - m_Y[j];
+      real_type const DX = m_X[i + 1] - m_X[i];
+      real_type const DY = m_Y[j + 1] - m_Y[j];
 
       Hermite3( dx, DX, u );
       Hermite3_DD( dy, DY, v_DD );
