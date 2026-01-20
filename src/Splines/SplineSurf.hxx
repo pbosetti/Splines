@@ -283,12 +283,15 @@ namespace Splines
     void clear()
     {
       m_mem.free();
+      m_nx = 0;
+      m_ny = 0;
 
-      m_nx = m_ny = 0;
+      m_X = nullptr;
+      m_Y = nullptr;
+      m_Z = nullptr;
 
-      m_X = m_Y = m_Z = nullptr;
-
-      m_Z_min = m_Z_max = 0;
+      m_Z_min = 0;
+      m_Z_max = 0;
     }
 
     //!

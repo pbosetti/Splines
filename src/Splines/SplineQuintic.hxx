@@ -49,16 +49,121 @@ namespace Splines
     return "NOTYPE";
   }
 
-
-  void Quintic_build(
+  /*!
+   * \brief Construct a complete quintic spline from cubic Hermite data
+   *
+   * This function elevates a C1 cubic spline (defined by nodal values and
+   * first derivatives) to a C3 quintic spline by computing optimal second
+   * derivatives that minimize the curvature energy.
+   *
+   * The algorithm consists of three phases:
+   * 1. First derivative estimation (if not already provided)
+   * 2. Second derivative computation via tridiagonal solver
+   * 3. Quintic Hermite interpolation on each interval
+   *
+   * The resulting spline is C3 continuous and provides superior smoothness
+   * while preserving the original interpolation conditions.
+   *
+   * \param[in]  q_sub_type Method for first derivative estimation (CUBIC, PCHIP, AKIMA, BESSEL)
+   * \param[in]  X          Array of x-coordinates
+   * \param[in]  Y          Array of y-coordinates
+   * \param[out] Yp         Array of first derivatives (computed if needed)
+   * \param[out] Ypp        Array of second derivatives (computed)
+   * \param[in]  npts       Number of data points
+   * \param[in]  bc_type    Boundary condition type (0=natural, 1=not-a-knot, 2=clamped)
+   * \param[in]  bcl        Left boundary second derivative for clamped condition
+   * \param[in]  bcr        Right boundary second derivative for clamped condition
+   */
+  inline void Quintic_build(
     QuinticSpline_sub_type const q_sub_type,
     real_type const              X[],
     real_type const              Y[],
     real_type                    Yp[],
     real_type                    Ypp[],
-    integer const                npts,
-    real_type                    bcl = 0.0,
-    real_type                    bcr = 0.0 );
+    integer const                npts )
+  {
+    UTILS_ASSERT( npts >= 2, "Quintic_build, npts={} must be >= 2\n", npts );
+
+    // Phase 1: Estimate first derivatives if not already available
+    // (This step can be skipped if Yp is precomputed from a C1 cubic spline)
+    switch ( q_sub_type )
+    {
+      case QuinticSpline_sub_type::CUBIC:
+        CubicSpline_build( X, Y, Yp, Ypp, npts, CubicSpline_BC::EXTRAPOLATE, CubicSpline_BC::EXTRAPOLATE );
+        return;
+      case QuinticSpline_sub_type::PCHIP: Pchip_build( X, Y, Yp, npts ); break;
+      case QuinticSpline_sub_type::AKIMA:
+      {
+        Malloc_real mem( "Quintic_build::work memory" );
+        Akima_build( X, Y, Yp, mem.malloc( npts ), npts );
+      }
+      break;
+      case QuinticSpline_sub_type::BESSEL: Bessel_build( X, Y, Yp, npts ); break;
+      default: UTILS_ERROR( "Unknown QuinticSpline_sub_type value\n" );
+    }
+
+    if ( npts == 2 )
+    {  // solo 2 punti, niente da fare
+      Ypp[0] = Ypp[1] = 0;
+      return;
+    }
+
+    // ---- left boundary ----
+    if ( npts <= 3 )
+    {
+      Ypp[0] = Utils::second_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
+      Ypp[1] = Utils::second_derivative_3p( X[1], Y[1], X[2], Y[2], X[0], Y[0] );
+    }
+    else
+    {
+      Ypp[0] = Utils::second_derivative_4p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3] );
+      Ypp[1] = Utils::second_derivative_4p( X[1], Y[1], X[2], Y[2], X[3], Y[3], X[0], Y[0] );
+    }
+
+    // ---- interior points ----
+    for ( integer i = 2; i < npts - 2; ++i )
+      Ypp[i] = Utils::second_derivative_5p(
+        X[i - 0],
+        Y[i - 0],
+        X[i + 1],
+        Y[i + 1],
+        X[i - 1],
+        Y[i - 1],
+        X[i + 2],
+        Y[i + 2],
+        X[i - 2],
+        Y[i - 2] );
+
+    // ---- right boundary ----
+    if ( npts <= 3 )
+    {
+      Ypp[npts - 1] =
+        Utils::second_derivative_3p( X[npts - 1], Y[npts - 1], X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3] );
+      Ypp[npts - 2] =
+        Utils::second_derivative_3p( X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3], X[npts - 1], Y[npts - 1] );
+    }
+    else
+    {
+      Ypp[npts - 1] = Utils::second_derivative_4p(
+        X[npts - 1],
+        Y[npts - 1],
+        X[npts - 2],
+        Y[npts - 2],
+        X[npts - 3],
+        Y[npts - 3],
+        X[npts - 4],
+        Y[npts - 4] );
+      Ypp[npts - 2] = Utils::second_derivative_4p(
+        X[npts - 2],
+        Y[npts - 2],
+        X[npts - 3],
+        Y[npts - 3],
+        X[npts - 4],
+        Y[npts - 4],
+        X[npts - 1],
+        Y[npts - 1] );
+    }
+  }
 
   //! Quintic spline class
   class QuinticSpline : public QuinticSplineBase

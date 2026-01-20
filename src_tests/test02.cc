@@ -408,7 +408,7 @@ template <typename SplineType> DerivativeErrors check_derivatives_with_patch_sep
   const real_type * Y_knots,
   integer           ny_knots,
   integer           grid_points_per_patch = 10,
-  real_type         h                     = 1e-6 )
+  real_type         h                     = 1e-4 )
 {
   DerivativeErrors errors{};
 

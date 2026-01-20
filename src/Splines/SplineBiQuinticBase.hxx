@@ -471,7 +471,12 @@ namespace Splines
       using autodiff::derivative;
       using autodiff::dual2nd;
 
-      real_type dd[6], dx{ val( x.grad ) }, dy{ val( y.grad ) }, ddx{ x.grad.grad }, ddy{ y.grad.grad };
+      real_type dd[6];
+      real_type dx  = val( x.grad );
+      real_type dy  = val( y.grad );
+      real_type ddx = x.grad.grad;
+      real_type ddy = y.grad.grad;
+
       DD( val( x ), val( y ), dd );
 
       dual2nd res{ dd[0] };
