@@ -51,6 +51,8 @@ namespace Splines
     real_type * m_DXXY  = nullptr;
     real_type * m_DXXYY = nullptr;
 
+    Spline_sub_type m_sub_type;
+
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
 
@@ -149,7 +151,10 @@ namespace Splines
     using SplineSurf::eval;
 
     //! spline constructor
-    explicit BiQuinticSplineBase( string_view name = "Spline" ) : SplineSurf( name ) {}
+    explicit BiQuinticSplineBase( Spline_sub_type sub_type, string_view name = "Spline" )
+      : SplineSurf( name ), m_sub_type( sub_type )
+    {
+    }
 
     ~BiQuinticSplineBase() override { m_mem_biquintic.free(); }
 

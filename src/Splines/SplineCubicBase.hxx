@@ -577,6 +577,8 @@ namespace Splines
 
     integer order() const override { return 4; }
 
+    bool is_monotone() const { return check_cubic_spline_monotonicity( m_X, m_Y, m_Yp, m_npts ); }
+
 #ifdef SPLINES_BACK_COMPATIBILITY
     void      copySpline( CubicSplineBase const & S ) { this->copy_spline( S ); }
     integer   numPoints() const { return m_npts; }

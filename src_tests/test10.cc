@@ -447,12 +447,12 @@ void test_spline1dblend()
   try
   {
     GenericContainer gc;
-    gc["spline0"]["type"]  = "cubic";
-    gc["spline0"]["xdata"] = x0;
-    gc["spline0"]["ydata"] = y0;
-    gc["spline1"]["type"]  = "cubic";
-    gc["spline1"]["xdata"] = x1;
-    gc["spline1"]["ydata"] = y1;
+    gc["spline0"]["spline_type"] = "cubic";
+    gc["spline0"]["xdata"]       = x0;
+    gc["spline0"]["ydata"]       = y0;
+    gc["spline1"]["spline_type"] = "cubic";
+    gc["spline1"]["xdata"]       = x1;
+    gc["spline1"]["ydata"]       = y1;
 
     Spline1Dblend blend2( "TestBlend2" );
     blend2.build( gc );

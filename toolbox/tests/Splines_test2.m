@@ -55,14 +55,12 @@ bottom = round((scrn(4) - height) / 2);
 % Crea la figura
 figure('Position', [left bottom width height]);
 
-subtype = 'pchip';
-
 for k=1:6
   X = XXX{k};
   Y = YYY{k};
 
   pc = Spline1D('pchip',X,Y);
-  qu = Spline1D('quintic',X,Y,subtype);
+  qu = Spline1D('quintic_pchip',X,Y);
 
   XX = X(1):(X(end)-X(1))/1000:X(end);
 
@@ -89,7 +87,7 @@ for k=1:6
   Y = YYY{k};
 
   pc = Spline1D('pchip',X,Y);
-  qu = Spline1D('quintic',X,Y,subtype);
+  qu = Spline1D('quintic_pchip',X,Y);
 
   XX = X(1):(X(end)-X(1))/1000:X(end);
 

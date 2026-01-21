@@ -353,13 +353,11 @@ void test_quintic_spline()
 {
   print_header( "⚙️ Testing QuinticSpline" );
 
-  QuinticSpline qs( "Quintic" );
-
   // Test different subtypes
-  vector<QuinticSpline_sub_type> types = { QuinticSpline_sub_type::CUBIC,
-                                           QuinticSpline_sub_type::PCHIP,
-                                           QuinticSpline_sub_type::AKIMA,
-                                           QuinticSpline_sub_type::BESSEL };
+  vector<Spline_sub_type> types = { Spline_sub_type::CUBIC,
+                                    Spline_sub_type::PCHIP,
+                                    Spline_sub_type::AKIMA,
+                                    Spline_sub_type::BESSEL };
 
   vector<string>     type_names  = { "CUBIC", "PCHIP", "AKIMA", "BESSEL" };
   vector<fmt::color> type_colors = { fmt::color::light_blue,
@@ -373,7 +371,9 @@ void test_quintic_spline()
   for ( size_t i = 0; i < types.size(); i++ )
   {
     auto type = types[i];
-    qs.set_quintic_type( type );
+
+    QuinticSpline qs( type, "Quintic" );
+    // qs.set_quintic_type( type );
     qs.build( x, y );
 
     fmt::print(

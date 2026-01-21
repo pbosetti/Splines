@@ -53,17 +53,16 @@ static real_type test1_xx[] = { 0, 0.9, 2.1, 3, 4.5 };
 static real_type test1_yy[] = { 0, 1, 1.1, 2.0, 2.1 };
 static integer   test1_npt  = 5;
 
-template <typename Tspline> static void test_autodiff_spline( const string & name )
+void test_autodiff_spline( const string & name, Spline * S )
 {
   using namespace autodiff::detail;
 
-  Tspline S;
-  S.build( test1_xx, test1_yy, test1_npt );
+  S->build( test1_xx, test1_yy, test1_npt );
 
   autodiff::dual2nd t{ 1.1 };
   t.grad = 1;
   autodiff::dual2nd ttt{ t * t - t / 2 };
-  autodiff::dual2nd v{ S( ttt ) };
+  autodiff::dual2nd v{ S->eval( ttt ) };
 
   // Create a table for results
   fmt::print(
@@ -82,13 +81,13 @@ template <typename Tspline> static void test_autodiff_spline( const string & nam
     "  {} = {} (analytic: {})\n",
     fmt::styled( "S'(t)", DATA_COLOR ),
     fmt::styled( val( v.grad ), VALUE_COLOR ),
-    fmt::styled( val( ttt.grad ) * S.D( val( ttt ) ), VALUE_COLOR ) );
+    fmt::styled( val( ttt.grad ) * S->D( val( ttt ) ), VALUE_COLOR ) );
   fmt::print(
     "  {} = {} (analytic: {})\n",
     fmt::styled( "S''(t)", DATA_COLOR ),
     fmt::styled( val( v.grad.grad ), VALUE_COLOR ),
     fmt::styled(
-      val( ttt.grad.grad ) * S.D( val( ttt ) ) + val( ttt.grad * ttt.grad ) * S.DD( val( ttt ) ),
+      val( ttt.grad.grad ) * S->D( val( ttt ) ) + val( ttt.grad * ttt.grad ) * S->DD( val( ttt ) ),
       VALUE_COLOR ) );
 }
 
@@ -197,10 +196,13 @@ void test_spline_set()
   for ( const auto & val : x_vals ) { X.emplace_back( val ); }
 
   // Y values (random data for demonstration)
-  fmt::print( DATA_COLOR, "\n  Dataset Configuration:\n" );
-  fmt::print( "  ┌────────────┬────────────┬────────────┬────────────┬────────────┐\n" );
-  fmt::print( "  │     x      │   sp1 (y)  │   sp2 (y)  │   sp3 (y)  │   sp4 (y)  │\n" );
-  fmt::print( "  ├────────────┼────────────┼────────────┼────────────┼────────────┤\n" );
+  fmt::print(
+    DATA_COLOR,
+    "\n"
+    "  Dataset Configuration:\n"
+    "  ┌────────────┬────────────┬────────────┬────────────┬────────────┐\n"
+    "  │     x      │   sp1 (y)  │   sp2 (y)  │   sp3 (y)  │   sp4 (y)  │\n"
+    "  ├────────────┼────────────┼────────────┼────────────┼────────────┤\n" );
 
   for ( unsigned i = 0; i < npts; ++i )
   {
@@ -243,28 +245,19 @@ int main()
   // Banner
   fmt::print(
     fmt::emphasis::bold | fmt::fg( fmt::color::royal_blue ),
-    "\n╔══════════════════════════════════════════════════════════════════╗\n"
+    "\n"
+    "╔══════════════════════════════════════════════════════════════════╗\n"
     "║                 SPLINE LIBRARY TEST SUITE                        ║\n"
     "║                    Combined Version                              ║\n"
     "╚══════════════════════════════════════════════════════════════════╝\n\n" );
 
-  // Test 1: AutoDiff spline evaluation
-  fmt::print( HEADER_COLOR, "┌────────────────────────────────────────────────────────────┐\n" );
-  fmt::print( HEADER_COLOR, "│                     TEST 1: AutoDiff                       │\n" );
-  fmt::print( HEADER_COLOR, "└────────────────────────────────────────────────────────────┘\n" );
-
-  test_autodiff_spline<LinearSpline>( "LinearSpline" );
-  test_autodiff_spline<ConstantSpline>( "ConstantSpline" );
-  test_autodiff_spline<AkimaSpline>( "AkimaSpline" );
-  test_autodiff_spline<CubicSpline>( "CubicSpline" );
-  test_autodiff_spline<BesselSpline>( "BesselSpline" );
-  test_autodiff_spline<PchipSpline>( "PchipSpline" );
-  test_autodiff_spline<QuinticSpline>( "QuinticSpline" );
-
   // Test 2: Spline construction
-  fmt::print( HEADER_COLOR, "\n┌────────────────────────────────────────────────────────────┐\n" );
-  fmt::print( HEADER_COLOR, "│                     TEST 2: Construction                   │\n" );
-  fmt::print( HEADER_COLOR, "└────────────────────────────────────────────────────────────┘\n" );
+  fmt::print(
+    HEADER_COLOR,
+    "\n"
+    "┌────────────────────────────────────────────────────────────┐\n"
+    "│                     TEST 1: Construction                   │\n"
+    "└────────────────────────────────────────────────────────────┘\n" );
 
   CubicSpline    cs;
   AkimaSpline    ak;
@@ -272,20 +265,47 @@ int main()
   PchipSpline    pc;
   LinearSpline   ls;
   ConstantSpline csts;
-  QuinticSpline  qs;
+  QuinticSpline  qs_cubic( Splines::Spline_sub_type::CUBIC );
+  QuinticSpline  qs_akima( Splines::Spline_sub_type::AKIMA );
+  QuinticSpline  qs_bessel( Splines::Spline_sub_type::BESSEL );
+  QuinticSpline  qs_pchip( Splines::Spline_sub_type::PCHIP );
 
+  test_spline_construction( "Constant", csts );
+  test_spline_construction( "Linear", ls );
   test_spline_construction( "Cubic", cs );
   test_spline_construction( "Akima", ak );
   test_spline_construction( "Bessel", bs );
   test_spline_construction( "Pchip", pc );
-  test_spline_construction( "Linear", ls );
-  test_spline_construction( "Constant", csts );
-  test_spline_construction( "Quintic", qs );
+  test_spline_construction( "Quintic", qs_cubic );
+  test_spline_construction( "Quintic_akima", qs_akima );
+  test_spline_construction( "Quintic_bessel", qs_bessel );
+  test_spline_construction( "Quintic_pchip", qs_pchip );
+
+  // Test 2: AutoDiff spline evaluation
+  fmt::print(
+    HEADER_COLOR,
+    "┌────────────────────────────────────────────────────────────┐\n"
+    "│                     TEST 2: AutoDiff                       │\n"
+    "└────────────────────────────────────────────────────────────┘\n" );
+
+  test_autodiff_spline( "Constant", &csts );
+  test_autodiff_spline( "Linear", &ls );
+  test_autodiff_spline( "Cubic", &cs );
+  test_autodiff_spline( "Akima", &ak );
+  test_autodiff_spline( "Bessel", &bs );
+  test_autodiff_spline( "Pchip", &pc );
+  test_autodiff_spline( "Quintic", &qs_cubic );
+  test_autodiff_spline( "Quintic_akima", &qs_akima );
+  test_autodiff_spline( "Quintic_bessel", &qs_bessel );
+  test_autodiff_spline( "Quintic_pchip", &qs_pchip );
 
   // Test 3: SplineSet
-  fmt::print( HEADER_COLOR, "\n┌────────────────────────────────────────────────────────────┐\n" );
-  fmt::print( HEADER_COLOR, "│                     TEST 3: SplineSet                      │\n" );
-  fmt::print( HEADER_COLOR, "└────────────────────────────────────────────────────────────┘\n" );
+  fmt::print(
+    HEADER_COLOR,
+    "\n"
+    "┌────────────────────────────────────────────────────────────┐\n"
+    "│                     TEST 3: SplineSet                      │\n"
+    "└────────────────────────────────────────────────────────────┘\n" );
 
   test_spline_set();
 

@@ -174,61 +174,115 @@ set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
+# ----------------------------------------------------------------------
+# Calcola automaticamente il suffisso MEX per la piattaforma corrente
+# ----------------------------------------------------------------------
+if(APPLE)
+    # macOS: determina se è Apple Silicon (ARM64) o Intel
+    execute_process(
+        COMMAND uname -m
+        OUTPUT_VARIABLE ARCHITECTURE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(ARCHITECTURE STREQUAL "arm64" OR ARCHITECTURE STREQUAL "aarch64")
+        set(MEX_SUFFIX ".mexmaca64")
+        message(STATUS "Detected Apple Silicon (ARM64), using MEX suffix: ${MEX_SUFFIX}")
+    else()
+        set(MEX_SUFFIX ".mexmaci64")
+        message(STATUS "Detected macOS Intel, using MEX suffix: ${MEX_SUFFIX}")
+    endif()
+elseif(WIN32)
+    set(MEX_SUFFIX ".mexw64")
+    message(STATUS "Detected Windows, using MEX suffix: ${MEX_SUFFIX}")
+elseif(UNIX AND NOT APPLE)
+    set(MEX_SUFFIX ".mexa64")
+    message(STATUS "Detected Linux, using MEX suffix: ${MEX_SUFFIX}")
+else()
+    set(MEX_SUFFIX ".mex")
+    message(STATUS "Unknown platform, using default MEX suffix: ${MEX_SUFFIX}")
+endif()
+
+# ----------------------------------------------------------------------
+# Funzione per creare target MEX con nome di output corretto
+# ----------------------------------------------------------------------
+function(add_mex_target MEX_NAME)
+    message(STATUS "Building MEX: ${MEX_NAME}")
+    
+    # Crea il target MEX
+    add_library(mex_${MEX_NAME} MODULE 
+        src_mex/mex_${MEX_NAME}.cc
+        ${Matlab_ROOT_DIR}/extern/version/c_mexapi_version.c
+    )
+    
+    # Imposta le proprietà con OUTPUT_NAME che include il suffisso
+    set_target_properties(mex_${MEX_NAME} PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "${MEX_NAME}${MEX_SUFFIX}"  # Nome completo con suffisso
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+        BUNDLE TRUE
+    )
+    
+    # Aggiungi le directory di include
+    target_include_directories(mex_${MEX_NAME} 
+        PRIVATE 
+        ${Matlab_INCLUDE_DIRS}
+        src 
+        src_lib 
+        src/Utils
+    )
+    
+    # Aggiungi le definizioni di compilazione per MEX
+    target_compile_definitions(mex_${MEX_NAME} PRIVATE
+        MATLAB_MEX_FILE
+        MATLAB_DEFAULT_RELEASE=R2018a
+        _USE_MATH_DEFINES
+    )
+    
+    # Link delle librerie
+    target_link_libraries(mex_${MEX_NAME}
+        ${EXTRA_LIBS}
+        ${Matlab_MEX_LIBRARY}
+        ${Matlab_MX_LIBRARY}
+    )
+    
+    # Opzioni di linker specifiche per macOS
+    if(APPLE)
+        target_link_options(mex_${MEX_NAME} PRIVATE
+            "-Wl,-undefined,dynamic_lookup"
+            "-L${Matlab_ROOT_DIR}/bin/maca64"
+            "-Wl,-rpath,${Matlab_ROOT_DIR}/bin/maca64"
+        )
+    endif()
+    
+    # Copia il file MEX nella directory bin
+    add_custom_command(
+        TARGET mex_${MEX_NAME}
+        POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "$<TARGET_FILE:mex_${MEX_NAME}>"
+        "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+        COMMENT "Copying ${MEX_NAME}${MEX_SUFFIX} to bin directory"
+    )
+endfunction()
+
+# ----------------------------------------------------------------------
+# Crea tutti i target MEX
+# ----------------------------------------------------------------------
 foreach(MEX ${MEX_LIST})
-
-  message( STATUS "Building MEX: ${MEX}")
-
-  # Create MEX target manually to have more control
-  add_library(mex_${MEX} MODULE 
-    src_mex/mex_${MEX}.cc
-  )
-
-  # Set MEX file properties - APPROCCIO CORRETTO per R2025b su Apple Silicon
-  set_target_properties(mex_${MEX} PROPERTIES
-    SUFFIX ".mexmaca64"
-    PREFIX ""
-    OUTPUT_NAME "${MEX}"
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-    BUNDLE TRUE
-  )
-
-  # Add include directories
-  target_include_directories(mex_${MEX} 
-    PRIVATE 
-    ${Matlab_INCLUDE_DIRS}
-    src 
-    src_lib 
-    src/Utils
-  )
-
-  # Link libraries
-  target_link_libraries(mex_${MEX}
-    ${EXTRA_LIBS}
-    ${Matlab_MEX_LIBRARY}
-    ${Matlab_MX_LIBRARY}
-  )
-
-  # SOLUZIONE CORRETTA per MATLAB R2025b su macOS Apple Silicon:
-  # Usa dynamic lookup invece di forzare i simboli specifici
-  target_link_options(mex_${MEX} PRIVATE
-    "-Wl,-undefined,dynamic_lookup"
-  )
-
-  # MEX-specific compile definitions
-  target_compile_definitions(mex_${MEX} PRIVATE
-    MATLAB_MEX_FILE
-    MX_COMPAT_64
-    _USE_MATH_DEFINES
-  )
-
-  add_custom_command(
-    TARGET mex_${MEX}
-    POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "$<TARGET_FILE:mex_${MEX}>"
-    "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-    COMMENT "Copying ${MEX} to bin directory"
-  )
-
+    add_mex_target(${MEX})
 endforeach()
+
+# Aggiungere un target per la pulizia
+add_custom_target(clean_all
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
+    COMMENT "Cleaning all build files"
+)
+
+# Aggiungere informazioni di debug
+message(STATUS "Matlab libraries found:")
+message(STATUS "  MEX Library: ${Matlab_MEX_LIBRARY}")
+message(STATUS "  MX Library: ${Matlab_MX_LIBRARY}")
+message(STATUS "  Include dirs: ${Matlab_INCLUDE_DIRS}")
+message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "  MEX suffix: ${MEX_SUFFIX}")

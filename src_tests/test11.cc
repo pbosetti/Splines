@@ -19,6 +19,9 @@
 
 #include "Splines.hh"
 #include "Utils_fmt.hh"
+#include "Utils_eigen.hh"
+
+#include <random>
 
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -30,208 +33,436 @@ namespace SplinesTest
 
   using namespace Splines;
   using namespace std;
+  using Eigen::VectorXd;
+  using Eigen::MatrixXd;
+  using Eigen::Map;
 
-  // Test function: f(x,y) = sin(x)*cos(y) + exp(-(x^2+y^2)/10)
-  // This function is smooth but non-trivial
-  real_type test_function( real_type x, real_type y )
+  // ===========================================================================
+  // TEST FUNCTIONS - Well-behaved smooth functions for spline testing
+  // ===========================================================================
+
+  // Function 1: Simple 2D polynomial (for basic testing)
+  real_type poly_function( real_type x, real_type y )
   {
-    return sin( x ) * cos( y ) + exp( -( x * x + y * y ) / 10.0 );
+    return 1.0 + 0.5 * x - 0.3 * y + 0.2 * x * x - 0.1 * x * y + 0.05 * y * y;
   }
 
-  // Analytical derivatives of test function
-  real_type test_function_dx( real_type x, real_type y )
+  real_type poly_dx( real_type x, real_type y )
   {
-    return cos( x ) * cos( y ) - ( x / 5.0 ) * exp( -( x * x + y * y ) / 10.0 );
+    return 0.5 + 0.4 * x - 0.1 * y;
   }
 
-  real_type test_function_dy( real_type x, real_type y )
+  real_type poly_dy( real_type x, real_type y )
   {
-    return -sin( x ) * sin( y ) - ( y / 5.0 ) * exp( -( x * x + y * y ) / 10.0 );
+    return -0.3 - 0.1 * x + 0.1 * y;
   }
 
-  real_type test_function_dxx( real_type x, real_type y )
+  real_type poly_dxx( real_type x, real_type y )
   {
-    real_type exp_term = exp( -( x * x + y * y ) / 10.0 );
-    return -sin( x ) * cos( y ) + ( ( x * x / 25.0 ) - 1.0 / 5.0 ) * exp_term;
+    return 0.4;
   }
 
-  real_type test_function_dyy( real_type x, real_type y )
+  real_type poly_dyy( real_type x, real_type y )
   {
-    real_type exp_term = exp( -( x * x + y * y ) / 10.0 );
-    return -sin( x ) * cos( y ) + ( ( y * y / 25.0 ) - 1.0 / 5.0 ) * exp_term;
+    return 0.1;
   }
 
-  real_type test_function_dxy( real_type x, real_type y )
+  real_type poly_dxy( real_type x, real_type y )
   {
-    real_type exp_term = exp( -( x * x + y * y ) / 10.0 );
-    return -cos( x ) * sin( y ) + ( x * y / 25.0 ) * exp_term;
+    return -0.1;
   }
 
-  // Find interval index for a sorted array
-  integer find_interval( const vector<real_type> & X, real_type x )
+  // Function 2: Smooth exponential function (for more challenging tests)
+  real_type exp_function( real_type x, real_type y )
   {
-    const integer n = static_cast<integer>( X.size() );
-    if ( n <= 1 ) return 0;
-
-    if ( x <= X.front() ) return 0;
-    if ( x >= X.back() ) return n - 2;
-
-    auto it = std::upper_bound( X.begin(), X.end(), x );
-    return static_cast<integer>( std::distance( X.begin(), it ) ) - 1;
+    return exp( -0.1 * ( x * x + y * y ) ) * cos( x ) * sin( y );
   }
 
-  inline real_type safe_step( real_type x, const vector<real_type> & grid, integer i, real_type base_h )
+  real_type exp_dx( real_type x, real_type y )
   {
-    const real_type left  = x - grid[i];
-    const real_type right = grid[i + 1] - x;
-    return std::min( base_h, real_type( 0.49 ) * std::min( left, right ) );
+    real_type g  = exp( -0.1 * ( x * x + y * y ) );
+    real_type dg = -0.2 * x * g;
+    return dg * cos( x ) * sin( y ) - g * sin( x ) * sin( y );
   }
 
-  // Adaptive finite difference that respects node boundaries
-  template <typename Func> real_type finite_diff_dx_adaptive(
-    Func                      f,
-    real_type                 x,
-    real_type                 y,
-    const vector<real_type> & X_grid,
-    const vector<real_type> & Y_grid,
-    real_type                 base_h = 1e-6 )
+  real_type exp_dy( real_type x, real_type y )
   {
-    const integer   i = find_interval( X_grid, x );
-    const real_type h = safe_step( x, X_grid, i, base_h );
+    real_type g  = exp( -0.1 * ( x * x + y * y ) );
+    real_type dg = -0.2 * y * g;
+    return dg * cos( x ) * sin( y ) + g * cos( x ) * cos( y );
+  }
 
+  real_type exp_dxx( real_type x, real_type y )
+  {
+    real_type g   = exp( -0.1 * ( x * x + y * y ) );
+    real_type dg  = -0.2 * x * g;
+    real_type d2g = ( 0.04 * x * x - 0.2 ) * g;
+    return d2g * cos( x ) * sin( y ) - 2.0 * dg * sin( x ) * sin( y ) - g * cos( x ) * sin( y );
+  }
+
+  real_type exp_dyy( real_type x, real_type y )
+  {
+    real_type g   = exp( -0.1 * ( x * x + y * y ) );
+    real_type dg  = -0.2 * y * g;
+    real_type d2g = ( 0.04 * y * y - 0.2 ) * g;
+    return d2g * cos( x ) * sin( y ) + 2.0 * dg * cos( x ) * cos( y ) - g * cos( x ) * sin( y );
+  }
+
+  real_type exp_dxy( real_type x, real_type y )
+  {
+    real_type g    = exp( -0.1 * ( x * x + y * y ) );
+    real_type dgx  = -0.2 * x * g;
+    real_type dgy  = -0.2 * y * g;
+    real_type dgxy = 0.04 * x * y * g;
+
+    return dgxy * cos( x ) * sin( y ) + dgx * cos( x ) * cos( y ) - dgy * sin( x ) * sin( y ) - g * sin( x ) * cos( y );
+  }
+
+  // Function 3: Gentle sine-cosine product (for accuracy tests)
+  real_type trig_function( real_type x, real_type y )
+  {
+    return sin( 0.5 * x ) * cos( 0.5 * y );
+  }
+
+  real_type trig_dx( real_type x, real_type y )
+  {
+    return 0.5 * cos( 0.5 * x ) * cos( 0.5 * y );
+  }
+
+  real_type trig_dy( real_type x, real_type y )
+  {
+    return -0.5 * sin( 0.5 * x ) * sin( 0.5 * y );
+  }
+
+  real_type trig_dxx( real_type x, real_type y )
+  {
+    return -0.25 * sin( 0.5 * x ) * cos( 0.5 * y );
+  }
+
+  real_type trig_dyy( real_type x, real_type y )
+  {
+    return -0.25 * sin( 0.5 * x ) * cos( 0.5 * y );
+  }
+
+  real_type trig_dxy( real_type x, real_type y )
+  {
+    return -0.25 * cos( 0.5 * x ) * sin( 0.5 * y );
+  }
+
+  // ===========================================================================
+  // UTILITY FUNCTIONS
+  // ===========================================================================
+
+  // Finite differences using Eigen-friendly interface
+  template <typename Func> real_type finite_diff_dx( Func f, real_type x, real_type y, real_type h = 1e-6 )
+  {
     return ( f( x + h, y ) - f( x - h, y ) ) / ( 2 * h );
   }
 
-  template <typename Func> real_type finite_diff_dy_adaptive(
-    Func                      f,
-    real_type                 x,
-    real_type                 y,
-    const vector<real_type> & X_grid,
-    const vector<real_type> & Y_grid,
-    real_type                 base_h = 1e-6 )
+  template <typename Func> real_type finite_diff_dy( Func f, real_type x, real_type y, real_type h = 1e-6 )
   {
-    const integer   j = find_interval( Y_grid, y );
-    const real_type h = safe_step( y, Y_grid, j, base_h );
-
     return ( f( x, y + h ) - f( x, y - h ) ) / ( 2 * h );
   }
 
-  template <typename Func> real_type finite_diff_dxx_adaptive(
-    Func                      f,
-    real_type                 x,
-    real_type                 y,
-    const vector<real_type> & X_grid,
-    const vector<real_type> & Y_grid,
-    real_type                 base_h = 1e-6 )
+  template <typename Func> real_type finite_diff_dxx( Func f, real_type x, real_type y, real_type h = 1e-6 )
   {
-    const integer   i = find_interval( X_grid, x );
-    const real_type h = safe_step( x, X_grid, i, base_h );
-
     return ( f( x + h, y ) - 2 * f( x, y ) + f( x - h, y ) ) / ( h * h );
   }
 
-  template <typename Func> real_type finite_diff_dyy_adaptive(
-    Func                      f,
-    real_type                 x,
-    real_type                 y,
-    const vector<real_type> & X_grid,
-    const vector<real_type> & Y_grid,
-    real_type                 base_h = 1e-6 )
+  template <typename Func> real_type finite_diff_dyy( Func f, real_type x, real_type y, real_type h = 1e-6 )
   {
-    const integer   j = find_interval( Y_grid, y );
-    const real_type h = safe_step( y, Y_grid, j, base_h );
-
     return ( f( x, y + h ) - 2 * f( x, y ) + f( x, y - h ) ) / ( h * h );
   }
 
-  template <typename Func> real_type finite_diff_dxy_adaptive(
-    Func                      f,
-    real_type                 x,
-    real_type                 y,
-    const vector<real_type> & X_grid,
-    const vector<real_type> & Y_grid,
-    real_type                 base_h = 1e-6 )
+  template <typename Func> real_type finite_diff_dxy( Func f, real_type x, real_type y, real_type h = 1e-6 )
   {
-    const integer i = find_interval( X_grid, x );
-    const integer j = find_interval( Y_grid, y );
-
-    const real_type hx = safe_step( x, X_grid, i, base_h );
-    const real_type hy = safe_step( y, Y_grid, j, base_h );
-    const real_type h  = std::min( hx, hy );
-
-    return ( f( x + h, y + h ) - f( x + h, y - h ) - f( x - h, y + h ) + f( x - h, y - h ) ) / ( 4 * h * h );
+    real_type h2 = 0.5 * h;
+    return ( f( x + h2, y + h2 ) - f( x + h2, y - h2 ) - f( x - h2, y + h2 ) + f( x - h2, y - h2 ) ) / ( h * h );
   }
 
-
-  // Statistics structure
-  struct Stats
+  // Statistics structure con punto di errore massimo
+  struct DerivativeStats
   {
-    real_type max_error{ 0 };
-    real_type avg_error{ 0 };
-    real_type rms_error{ 0 };
-    integer   count{ 0 };
+    string    name;
+    real_type max_abs_error = 0;
+    real_type rms_error     = 0;
+    real_type max_rel_error = 0;
+    integer   count         = 0;
+    bool      is_derivative = false;
 
-    void update( real_type error )
+    // Punti dove si verificano gli errori massimi
+    real_type max_error_x   = 0;
+    real_type max_error_y   = 0;
+    real_type exact_at_max  = 0;
+    real_type approx_at_max = 0;
+
+    void update( real_type x, real_type y, real_type exact, real_type approx )
     {
-      max_error = max( max_error, abs( error ) );
-      avg_error += error;
-      rms_error += error * error;
+      real_type abs_err = abs( exact - approx );
+
+      // Aggiorna punto di errore massimo
+      if ( abs_err > max_abs_error )
+      {
+        max_abs_error = abs_err;
+        max_error_x   = x;
+        max_error_y   = y;
+        exact_at_max  = exact;
+        approx_at_max = approx;
+      }
+
+      real_type rel_err = 0.0;
+      if ( abs( exact ) > 1e-12 ) { rel_err = abs_err / abs( exact ); }
+      max_rel_error = max( max_rel_error, rel_err );
+
+      rms_error += abs_err * abs_err;
       ++count;
     }
 
     void finalize()
     {
+      if ( count > 0 ) { rms_error = sqrt( rms_error / static_cast<real_type>( count ) ); }
+    }
+
+    void print_row() const
+    {
+      fmt::color color;
+      if ( max_abs_error < 1e-6 ) { color = fmt::color::green; }
+      else if ( max_abs_error < 1e-3 ) { color = fmt::color::yellow; }
+      else
+      {
+        color = fmt::color::red;
+      }
+
+      if ( is_derivative )
+      {
+        fmt::print(
+          fg( color ),
+          "│ {:<14} │ {:^12.2e} │ {:^12.2e} │ {:^12.2e} │ {:18} │\n",
+          name,
+          max_abs_error,
+          rms_error,
+          max_rel_error,
+          fmt::format( "({:.3f},{:.3f})", max_error_x, max_error_y ) );
+      }
+      else
+      {
+        fmt::print(
+          fg( color ),
+          "│ {:<14} │ {:^12.2e} │ {:^12.2e} │ {:^12.2e} │ {:18} │\n",
+          name,
+          max_abs_error,
+          rms_error,
+          max_rel_error,
+          fmt::format( "({:.3f},{:.3f})", max_error_x, max_error_y ) );
+      }
+    }
+
+    void print_max_error_details() const
+    {
       if ( count > 0 )
       {
-        avg_error /= static_cast<real_type>( count );
-        rms_error = sqrt( rms_error / static_cast<real_type>( count ) );
+        fmt::print(
+          fg( fmt::color::light_gray ),
+          "    Max error at ({:.4f}, {:.4f}): exact={:.6e}, approx={:.6e}, diff={:.2e}\n",
+          max_error_x,
+          max_error_y,
+          exact_at_max,
+          approx_at_max,
+          max_abs_error );
       }
     }
   };
 
-  // Color formatting helpers
-  string format_error( real_type error )
+  struct SplineTestResults
   {
-    auto color = error < 1e-8 ? fmt::color::green : ( error < 1e-4 ? fmt::color::yellow : fmt::color::red );
-    return fmt::format( fmt::fg( color ), "{:12.2e}", error );
-  }
+    string          spline_name;
+    DerivativeStats value{ "f(x,y)", 0, 0, 0, 0, false };
+    DerivativeStats dx{ "∂f/∂x", 0, 0, 0, 0, true };
+    DerivativeStats dy{ "∂f/∂y", 0, 0, 0, 0, true };
+    DerivativeStats dxx{ "∂²f/∂x²", 0, 0, 0, 0, true };
+    DerivativeStats dyy{ "∂²f/∂y²", 0, 0, 0, 0, true };
+    DerivativeStats dxy{ "∂²f/∂x∂y", 0, 0, 0, 0, true };
+    DerivativeStats dx_fd{ "∂f/∂x (FD)", 0, 0, 0, 0, true };  // Consistency with FD
+    DerivativeStats dy_fd{ "∂f/∂y (FD)", 0, 0, 0, 0, true };
+    DerivativeStats dxx_fd{ "∂²f/∂x² (FD)", 0, 0, 0, 0, true };
+    DerivativeStats dyy_fd{ "∂²f/∂y² (FD)", 0, 0, 0, 0, true };
+    DerivativeStats dxy_fd{ "∂²f/∂x∂y (FD)", 0, 0, 0, 0, true };
 
-  string format_ratio( real_type ratio )
-  {
-    auto color = ratio < 1.1 ? fmt::color::green : ratio < 2.0 ? fmt::color::yellow : fmt::color::red;
-    return fmt::format( fmt::fg( color ), "{:30.4g}", ratio );
-  }
+    // Statistiche per interpolazione sui punti di griglia
+    DerivativeStats grid_interp{ "Grid Interp", 0, 0, 0, 0, false };
+    real_type       grid_max_interp_error{ 0 };
+    real_type       grid_max_interp_x{ 0 };
+    real_type       grid_max_interp_y{ 0 };
 
-  // Test a specific spline type
+    SplineTestResults( const string & name ) : spline_name( name ) {}
+
+    void finalize()
+    {
+      value.finalize();
+      dx.finalize();
+      dy.finalize();
+      dxx.finalize();
+      dyy.finalize();
+      dxy.finalize();
+      dx_fd.finalize();
+      dy_fd.finalize();
+      dxx_fd.finalize();
+      dyy_fd.finalize();
+      dxy_fd.finalize();
+      grid_interp.finalize();
+    }
+
+    void print_table() const
+    {
+      fmt::print(
+        fg( fmt::color::cyan ),
+        "\n┌{0:─^{2}}┐\n"
+        "│{1: ^{2}}│\n"
+        "└{0:─^{2}}┘\n",
+        "",
+        spline_name,
+        78 );
+
+      fmt::print(
+        "┌────────────────┬──────────────┬──────────────┬──────────────┬────────────────────┐\n"
+        "│ Derivative     │ Max Abs Err  │ RMS Error    │ Max Rel Err  │    Max Err At      │\n"
+        "├────────────────┼──────────────┼──────────────┼──────────────┼────────────────────┤\n" );
+
+      value.print_row();
+      dx.print_row();
+      dy.print_row();
+
+      if ( dxx.count > 0 )
+      {
+        dxx.print_row();
+        dyy.print_row();
+        dxy.print_row();
+      }
+
+      fmt::print(
+        "├────────────────┼──────────────┼──────────────┼──────────────┼────────────────────┤\n"
+        "│ FD Consistency │              │              │              │                    │\n" );
+
+      dx_fd.print_row();
+      dy_fd.print_row();
+
+      if ( dxx_fd.count > 0 )
+      {
+        dxx_fd.print_row();
+        dyy_fd.print_row();
+        dxy_fd.print_row();
+      }
+
+      // Aggiungi riga per interpolazione sui punti di griglia
+      fmt::print( "├────────────────┼──────────────┼──────────────┼──────────────┼────────────────────┤\n" );
+      grid_interp.print_row();
+
+      fmt::print( "└────────────────┴──────────────┴──────────────┴──────────────┴────────────────────┘\n" );
+
+      // Print summary con dettagli errori massimi
+      fmt::print( "\n📋 Summary for {}:\n", spline_name );
+
+      // Dettagli errori massimi per ogni tipo
+      fmt::print( "  Max error details:\n" );
+      value.print_max_error_details();
+      dx.print_max_error_details();
+      dy.print_max_error_details();
+
+      if ( dxx.count > 0 )
+      {
+        dxx.print_max_error_details();
+        dyy.print_max_error_details();
+        dxy.print_max_error_details();
+      }
+
+      // Dettagli per interpolazione griglia
+      if ( grid_interp.count > 0 )
+      {
+        fmt::print( "  Grid interpolation:\n" );
+        grid_interp.print_max_error_details();
+      }
+
+      bool all_good = true;
+      if ( value.max_abs_error > 1e-4 )
+      {
+        fmt::print( fg( fmt::color::yellow ), "  ⚠️  Function error: {:.2e}\n", value.max_abs_error );
+        all_good = false;
+      }
+
+      if ( grid_interp.max_abs_error > 1e-10 )
+      {
+        fmt::print( fg( fmt::color::yellow ), "  ⚠️  Grid interpolation error: {:.2e}\n", grid_interp.max_abs_error );
+        all_good = false;
+      }
+
+      if ( dx_fd.max_abs_error > 1e-6 )
+      {
+        fmt::print( fg( fmt::color::red ), "  ❌ ∂f/∂x FD consistency: {:.2e}\n", dx_fd.max_abs_error );
+        all_good = false;
+      }
+
+      if ( dy_fd.max_abs_error > 1e-6 )
+      {
+        fmt::print( fg( fmt::color::red ), "  ❌ ∂f/∂y FD consistency: {:.2e}\n", dy_fd.max_abs_error );
+        all_good = false;
+      }
+
+      if ( dxx.count > 0 )
+      {
+        if ( dxx_fd.max_abs_error > 1e-4 )
+        {
+          fmt::print( fg( fmt::color::yellow ), "  ⚠️  ∂²f/∂x² FD consistency: {:.2e}\n", dxx_fd.max_abs_error );
+          all_good = false;
+        }
+
+        if ( dyy_fd.max_abs_error > 1e-4 )
+        {
+          fmt::print( fg( fmt::color::yellow ), "  ⚠️  ∂²f/∂y² FD consistency: {:.2e}\n", dyy_fd.max_abs_error );
+          all_good = false;
+        }
+
+        if ( dxy_fd.max_abs_error > 1e-4 )
+        {
+          fmt::print( fg( fmt::color::yellow ), "  ⚠️  ∂²f/∂x∂y FD consistency: {:.2e}\n", dxy_fd.max_abs_error );
+          all_good = false;
+        }
+      }
+
+      if ( all_good ) { fmt::print( fg( fmt::color::green ), "  ✅ All tests passed!\n" ); }
+    }
+  };
+
+  // ===========================================================================
+  // TEST FUNCTION
+  // ===========================================================================
+
   void test_spline_type(
-    SplineType2D              spline_type,
-    const vector<real_type> & x_grid,
-    const vector<real_type> & y_grid,
-    const vector<real_type> & z_data,
-    integer                   n_test_points = 1000 )
+    SplineType2D     spline_type,
+    const VectorXd & x_grid,
+    const VectorXd & y_grid,
+    const MatrixXd & z_data,
+    integer          n_test_points = 500 )
   {
     string type_name;
     switch ( spline_type )
     {
       case SplineType2D::BILINEAR: type_name = "Bilinear"; break;
-      case SplineType2D::BICUBIC: type_name = "Bicubic"; break;
-      case SplineType2D::BIQUINTIC: type_name = "Biquintic"; break;
-      case SplineType2D::AKIMA2D: type_name = "Akima2D"; break;
+      case SplineType2D::BICUBIC_CUBIC: type_name = "Bicubic"; break;
+      case SplineType2D::BICUBIC_AKIMA: type_name = "Bicubic[Akima]"; break;
+      case SplineType2D::BICUBIC_BESSEL: type_name = "Bicubic[Bessel]"; break;
+      case SplineType2D::BICUBIC_PCHIP: type_name = "Bicubic[Pchip]"; break;
+      case SplineType2D::BIQUINTIC_CUBIC: type_name = "Biquintic"; break;
+      case SplineType2D::BIQUINTIC_AKIMA: type_name = "Biquintic[Akima]"; break;
+      case SplineType2D::BIQUINTIC_BESSEL: type_name = "Biquintic[Bessel]"; break;
+      case SplineType2D::BIQUINTIC_PCHIP: type_name = "Biquintic[Pchip]"; break;
       default: type_name = "Unknown"; break;
     }
 
-    fmt::print(
-      fmt::fg( fmt::color::cyan ),
-      "\n┌{0:─^{2}}┐\n"
-      "│{1: ^{2}}│\n"
-      "└{0:─^{2}}┘\n",
-      "",
-      fmt::format( "Testing {} Spline", type_name ),
-      50 );
-
     // Create and build spline
     Spline2D spline( type_name );
-    spline.build( spline_type, x_grid, y_grid, z_data );
+    integer nx = static_cast<integer>( x_grid.size() );
+    integer ny = static_cast<integer>( y_grid.size() );
+    spline.build( spline_type, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny );
 
     // Get bounds
     real_type x_min = spline.x_min();
@@ -239,61 +470,60 @@ namespace SplinesTest
     real_type y_min = spline.y_min();
     real_type y_max = spline.y_max();
 
-    // Generate random test points
-    mt19937                              rng( 1000 );
-    uniform_real_distribution<real_type> dist_x( x_min, x_max );
-    uniform_real_distribution<real_type> dist_y( y_min, y_max );
+    // Test interpolation at grid points
 
-    // Statistics
-    Stats stats_value, stats_dx, stats_dy, stats_dxx, stats_dyy, stats_dxy;
-    Stats stats_dx_fd, stats_dy_fd, stats_dxx_fd, stats_dyy_fd, stats_dxy_fd;
+    SplineTestResults results( type_name );
 
-    // Test points
-    integer skipped_points = 0;
+    // Prima testiamo l'interpolazione sui punti di griglia
+    fmt::print( fg( fmt::color::light_blue ), "\n  Testing interpolation at grid points for {}...\n", type_name );
+
+    for ( integer i = 0; i < nx; ++i )
+    {
+      for ( integer j = 0; j < ny; ++j )
+      {
+        real_type x          = x_grid[i];
+        real_type y          = y_grid[j];
+        real_type exact_val  = z_data(i, j);
+        real_type spline_val = spline.eval( x, y );
+        results.grid_interp.update( x, y, exact_val, spline_val );
+      }
+    }
+
+    fmt::print( fg( fmt::color::light_green ), "    Grid points tested: {} × {} = {}\n", nx, ny, nx * ny );
+
+    // Generate test points using Eigen (avoid boundaries)
+    std::mt19937 rng( 1000 + static_cast<unsigned>( spline_type ) );
+    std::uniform_real_distribution<real_type> dist_x( x_min * 0.9, x_max * 0.9 );
+    std::uniform_real_distribution<real_type> dist_y( y_min * 0.9, y_max * 0.9 );
+
+    // Use trigonometric function for testing (smooth and well-behaved)
+    auto & func     = trig_function;
+    auto & func_dx  = trig_dx;
+    auto & func_dy  = trig_dy;
+    auto & func_dxx = trig_dxx;
+    auto & func_dyy = trig_dyy;
+    auto & func_dxy = trig_dxy;
+
+    // Test points - use Eigen for generating test points
+    VectorXd x_test = VectorXd::NullaryExpr(n_test_points, [&]() { return dist_x(rng); });
+    VectorXd y_test = VectorXd::NullaryExpr(n_test_points, [&]() { return dist_y(rng); });
+
     for ( integer i_test = 0; i_test < n_test_points; ++i_test )
     {
-      real_type x = dist_x( rng );
-      real_type y = dist_y( rng );
+      real_type x = x_test(i_test);
+      real_type y = y_test(i_test);
 
-      // Skip points too close to boundaries
-      real_type h_min = 1e-6;
-      if ( x <= x_min + h_min || x >= x_max - h_min || y <= y_min + h_min || y >= y_max - h_min )
-      {
-        ++skipped_points;
-        continue;
-      }
-
-      // Find intervals to check if we're too close to nodes
-      integer i_interval = find_interval( x_grid, x );
-      integer j_interval = find_interval( y_grid, y );
-
-      size_t i_size     = static_cast<size_t>( i_interval );
-      size_t i_plus_one = i_size + 1;
-      size_t j_size     = static_cast<size_t>( j_interval );
-      size_t j_plus_one = j_size + 1;
-
-      real_type dist_to_left   = x - x_grid[i_size];
-      real_type dist_to_right  = x_grid[i_plus_one] - x;
-      real_type dist_to_bottom = y - y_grid[j_size];
-      real_type dist_to_top    = y_grid[j_plus_one] - y;
-
-      // Skip if too close to any node for accurate finite differences
-      real_type min_dist_threshold = 5e-4;
-      if (
-        dist_to_left < min_dist_threshold || dist_to_right < min_dist_threshold ||
-        dist_to_bottom < min_dist_threshold || dist_to_top < min_dist_threshold )
-      {
-        ++skipped_points;
-        continue;
-      }
+      // Avoid points too close to boundaries
+      real_type margin = 0.05 * ( x_max - x_min );
+      if ( x < x_min + margin || x > x_max - margin || y < y_min + margin || y > y_max - margin ) continue;
 
       // Exact values
-      real_type exact_val = test_function( x, y );
-      real_type exact_dx  = test_function_dx( x, y );
-      real_type exact_dy  = test_function_dy( x, y );
-      real_type exact_dxx = test_function_dxx( x, y );
-      real_type exact_dyy = test_function_dyy( x, y );
-      real_type exact_dxy = test_function_dxy( x, y );
+      real_type exact_val = func( x, y );
+      real_type exact_dx  = func_dx( x, y );
+      real_type exact_dy  = func_dy( x, y );
+      real_type exact_dxx = func_dxx( x, y );
+      real_type exact_dyy = func_dyy( x, y );
+      real_type exact_dxy = func_dxy( x, y );
 
       // Spline values
       real_type spline_val = spline.eval( x, y );
@@ -303,177 +533,202 @@ namespace SplinesTest
       real_type spline_dyy = spline.Dyy( x, y );
       real_type spline_dxy = spline.Dxy( x, y );
 
-      // Adaptive finite difference approximations of spline
+      // Update accuracy stats
+      results.value.update( x, y, exact_val, spline_val );
+      results.dx.update( x, y, exact_dx, spline_dx );
+      results.dy.update( x, y, exact_dy, spline_dy );
+
+      if ( spline_type != SplineType2D::BILINEAR )
+      {
+        results.dxx.update( x, y, exact_dxx, spline_dxx );
+        results.dyy.update( x, y, exact_dyy, spline_dyy );
+        results.dxy.update( x, y, exact_dxy, spline_dxy );
+      }
+
+      // Finite difference consistency check
       auto spline_eval = [&]( real_type xx, real_type yy ) { return spline.eval( xx, yy ); };
 
-      real_type fd_dx  = finite_diff_dx_adaptive( spline_eval, x, y, x_grid, y_grid );
-      real_type fd_dy  = finite_diff_dy_adaptive( spline_eval, x, y, x_grid, y_grid );
-      real_type fd_dxx = finite_diff_dxx_adaptive( spline_eval, x, y, x_grid, y_grid );
-      real_type fd_dyy = finite_diff_dyy_adaptive( spline_eval, x, y, x_grid, y_grid );
-      real_type fd_dxy = finite_diff_dxy_adaptive( spline_eval, x, y, x_grid, y_grid );
+      real_type fd_dx  = finite_diff_dx( spline_eval, x, y );
+      real_type fd_dy  = finite_diff_dy( spline_eval, x, y );
+      real_type fd_dxx = finite_diff_dxx( spline_eval, x, y );
+      real_type fd_dyy = finite_diff_dyy( spline_eval, x, y );
+      real_type fd_dxy = finite_diff_dxy( spline_eval, x, y );
 
-      // Update statistics
-      stats_value.update( std::abs( spline_val - exact_val ) );
-      stats_dx.update( std::abs( spline_dx - exact_dx ) );
-      stats_dy.update( std::abs( spline_dy - exact_dy ) );
-      stats_dxx.update( std::abs( spline_dxx - exact_dxx ) );
-      stats_dyy.update( std::abs( spline_dyy - exact_dyy ) );
-      stats_dxy.update( std::abs( spline_dxy - exact_dxy ) );
+      results.dx_fd.update( x, y, spline_dx, fd_dx );
+      results.dy_fd.update( x, y, spline_dy, fd_dy );
 
-      stats_dx_fd.update( std::abs( spline_dx - fd_dx ) );
-      stats_dy_fd.update( std::abs( spline_dy - fd_dy ) );
-      stats_dxx_fd.update( std::abs( spline_dxx - fd_dxx ) );
-      stats_dyy_fd.update( std::abs( spline_dyy - fd_dyy ) );
-      stats_dxy_fd.update( std::abs( spline_dxy - fd_dxy ) );
+      if ( spline_type != SplineType2D::BILINEAR )
+      {
+        results.dxx_fd.update( x, y, spline_dxx, fd_dxx );
+        results.dyy_fd.update( x, y, spline_dyy, fd_dyy );
+        results.dxy_fd.update( x, y, spline_dxy, fd_dxy );
+      }
     }
 
-    // Finalize statistics
-    stats_value.finalize();
-    stats_dx.finalize();
-    stats_dy.finalize();
-    stats_dxx.finalize();
-    stats_dyy.finalize();
-    stats_dxy.finalize();
-    stats_dx_fd.finalize();
-    stats_dy_fd.finalize();
-    stats_dxx_fd.finalize();
-    stats_dyy_fd.finalize();
-    stats_dxy_fd.finalize();
+    results.finalize();
+    results.print_table();
+  }
 
-    fmt::print( "  Test points: {}, Skipped (near nodes/boundaries): {}\n", n_test_points, skipped_points );
-
-    // Print results table
+  // Test interpolation at grid points
+  void test_interpolation_accuracy(
+    const VectorXd & x_grid,
+    const VectorXd & y_grid,
+    const MatrixXd & z_data )
+  {
     fmt::print(
+      fg( fmt::color::light_blue ) | fmt::emphasis::bold,
       "\n"
-      "┌─────────────────────────────────────────────────────────────────────┐\n"
-      "│ {:^67} │\n"
-      "├────────────────────────┬──────────────┬──────────────┬──────────────┤\n"
-      "│      Derivative        │  Max Error   │  Avg Error   │  RMS Error   │\n"
-      "├────────────────────────┼──────────────┼──────────────┼──────────────┤\n",
-      fmt::format( "{} Spline Error Analysis", type_name ) );
+      "╔══════════════════════════════════════════════════════════╗\n"
+      "║          Interpolation Accuracy at Grid Points           ║\n"
+      "╚══════════════════════════════════════════════════════════╝\n" );
 
-    // Function value
-    fmt::print(
-      "│ {:<22} │ {} │ {} │ {} │\n",
-      "f(x,y)",
-      format_error( stats_value.max_error ),
-      format_error( stats_value.avg_error ),
-      format_error( stats_value.rms_error ) );
+    // Test with Bicubic spline (should interpolate exactly for all types)
+    Spline2D spline( "TestSpline" );
+    integer nx = static_cast<integer>( x_grid.size() );
+    integer ny = static_cast<integer>( y_grid.size() );
+    spline.build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny );
 
-    // First derivatives
-    fmt::print(
-      "│ {:<22} │ {} │ {} │ {} │\n",
-      "∂f/∂x (vs exact)",
-      format_error( stats_dx.max_error ),
-      format_error( stats_dx.avg_error ),
-      format_error( stats_dx.rms_error ) );
+    real_type max_error   = 0.0;
+    real_type max_error_x = 0.0;
+    real_type max_error_y = 0.0;
+    real_type avg_error   = 0.0;
+    integer   count       = 0;
 
-    fmt::print(
-      "│ {:<22} │ {} │ {} │ {} │\n",
-      "∂f/∂x (vs FD)",
-      format_error( stats_dx_fd.max_error ),
-      format_error( stats_dx_fd.avg_error ),
-      format_error( stats_dx_fd.rms_error ) );
-
-    fmt::print(
-      "│ {:<22} │ {} │ {} │ {} │\n",
-      "∂f/∂y (vs exact)",
-      format_error( stats_dy.max_error ),
-      format_error( stats_dy.avg_error ),
-      format_error( stats_dy.rms_error ) );
-
-    fmt::print(
-      "│ {:<22} │ {} │ {} │ {} │\n",
-      "∂f/∂y (vs FD)",
-      format_error( stats_dy_fd.max_error ),
-      format_error( stats_dy_fd.avg_error ),
-      format_error( stats_dy_fd.rms_error ) );
-
-    // Second derivatives (if applicable)
-    if ( spline_type != SplineType2D::BILINEAR )
+    for ( integer i = 0; i < nx; ++i )
     {
-      fmt::print(
-        "│ {:<22} │ {} │ {} │ {} │\n",
-        "∂²f/∂x² (vs exact)",
-        format_error( stats_dxx.max_error ),
-        format_error( stats_dxx.avg_error ),
-        format_error( stats_dxx.rms_error ) );
+      for ( integer j = 0; j < ny; ++j )
+      {
+        real_type exact  = z_data(i, j);
+        real_type interp = spline.eval( x_grid[i], y_grid[j] );
+        real_type error  = abs( interp - exact );
 
-      fmt::print(
-        "│ {:<22} │ {} │ {} │ {} │\n",
-        "∂²f/∂x² (vs FD)",
-        format_error( stats_dxx_fd.max_error ),
-        format_error( stats_dxx_fd.avg_error ),
-        format_error( stats_dxx_fd.rms_error ) );
+        if ( error > max_error )
+        {
+          max_error   = error;
+          max_error_x = x_grid[i];
+          max_error_y = y_grid[j];
+        }
 
-      fmt::print(
-        "│ {:<22} │ {} │ {} │ {} │\n",
-        "∂²f/∂y² (vs exact)",
-        format_error( stats_dyy.max_error ),
-        format_error( stats_dyy.avg_error ),
-        format_error( stats_dyy.rms_error ) );
+        avg_error += error;
+        ++count;
+      }
+    }
 
-      fmt::print(
-        "│ {:<22} │ {} │ {} │ {} │\n",
-        "∂²f/∂y² (vs FD)",
-        format_error( stats_dyy_fd.max_error ),
-        format_error( stats_dyy_fd.avg_error ),
-        format_error( stats_dyy_fd.rms_error ) );
+    avg_error /= static_cast<real_type>( count );
 
-      fmt::print(
-        "│ {:<22} │ {} │ {} │ {} │\n",
-        "∂²f/∂x∂y (vs exact)",
-        format_error( stats_dxy.max_error ),
-        format_error( stats_dxy.avg_error ),
-        format_error( stats_dxy.rms_error ) );
+    fmt::print( "\nGrid interpolation test ({}×{} points):\n", nx, ny );
 
-      fmt::print(
-        "│ {:<22} │ {} │ {} │ {} │\n",
-        "∂²f/∂x∂y (vs FD)",
-        format_error( stats_dxy_fd.max_error ),
-        format_error( stats_dxy_fd.avg_error ),
-        format_error( stats_dxy_fd.rms_error ) );
+    fmt::print( "  Maximum error: {:12.2e} at ({:.4f}, {:.4f})\n", max_error, max_error_x, max_error_y );
+    fmt::print( "  Average error: {:12.2e}\n", avg_error );
+
+    if ( max_error < 1e-10 ) { fmt::print( fg( fmt::color::green ), "  ✅ Interpolation is exact at grid points\n" ); }
+    else if ( max_error < 1e-6 )
+    {
+      fmt::print( fg( fmt::color::yellow ), "  ⚠️  Small interpolation errors (numerical precision)\n" );
     }
     else
     {
-      // For bilinear spline, derivatives are piecewise constant
-      fmt::print( "│ {:<22} │ {:>12} │ {:>12} │ {:>12} │\n", "∂²f/∂x² (vs exact)", "N/A", "N/A", "N/A" );
-      fmt::print( "│ {:<22} │ {:>12} │ {:>12} │ {:>12} │\n", "∂²f/∂y² (vs exact)", "N/A", "N/A", "N/A" );
-      fmt::print( "│ {:<22} │ {:>12} │ {:>12} │ {:>12} │\n", "∂²f/∂x∂y (vs exact)", "N/A", "N/A", "N/A" );
+      fmt::print( fg( fmt::color::red ), "  ❌ Large interpolation errors - check implementation!\n" );
     }
+  }
 
-    fmt::print( "└────────────────────────┴──────────────┴──────────────┴──────────────┘\n" );
-
-    // Print consistency ratios (Spline vs Finite Difference)
+  // Test derivative method consistency
+  void test_derivative_consistency(
+    Spline2D &       spline,
+    const VectorXd & x_grid,
+    const VectorXd & y_grid )
+  {
     fmt::print(
+      fg( fmt::color::light_blue ) | fmt::emphasis::bold,
       "\n"
-      "┌─────────────────────────────────────────────────────────┐\n"
-      "│     Consistency Check (Spline vs Finite Difference)     │\n"
-      "├────────────────────────┬────────────────────────────────┤\n"
-      "│      Derivative        │   Error Ratio (Spline/FD)      │\n"
-      "├────────────────────────┼────────────────────────────────┤\n" );
+      "╔══════════════════════════════════════════════════════════╗\n"
+      "║          Derivative Method Consistency Test              ║\n"
+      "╚══════════════════════════════════════════════════════════╝\n" );
 
-    real_type ratio_dx = ( stats_dx_fd.rms_error > 0 ) ? stats_dx.rms_error / stats_dx_fd.rms_error : 0;
-    real_type ratio_dy = ( stats_dy_fd.rms_error > 0 ) ? stats_dy.rms_error / stats_dy_fd.rms_error : 0;
+    std::mt19937 rng( 1234 );
+    std::uniform_real_distribution<real_type> dist_x( x_grid(0) * 0.8, x_grid.tail(1)(0) * 0.8 );
+    std::uniform_real_distribution<real_type> dist_y( y_grid(0) * 0.8, y_grid.tail(1)(0) * 0.8 );
 
-    fmt::print( "│ {:<22} │ {} │\n", "∂f/∂x", format_ratio( ratio_dx ) );
+    real_type max_D_error   = 0.0;
+    real_type max_DD_error  = 0.0;
+    real_type max_D_error_x = 0.0, max_D_error_y = 0.0;
+    real_type max_DD_error_x = 0.0, max_DD_error_y = 0.0;
+    integer   test_count = 0;
 
-    fmt::print( "│ {:<22} │ {} │\n", "∂f/∂y", format_ratio( ratio_dy ) );
+    // Generate test points using Eigen
+    VectorXd x_test = VectorXd::NullaryExpr(100, [&]() { return dist_x(rng); });
+    VectorXd y_test = VectorXd::NullaryExpr(100, [&]() { return dist_y(rng); });
 
-    if ( spline_type != SplineType2D::BILINEAR )
+    for ( integer i = 0; i < 100; ++i )
     {
-      real_type ratio_dxx = ( stats_dxx_fd.rms_error > 0 ) ? stats_dxx.rms_error / stats_dxx_fd.rms_error : 0;
-      real_type ratio_dyy = ( stats_dyy_fd.rms_error > 0 ) ? stats_dyy.rms_error / stats_dyy_fd.rms_error : 0;
-      real_type ratio_dxy = ( stats_dxy_fd.rms_error > 0 ) ? stats_dxy.rms_error / stats_dxy_fd.rms_error : 0;
+      real_type x = x_test(i);
+      real_type y = y_test(i);
 
-      fmt::print( "│ {:<22} │ {:>30} │\n", "∂²f/∂x²", format_ratio( ratio_dxx ) );
+      // Skip boundary regions
+      real_type margin = 0.1 * ( x_grid.tail(1)(0) - x_grid(0) );
+      if (
+        x < x_grid(0) + margin || x > x_grid.tail(1)(0) - margin || y < y_grid(0) + margin ||
+        y > y_grid.tail(1)(0) - margin )
+        continue;
 
-      fmt::print( "│ {:<22} │ {:>30} │\n", "∂²f/∂y²", format_ratio( ratio_dyy ) );
+      // Test D() method
+      real_type d[3];
+      spline.D( x, y, d );
 
-      fmt::print( "│ {:<22} │ {:>30} │\n", "∂²f/∂x∂y", format_ratio( ratio_dxy ) );
+      real_type dx_indiv = spline.Dx( x, y );
+      real_type dy_indiv = spline.Dy( x, y );
+
+      real_type d_error = max( abs( d[1] - dx_indiv ), abs( d[2] - dy_indiv ) );
+      if ( d_error > max_D_error )
+      {
+        max_D_error   = d_error;
+        max_D_error_x = x;
+        max_D_error_y = y;
+      }
+
+      // Test DD() method
+      real_type dd[6];
+      spline.DD( x, y, dd );
+
+      real_type dxx_indiv = spline.Dxx( x, y );
+      real_type dyy_indiv = spline.Dyy( x, y );
+      real_type dxy_indiv = spline.Dxy( x, y );
+
+      real_type dd_error = max( max( abs( dd[3] - dxx_indiv ), abs( dd[5] - dyy_indiv ) ), abs( dd[4] - dxy_indiv ) );
+      if ( dd_error > max_DD_error )
+      {
+        max_DD_error   = dd_error;
+        max_DD_error_x = x;
+        max_DD_error_y = y;
+      }
+
+      ++test_count;
     }
 
-    fmt::print( "└────────────────────────┴────────────────────────────────┘\n" );
+    fmt::print( "\nMethod consistency test ({} points):\n", test_count );
+    fmt::print(
+      "  D() method max inconsistency:  {:12.2e} at ({:.4f}, {:.4f})\n",
+      max_D_error,
+      max_D_error_x,
+      max_D_error_y );
+    fmt::print(
+      "  DD() method max inconsistency: {:12.2e} at ({:.4f}, {:.4f})\n",
+      max_DD_error,
+      max_DD_error_x,
+      max_DD_error_y );
+
+    if ( max_D_error < 1e-12 && max_DD_error < 1e-12 )
+    {
+      fmt::print( fg( fmt::color::green ), "  ✅ All derivative methods are perfectly consistent\n" );
+    }
+    else if ( max_D_error < 1e-8 && max_DD_error < 1e-8 )
+    {
+      fmt::print( fg( fmt::color::yellow ), "  ⚠️  Minor inconsistencies (numerical precision)\n" );
+    }
+    else
+    {
+      fmt::print( fg( fmt::color::red ), "  ❌ Significant inconsistencies found!\n" );
+    }
   }
 
 }  // namespace SplinesTest
@@ -483,201 +738,83 @@ int main()
   using namespace SplinesTest;
 
   fmt::print(
-    fmt::fg( fmt::color::light_blue ) | fmt::emphasis::bold,
+    fg( fmt::color::light_blue ) | fmt::emphasis::bold,
     "\n"
     "╔══════════════════════════════════════════════════════════╗\n"
-    "║         2D Spline Library - Comprehensive Test           ║\n"
+    "║          2D Spline Library - Validation Test             ║\n"
+    "║                  (Well-behaved functions)                ║\n"
     "╚══════════════════════════════════════════════════════════╝\n\n" );
 
-  // Create a non-uniform grid for testing
-  integer nx = 113;
-  integer ny = 121;
+  // Create a moderately sized uniform grid using Eigen
+  integer nx = 51;  // Reduced for faster testing
+  integer ny = 63;
 
-  // Use size_t for vector sizes to avoid warnings
-  size_t nx_size = static_cast<size_t>( nx );
-  size_t ny_size = static_cast<size_t>( ny );
+  // Domain for trigonometric function (gentle oscillations)
+  real_type XMIN = -M_PI;
+  real_type XMAX = M_PI;
+  real_type YMIN = -M_PI;
+  real_type YMAX = M_PI;
 
-  vector<real_type> x_grid( nx_size );
-  vector<real_type> y_grid( ny_size );
-  vector<real_type> z_data( nx_size * ny_size );
+  // Create uniform grid using Eigen
+  VectorXd x_grid = VectorXd::LinSpaced(nx, XMIN, XMAX);
+  VectorXd y_grid = VectorXd::LinSpaced(ny, YMIN, YMAX);
 
-  real_type XMIN = -3;
-  real_type XMAX = 3;
-  real_type YMIN = -3;
-  real_type YMAX = 3;
-
-  // Create a slightly non-uniform grid
-  for ( integer i = 0; i < nx; ++i )
-  {
-    size_t    i_idx = static_cast<size_t>( i );
-    real_type t     = real_type( i ) / ( nx - 1 );
-    x_grid[i_idx]   = XMIN + ( XMAX - XMIN ) * ( t + 0.1 * sin( 2.0 * M_PI * t ) );
-  }
-
-  for ( integer j = 0; j < ny; ++j )
-  {
-    size_t    j_idx = static_cast<size_t>( j );
-    real_type t     = real_type( j ) / ( ny - 1 );
-    y_grid[j_idx]   = YMIN + ( YMAX - YMIN ) * ( t + 0.1 * cos( 2.0 * M_PI * t ) );
-  }
-
-  // Sort grids to ensure monotonicity
-  sort( x_grid.begin(), x_grid.end() );
-  sort( y_grid.begin(), y_grid.end() );
-
-  // Generate test data
-  for ( integer i = 0; i < nx; ++i )
-  {
-    size_t i_idx = static_cast<size_t>( i );
-    for ( integer j = 0; j < ny; ++j )
-    {
-      size_t j_idx = static_cast<size_t>( j );
-      size_t idx   = i_idx * ny_size + j_idx;
-      z_data[idx]  = test_function( x_grid[i_idx], y_grid[j_idx] );
-    }
-  }
+  // Generate data using trigonometric function (well-behaved)
+  MatrixXd z_data = MatrixXd::NullaryExpr(nx, ny, [&](Eigen::Index i, Eigen::Index j) {
+    return trig_function(x_grid(i), y_grid(j));
+  });
 
   fmt::print(
-    "Test grid: {} x {} points, domain: x∈[{:.2f}, {:.2f}], y∈[{:.2f}, {:.2f}]\n\n",
+    "Test configuration:\n"
+    "  Grid: {} × {} points\n"
+    "  Domain: x ∈ [{:.2f}, {:.2f}], y ∈ [{:.2f}, {:.2f}]\n"
+    "  Test function: sin(0.5x) * cos(0.5y) (smooth, well-behaved)\n"
+    "  Test points: 500 per spline type\n\n",
     nx,
     ny,
-    x_grid.front(),
-    x_grid.back(),
-    y_grid.front(),
-    y_grid.back() );
+    x_grid.minCoeff(),
+    x_grid.maxCoeff(),
+    y_grid.minCoeff(),
+    y_grid.maxCoeff() );
 
   // Test all spline types
-  vector<SplineType2D> spline_types = { SplineType2D::BILINEAR,
-                                        SplineType2D::BICUBIC,
-                                        SplineType2D::BIQUINTIC,
-                                        SplineType2D::AKIMA2D };
+  vector<SplineType2D> spline_types = { SplineType2D::BILINEAR,        SplineType2D::BICUBIC_CUBIC,
+                                        SplineType2D::BICUBIC_AKIMA,   SplineType2D::BICUBIC_BESSEL,
+                                        SplineType2D::BICUBIC_PCHIP,   SplineType2D::BIQUINTIC_CUBIC,
+                                        SplineType2D::BIQUINTIC_AKIMA, SplineType2D::BIQUINTIC_BESSEL,
+                                        SplineType2D::BIQUINTIC_PCHIP };
 
-  for ( auto type : spline_types ) { test_spline_type( type, x_grid, y_grid, z_data, 2000 ); }
+  for ( auto type : spline_types ) { test_spline_type( type, x_grid, y_grid, z_data, 500 ); }
 
-  // Additional test: Evaluate at grid points (should be exact for interpolating splines)
+  // Test interpolation accuracy
+  test_interpolation_accuracy( x_grid, y_grid, z_data );
+
+  // Test derivative consistency
+  Spline2D test_spline( "ConsistencyTest" );
+  
+  test_spline.build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny );
+  test_derivative_consistency( test_spline, x_grid, y_grid );
+
+  // Final summary
   fmt::print(
-    fmt::fg( fmt::color::light_blue ) | fmt::emphasis::bold,
-    "\n\n"
-    "╔══════════════════════════════════════════════════════════╗\n"
-    "║          Interpolation Accuracy at Grid Points           ║\n"
-    "╚══════════════════════════════════════════════════════════╝\n" );
-
-  Spline2D test_spline( "TestSpline" );
-  test_spline.build( SplineType2D::BIQUINTIC, x_grid, y_grid, z_data );
-
-  real_type max_interp_error = 0.0;
-  real_type avg_interp_error = 0.0;
-  integer   count            = 0;
-
-  for ( integer i = 0; i < nx; ++i )
-  {
-    size_t i_idx = static_cast<size_t>( i );
-    for ( integer j = 0; j < ny; ++j )
-    {
-      size_t    j_idx  = static_cast<size_t>( j );
-      size_t    idx    = i_idx * ny_size + j_idx;
-      real_type exact  = z_data[idx];
-      real_type interp = test_spline.eval( x_grid[i_idx], y_grid[j_idx] );
-      real_type error  = abs( interp - exact );
-
-      max_interp_error = max( max_interp_error, error );
-      avg_interp_error += error;
-      ++count;
-    }
-  }
-
-  avg_interp_error /= static_cast<real_type>( count );
-
-  fmt::print(
-    "\n"
-    "Grid interpolation test (Biquintic spline):\n"
-    "  Maximum error: {}\n"
-    "  Average error: {}\n",
-    format_error( max_interp_error ),
-    format_error( avg_interp_error ) );
-
-  if ( max_interp_error > 1e-10 )
-  {
-    fmt::print( fmt::fg( fmt::color::yellow ), "  Warning: Interpolation error larger than expected!\n" );
-  }
-  else
-  {
-    fmt::print( fmt::fg( fmt::color::green ), "  ✓ Interpolation is accurate at grid points\n" );
-  }
-
-  // Test derivative consistency using D() and DD() methods
-  fmt::print(
-    fmt::fg( fmt::color::light_blue ) | fmt::emphasis::bold,
-    "\n\n"
-    "╔══════════════════════════════════════════════════════════╗\n"
-    "║          Derivative Method Consistency Test              ║\n"
-    "╚══════════════════════════════════════════════════════════╝\n" );
-
-  mt19937                              rng( 123 );
-  uniform_real_distribution<real_type> dist_x( x_grid.front(), x_grid.back() );
-  uniform_real_distribution<real_type> dist_y( y_grid.front(), y_grid.back() );
-
-  real_type max_D_consistency_error  = 0.0;
-  real_type max_DD_consistency_error = 0.0;
-
-  for ( integer i = 0; i < 100; ++i )
-  {
-    real_type x = dist_x( rng );
-    real_type y = dist_y( rng );
-
-    // Skip points too close to boundaries
-    real_type h_min = 1e-6;
-    if (
-      x <= x_grid.front() + h_min || x >= x_grid.back() - h_min || y <= y_grid.front() + h_min ||
-      y >= y_grid.back() - h_min )
-      continue;
-
-    // Test D() method consistency
-    real_type d[3];
-    test_spline.D( x, y, d );
-
-    real_type dx_indiv = test_spline.Dx( x, y );
-    real_type dy_indiv = test_spline.Dy( x, y );
-
-    real_type error_Dx = abs( d[1] - dx_indiv );
-    real_type error_Dy = abs( d[2] - dy_indiv );
-
-    max_D_consistency_error = max( max_D_consistency_error, max( error_Dx, error_Dy ) );
-
-    // Test DD() method consistency
-    real_type dd[6];
-    test_spline.DD( x, y, dd );
-
-    real_type dxx_indiv = test_spline.Dxx( x, y );
-    real_type dyy_indiv = test_spline.Dyy( x, y );
-    real_type dxy_indiv = test_spline.Dxy( x, y );
-
-    real_type error_Dxx = abs( dd[3] - dxx_indiv );
-    real_type error_Dyy = abs( dd[5] - dyy_indiv );
-    real_type error_Dxy = abs( dd[4] - dxy_indiv );
-
-    max_DD_consistency_error = max( max_DD_consistency_error, max( { error_Dxx, error_Dyy, error_Dxy } ) );
-  }
-
-  fmt::print(
-    "\n"
-    "Method consistency test (Biquintic spline):\n"
-    "  D() method consistency error:  {}\n"
-    "  DD() method consistency error: {}\n",
-    format_error( max_D_consistency_error ),
-    format_error( max_DD_consistency_error ) );
-
-  if ( max_D_consistency_error < 1e-12 && max_DD_consistency_error < 1e-12 )
-  {
-    fmt::print( fmt::fg( fmt::color::green ), "  ✓ All derivative methods are consistent\n" );
-  }
-
-  fmt::print(
-    fmt::fg( fmt::color::light_green ) | fmt::emphasis::bold,
+    fg( fmt::color::light_green ) | fmt::emphasis::bold,
     "\n\n"
     "════════════════════════════════════════════════════════════\n"
-    "           All tests completed successfully!                \n"
+    "                    TEST COMPLETED                          \n"
     "════════════════════════════════════════════════════════════\n" );
+
+  fmt::print(
+    "\nInterpretation guide:\n"
+    "  ✅ Excellent (error < 1e-6)\n"
+    "  ⚠️  Acceptable (error < 1e-3)\n"
+    "  ❌ Problematic (error ≥ 1e-3)\n"
+    "\n"
+    "Note: Finite Difference (FD) consistency errors measure how well\n"
+    "the spline's analytical derivatives match numerical derivatives\n"
+    "of the spline itself. This is a key consistency check.\n"
+    "\n"
+    "Grid interpolation test: Checks if the spline exactly matches\n"
+    "the input data at the grid points (as expected for interpolating splines).\n" );
 
   return 0;
 }

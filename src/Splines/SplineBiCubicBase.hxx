@@ -50,6 +50,8 @@ namespace Splines
     real_type * m_DY  = nullptr;
     real_type * m_DXY = nullptr;
 
+    Spline_sub_type m_sub_type;
+
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
 
@@ -99,8 +101,8 @@ namespace Splines
     using SplineSurf::eval;
 
     //! spline constructor
-    explicit BiCubicSplineBase( string_view name = "BiCubicSplineBase" )
-      : SplineSurf( name ), m_mem_bicubic( fmt::format( "BiCubicSplineBase[{}]", name ) )
+    explicit BiCubicSplineBase( Spline_sub_type sub_type, string_view name = "BiCubicSplineBase" )
+      : SplineSurf( name ), m_mem_bicubic( fmt::format( "BiCubicSplineBase[{}]", name ) ), m_sub_type( sub_type )
     {
     }
 

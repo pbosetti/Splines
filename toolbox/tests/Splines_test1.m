@@ -53,7 +53,7 @@ XXX = { xx1, xx2, xx3, xx4 };
 YYY = { yy1, yy2, yy3, yy4 };
 LOC = {'northwest','northwest','southeast','northwest'};
 
-tiledlayout(2,2);
+tiledlayout(2,4);
 
 for k=1:4
 
@@ -67,7 +67,10 @@ for k=1:4
   ak = Spline1D('akima',X,Y);
   be = Spline1D('bessel',X,Y);
   pc = Spline1D('pchip',X,Y);
-  qu = Spline1D('quintic',X,Y,'pchip');
+  qc = Spline1D('quintic',X,Y);
+  qa = Spline1D('quintic_akima',X,Y);
+  qb = Spline1D('quintic_bessel',X,Y);
+  qp = Spline1D('quintic_pchip',X,Y);
 
   XX = X(1):(X(end)-X(1))/1000:X(end);
 
@@ -76,17 +79,32 @@ for k=1:4
   Y3 = ak.eval(XX);
   Y4 = be.eval(XX);
   Y5 = pc.eval(XX);
-  Y6 = qu.eval(XX);
+  Y6 = qc.eval(XX);
+  Y7 = qa.eval(XX);
+  Y8 = qb.eval(XX);
+  Y9 = qp.eval(XX);
 
   plot( X,  Y, 'o', ...
         XX, Y1, ...
         XX, Y2, ...
         XX, Y3, ...
         XX, Y4, ...
-        XX, Y5, ...
-        XX, Y6, 'LineWidth', 2 );
+        XX, Y5, 'LineWidth', 2 );
 
-  legend('data','linear','cubic','akima','bessel','pchip','quintic');
+  legend('data','linear','cubic','akima','bessel','pchip');
+  legend('boxoff');
+  legend('Location',LOC{k});
+
+  nexttile
+
+
+  plot( X,  Y, 'o', ...
+        XX, Y6, ...
+        XX, Y7, ...
+        XX, Y8, ...
+        XX, Y9, 'LineWidth', 2 );
+
+  legend('data','quintic','quintic akima','quintic bessel','quintic pchip');
   legend('boxoff');
   legend('Location',LOC{k});
 

@@ -71,7 +71,10 @@ extern "C"
       case SplineType1D::CUBIC: head = new CubicSpline; break;
       case SplineType1D::LINEAR: head = new LinearSpline; break;
       case SplineType1D::CONSTANT: head = new ConstantSpline; break;
-      case SplineType1D::QUINTIC: head = new QuinticSpline; break;
+      case SplineType1D::QUINTIC_CUBIC: head = new QuinticSpline( Splines::Spline_sub_type::CUBIC ); break;
+      case SplineType1D::QUINTIC_AKIMA: head = new QuinticSpline( Splines::Spline_sub_type::AKIMA ); break;
+      case SplineType1D::QUINTIC_BESSEL: head = new QuinticSpline( Splines::Spline_sub_type::BESSEL ); break;
+      case SplineType1D::QUINTIC_PCHIP: head = new QuinticSpline( Splines::Spline_sub_type::PCHIP ); break;
       default:
         head = nullptr;
         ok   = -1;

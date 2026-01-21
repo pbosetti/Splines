@@ -54,7 +54,6 @@ V2 = flip(V2,2);
 X2 = 1:1:10;
 Y2 = 1:1:11;
 
-type = { 'bilinear', 'bicubic', 'biquintic', 'akima' };
 set(gca,'Fontsize',16);
 
 data.surf0.spline_type     = 'bicubic';
@@ -65,7 +64,7 @@ data.surf0.fortran_storage = true;
 data.surf0.transposed      = true;
 
 
-data.surf1.spline_type     = 'biquintic';
+data.surf1.spline_type     = 'biquintic_pchip';
 data.surf1.xdata           = X2;
 data.surf1.ydata           = Y2;
 data.surf1.zdata           = V2;
@@ -88,7 +87,8 @@ for k=1:4
 
   fprintf('Plot n.%d\n',k);
 
-  ZZ = S.eval(XX,YY,(k-1)/3);
+  ss = (k-1)/3;
+  ZZ = S.eval(XX,YY,ss);
 
   if any(isnan(ZZ(:)))
     fprintf('Trovati NaN sulla superfice\n');
@@ -100,7 +100,7 @@ for k=1:4
   subplot(2,2,k);
 
   surf(XX,YY,ZZ,'Linestyle',':');
-  title(type{k});
+  title(sprintf('s=%f',ss));
 
   axis tight
 

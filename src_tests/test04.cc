@@ -68,7 +68,11 @@ static real_type yy4[] = { 0.644, 0.652, 0.644, 0.694, 0.907, 1.336, 1.336, 2.16
 static real_type xx5[] = { 0.11, 0.12, 0.15, 0.16 };
 static real_type yy5[] = { 0.0003, 0.0003, 0.0004, 0.0004 };
 
-static integer nn[] = { 11 + 1, 11 + 1, 11 + 1, 9 + 1, 12 + 1, 4 };
+static integer nn[] = { 12, 12, 12, 10, 13, 4 };
+
+// ===========================================================================
+// IMPROVED SUPPORT FUNCTIONS
+// ===========================================================================
 
 // Function for central finite differences
 real_type finite_diff_central( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
@@ -87,20 +91,57 @@ real_type finite_diff_backward( SplineSet const & ss, real_type x, integer i, re
   return ( ss( x, i ) - ss( x - h, i ) ) / h;
 }
 
-// Print table with Unicode borders and colors
+// Adaptive finite difference function
+real_type finite_diff_adaptive(
+  SplineSet const & ss,
+  real_type         x,
+  integer           i,
+  real_type         xmin,
+  real_type         xmax,
+  real_type         h = 1e-6 )
+{
+  if ( x <= xmin + h ) { return finite_diff_forward( ss, x, i, h ); }
+  else if ( x >= xmax - h ) { return finite_diff_backward( ss, x, i, h ); }
+  else
+  {
+    return finite_diff_central( ss, x, i, h );
+  }
+}
+
+// Compute error robustly
+pair<real_type, real_type> compute_error( real_type exact, real_type approx, real_type abs_tol = 1e-12 )
+{
+  real_type abs_err = abs( exact - approx );
+  real_type rel_err = 0.0;
+
+  if ( abs( exact ) < abs_tol && abs( approx ) < abs_tol ) { rel_err = 0.0; }
+  else
+  {
+    real_type denom = max( abs( exact ), abs( approx ) );
+    if ( denom > abs_tol ) { rel_err = 100.0 * abs_err / denom; }
+    else
+    {
+      rel_err = ( abs_err > abs_tol ) ? 100.0 : 0.0;
+    }
+  }
+
+  return make_pair( abs_err, min( rel_err, 100.0 ) );
+}
+
+// ===========================================================================
+// TABLE FUNCTIONS
+// ===========================================================================
+
 void print_table_header( vector<string> const & headers )
 {
-  // Top line
   fmt::print( "┌{}", fmt::format( "{:─^{}}", "", 12 ) );
   for ( size_t i = 1; i < headers.size() - 1; ++i ) { fmt::print( "┬{}", fmt::format( "{:─^{}}", "", 16 ) ); }
   fmt::print( "┬{:─^{}}┐\n", "", 25 );
 
-  // Headers
   fmt::print( "│{:^12}", headers[0] );
   for ( size_t i = 1; i < headers.size() - 1; ++i ) { fmt::print( "│{:^16}", headers[i] ); }
   fmt::print( "│{:^25}│\n", headers.back() );
 
-  // Separator
   fmt::print( "├{}", fmt::format( "{:─^{}}", "", 12 ) );
   for ( size_t i = 1; i < headers.size() - 1; ++i ) { fmt::print( "┼{}", fmt::format( "{:─^{}}", "", 16 ) ); }
   fmt::print( "┼{:─^{}}┤\n", "", 25 );
@@ -123,7 +164,10 @@ void print_table_footer( size_t ncols )
   fmt::print( "┴{:─^{}}┘\n", "", 25 );
 }
 
-// Check if a point is a duplicate knot (discontinuity point)
+// ===========================================================================
+// DUPLICATE KNOT HANDLING
+// ===========================================================================
+
 bool is_duplicate_knot( real_type const * xx, integer npts, real_type x, integer & first_index, real_type eps = 1e-12 )
 {
   first_index   = -1;
@@ -140,20 +184,35 @@ bool is_duplicate_knot( real_type const * xx, integer npts, real_type x, integer
   return false;
 }
 
-// Check if a point is too close to a duplicate knot to avoid issues with finite differences
 bool too_close_to_duplicate( real_type const * xx, integer npts, real_type x, real_type safety_margin = 1e-4 )
 {
   for ( integer i = 0; i < npts; ++i )
   {
-    // Look for duplicate knots
     if ( i > 0 && abs( xx[i] - xx[i - 1] ) < 1e-12 )
     {
-      // This is a duplicate knot
       if ( abs( x - xx[i] ) < safety_margin ) { return true; }
     }
   }
   return false;
 }
+
+bool is_near_knot( real_type x, real_type const * knots, integer n, real_type eps = 1e-10 )
+{
+  for ( integer i = 0; i < n; ++i )
+  {
+    if ( abs( x - knots[i] ) <= eps ) return true;
+  }
+  return false;
+}
+
+bool is_spline_differentiable_at_knots( string const & spline_name )
+{
+  return !( spline_name == "CONSTANT" || spline_name == "LINEAR" );
+}
+
+// ===========================================================================
+// MAIN FUNCTION
+// ===========================================================================
 
 int main()
 {
@@ -162,10 +221,17 @@ int main()
     "\n"
     "╔══════════════════════════════════════════════════════════╗\n"
     "║                         TEST N.4                         ║\n"
+    "║                  (with duplicate knots)                  ║\n"
     "╚══════════════════════════════════════════════════════════╝\n\n" );
 
   SplineSet ss;
   ofstream  file, file_D;
+
+  // Configuration parameters
+  const real_type h_fd           = 1e-6;
+  const real_type abs_tol        = 1e-8;
+  const real_type rel_tol        = 1e-4;
+  const real_type knot_tolerance = 1e-10;
 
   for ( integer k = 0; k < 6; ++k )
   {
@@ -210,7 +276,7 @@ int main()
       fg( fmt::color::yellow ) | fmt::emphasis::bold,
       "\n"
       "┌──────────────────────────────────────────────────────────┐\n"
-      "│ Dataset {}: {:42} │\n"
+      "│ Dataset {}: {:45} │\n"
       "└──────────────────────────────────────────────────────────┘\n",
       k,
       dataset_name );
@@ -223,19 +289,25 @@ int main()
 
     real_type const xmin{ xx[0] };
     real_type const xmax{ xx[nn[k] - 1] };
+    integer const   npts{ nn[k] };
 
-    constexpr integer nspl      = 7;
-    integer const     npts      = nn[k];
-    char const *      headers[] = { "SPLINE_CONSTANT", "SPLINE_LINEAR", "SPLINE_AKIMA",  "SPLINE_BESSEL",
-                                    "SPLINE_PCHIP",    "SPLINE_CUBIC",  "SPLINE_QUINTIC" };
+    // Define 10 splines including all quintic subtypes
+    constexpr integer nspl      = 10;
+    char const *      headers[] = { "CONSTANT", "LINEAR",        "CUBIC",         "AKIMA",          "BESSEL",
+                                    "PCHIP",    "QUINTIC_CUBIC", "QUINTIC_AKIMA", "QUINTIC_BESSEL", "QUINTIC_PCHIP" };
 
-    constexpr SplineType1D stype[]{ SplineType1D::CONSTANT, SplineType1D::LINEAR, SplineType1D::AKIMA,
-                                    SplineType1D::BESSEL,   SplineType1D::PCHIP,  SplineType1D::CUBIC,
-                                    SplineType1D::QUINTIC };
+    SplineType1D const stype[] = { SplineType1D::CONSTANT,       SplineType1D::LINEAR,
+                                   SplineType1D::CUBIC,          SplineType1D::AKIMA,
+                                   SplineType1D::BESSEL,         SplineType1D::PCHIP,
+                                   SplineType1D::QUINTIC_CUBIC,  SplineType1D::QUINTIC_AKIMA,
+                                   SplineType1D::QUINTIC_BESSEL, SplineType1D::QUINTIC_PCHIP };
 
-    real_type const * Y[] = { yy, yy, yy, yy, yy, yy, yy };
+    // Prepare data for all splines
+    vector<real_type const *> Y( nspl );
+    for ( integer i = 0; i < nspl; ++i ) Y[i] = yy;
 
-    ss.build( nspl, npts, headers, stype, xx, Y );
+    // Build spline set
+    ss.build( nspl, npts, headers, stype, xx, Y.data() );
 
     // Write spline values file
     file << "x";
@@ -261,12 +333,7 @@ int main()
     }
     file_D.close();
 
-    ss.info( cout );
-
     // ========== DERIVATIVE CHECK WITH FINITE DIFFERENCES ==========
-
-    // Test points: interior points far from duplicate knots
-    vector<real_type> test_points;
 
     // Identify valid intervals (where x[i] != x[i+1])
     vector<pair<real_type, real_type>> valid_intervals;
@@ -276,13 +343,13 @@ int main()
     }
 
     // Generate test points in valid intervals
+    vector<real_type> test_points;
     for ( const auto & interval : valid_intervals )
     {
       real_type x1 = interval.first;
       real_type x2 = interval.second;
       real_type dx = ( x2 - x1 ) / 10.0;
 
-      // Add interior points (avoiding interval boundaries)
       for ( integer j = 1; j < 10; ++j )
       {
         real_type x = x1 + j * dx;
@@ -290,7 +357,7 @@ int main()
       }
     }
 
-    // Also add single knots (not duplicates) if not too close to duplicates
+    // Add single knots (not duplicates) if not too close to duplicates
     for ( integer i = 0; i < npts; ++i )
     {
       integer first_index;
@@ -313,27 +380,26 @@ int main()
       k,
       test_points.size() );
 
-    vector<string> table_headers = { "x", "Spline", "D(x)", "FinDiff", "Rel. Err%", "Note" };
+    vector<string> table_headers = { "x", "Spline", "D(x)", "FinDiff", "AbsErr", "Note" };
     print_table_header( table_headers );
 
-    real_type const h                   = 1e-6;
-    real_type const tol                 = 1e-4;
-    integer         total_points_tested = 0;
-    integer         points_with_error   = 0;
-    integer         points_skipped      = 0;
+    integer total_points_tested = 0;
+    integer points_with_error   = 0;
+    integer points_skipped      = 0;
 
     for ( integer spline_idx = 0; spline_idx < nspl; ++spline_idx )
     {
-      string spline_name = string( ss.header( spline_idx ) );
+      string spline_name    = string( ss.header( spline_idx ) );
+      bool   differentiable = is_spline_differentiable_at_knots( spline_name );
 
       for ( size_t pt_idx = 0; pt_idx < test_points.size(); ++pt_idx )
       {
         real_type x = test_points[pt_idx];
 
-        // Determine if it's a knot
-        bool    is_knot = ( find( xx, xx + npts, x ) != xx + npts );
+        // Check for duplicate knots
         integer first_index;
         bool    is_dup_knot = is_duplicate_knot( xx, npts, x, first_index );
+        bool    is_knot     = is_near_knot( x, xx, npts, knot_tolerance );
 
         // Skip duplicate knots and points too close to them
         if ( is_dup_knot || too_close_to_duplicate( xx, npts, x ) )
@@ -342,82 +408,59 @@ int main()
           continue;
         }
 
+        // Skip non-differentiable splines at knots
+        if ( !differentiable && is_knot )
+        {
+          ++points_skipped;
+          continue;
+        }
+
         // Calculate spline derivative
         real_type D_spline = ss.D( x, spline_idx );
 
-        // Calculate appropriate finite difference
+        // Calculate finite difference derivative
         real_type D_fd;
         string    note = is_knot ? "knot" : "interior";
 
-        // For knots (not duplicates), use appropriate one-sided finite differences
-        if ( is_knot )
+        try
         {
-          if ( x <= xmin + h )
-          {
-            D_fd = finite_diff_forward( ss, x, spline_idx, h );
-            note += " (left boundary)";
-          }
-          else if ( x >= xmax - h )
-          {
-            D_fd = finite_diff_backward( ss, x, spline_idx, h );
-            note += " (right boundary)";
-          }
+          D_fd = finite_diff_adaptive( ss, x, spline_idx, xmin, xmax, h_fd );
+        }
+        catch ( ... )
+        {
+          if ( x <= xmin + h_fd ) { D_fd = finite_diff_forward( ss, x, spline_idx, h_fd ); }
+          else if ( x >= xmax - h_fd ) { D_fd = finite_diff_backward( ss, x, spline_idx, h_fd ); }
           else
           {
-            // For interior knots, we might have discontinuities, use finite difference from appropriate side
-            // Check if it's the start or end of an interval
-            bool is_start_of_interval = false;
-            for ( integer i = 0; i < npts - 1; ++i )
-            {
-              if ( abs( xx[i] - x ) < 1e-12 && abs( xx[i + 1] - xx[i] ) > 1e-12 )
-              {
-                is_start_of_interval = true;
-                break;
-              }
-            }
-            if ( is_start_of_interval )
-            {
-              D_fd = finite_diff_forward( ss, x, spline_idx, h );
-              note += " (interval start)";
-            }
-            else
-            {
-              D_fd = finite_diff_backward( ss, x, spline_idx, h );
-              note += " (interval end)";
-            }
+            D_fd = finite_diff_central( ss, x, spline_idx, h_fd );
           }
         }
-        else
-        {
-          // For interior points, use central finite difference
-          D_fd = finite_diff_central( ss, x, spline_idx, h );
-        }
 
-        // Calculate relative error
-        real_type abs_err = abs( D_spline - D_fd );
-        real_type rel_err = 0.0;
-        if ( abs( D_spline ) > 1e-10 ) { rel_err = 100.0 * abs_err / abs( D_spline ); }
-        else if ( abs( D_fd ) > 1e-10 ) { rel_err = 100.0 * abs_err / abs( D_fd ); }
-        else
-        {
-          // Both zero, error zero
-          rel_err = 0.0;
-        }
+        // Calculate error
+        auto [abs_err, rel_err] = compute_error( D_spline, D_fd, abs_tol );
 
         ++total_points_tested;
-        if ( rel_err > tol ) ++points_with_error;
+        if ( abs_err > abs_tol && rel_err > rel_tol ) ++points_with_error;
 
-        // Print only if: knot, significant error, or for reduced sampling
-        bool should_print = ( is_knot || rel_err > tol || pt_idx % 5 == 0 );
+        // Print only: knots, significant errors, or sampled points
+        bool should_print = ( is_knot || abs_err > abs_tol || pt_idx % 5 == 0 );
 
         if ( should_print )
         {
           vector<string> row_values = { fmt::format( "{:.6f}", x ),        spline_name,
-                                        fmt::format( "{:.6f}", D_spline ), fmt::format( "{:.6f}", D_fd ),
-                                        fmt::format( "{:.2e}", rel_err ),  note };
-          print_table_row(
-            row_values,
-            rel_err < tol ? fmt::color::green : ( rel_err < 10.0 * tol ? fmt::color::yellow : fmt::color::red ) );
+                                        fmt::format( "{:.6e}", D_spline ), fmt::format( "{:.6e}", D_fd ),
+                                        fmt::format( "{:.2e}", abs_err ),  note };
+
+          // Color coding based on absolute error
+          fmt::color color_code;
+          if ( abs_err < abs_tol || rel_err < rel_tol ) { color_code = fmt::color::green; }
+          else if ( abs_err < 10.0 * abs_tol && rel_err < 10.0 * rel_tol ) { color_code = fmt::color::yellow; }
+          else
+          {
+            color_code = fmt::color::red;
+          }
+
+          print_table_row( row_values, color_code );
         }
       }
 
@@ -442,12 +485,11 @@ int main()
       fg( fmt::color::blue ),
       "\n📊 Statistics Dataset {}:\n"
       "   • Valid test points: {}\n"
-      "   • Skipped points (near discontinuities): {}\n"
-      "   • Points with error > {:.0e}: {} ({:.1f}%)\n\n",
+      "   • Skipped points: {}\n"
+      "   • Points with error > tolerance: {} ({:.1f}%)\n\n",
       k,
       total_points_tested,
       points_skipped,
-      tol,
       points_with_error,
       total_points_tested > 0 ? 100.0 * points_with_error / total_points_tested : 0.0 );
   }

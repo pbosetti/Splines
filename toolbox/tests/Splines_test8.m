@@ -41,13 +41,11 @@ fmt2 = {'o','Color','red','MarkerSize',10,'MarkerFaceColor','yellow','MarkerEdge
 fmt3 = {'-','Color','black','Linewidth',2};
 fmt4 = {'o','Color','blue','MarkerSize',10,'MarkerFaceColor','black','MarkerEdgeColor','black'};
 
-subtype = 'pchip';
-
 X = xx1;
 Y = yy1;
 
 %S = Spline1D('pchip',X,Y);
-S = Spline1D('quintic',X,Y,subtype);
+S = Spline1D('quintic_pchip',X,Y);
 
 XX = X(1):(X(end)-X(1))/1000:X(end);
 YY = S.eval(XX);

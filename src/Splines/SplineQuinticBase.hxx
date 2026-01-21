@@ -47,10 +47,11 @@ namespace Splines
   class QuinticSplineBase : public Spline
   {
   protected:
-    Malloc_real m_base_quintic;
-    real_type * m_Yp             = nullptr;
-    real_type * m_Ypp            = nullptr;
-    bool        m_external_alloc = false;
+    Malloc_real     m_base_quintic;
+    real_type *     m_Yp             = nullptr;
+    real_type *     m_Ypp            = nullptr;
+    bool            m_external_alloc = false;
+    Spline_sub_type m_sub_type;
 
   public:
     //!
@@ -65,8 +66,8 @@ namespace Splines
     //!
     //! \param name the name of the spline
     //!
-    explicit QuinticSplineBase( string_view name = "QuinticSplineBase" )
-      : Spline( name ), m_base_quintic( fmt::format( "QuinticSplineBase[{}]", name ) )
+    explicit QuinticSplineBase( Spline_sub_type type, string_view name = "QuinticSplineBase" )
+      : Spline( name ), m_base_quintic( fmt::format( "QuinticSplineBase[{}]", name ) ), m_sub_type( type )
     {
     }
 
@@ -297,7 +298,16 @@ namespace Splines
           ( m_Y[i + 1] - m_Y[i] ) / ( m_X[i + 1] - m_X[i] ) );
     }
 
-    SplineType1D type() const override { return SplineType1D::QUINTIC; }
+    SplineType1D type() const override
+    {
+      switch ( m_sub_type )
+      {
+        case Spline_sub_type::CUBIC: return SplineType1D::QUINTIC_CUBIC;
+        case Spline_sub_type::AKIMA: return SplineType1D::QUINTIC_AKIMA;
+        case Spline_sub_type::BESSEL: return SplineType1D::QUINTIC_BESSEL;
+        case Spline_sub_type::PCHIP: return SplineType1D::QUINTIC_PCHIP;
+      }
+    }
 
     ///@}
 
@@ -624,6 +634,8 @@ namespace Splines
     }
 
     integer order() const override { return 6; }
+
+    bool is_monotone() const { return check_quintic_spline_monotonicity( m_X, m_Y, m_Yp, m_Ypp, m_npts ); }
 
 #ifdef SPLINES_BACK_COMPATIBILITY
     void      copySpline( QuinticSplineBase const & S ) { this->copy_spline( S ); }

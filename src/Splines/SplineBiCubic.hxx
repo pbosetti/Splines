@@ -46,9 +46,9 @@ namespace Splines
       m_DY  = m_mem_bicubic( nn );
       m_DXY = m_mem_bicubic( nn );
 
-      make_derivative_x( m_Z, m_DX );
-      make_derivative_y( m_Z, m_DY );
-      make_derivative_xy( m_DX, m_DY, m_DXY );
+      make_derivative_x( m_sub_type, m_Z, m_DX );
+      make_derivative_y( m_sub_type, m_Z, m_DY );
+      make_derivative_xy( m_sub_type, m_DX, m_DY, m_DXY );
 
       m_search_x.must_reset();
       m_search_y.must_reset();
@@ -67,7 +67,10 @@ namespace Splines
     //!
     //! \param name the name of the spline
     //!
-    explicit BiCubicSpline( string_view name = "BiCubicSpline" ) : BiCubicSplineBase( name ) {}
+    explicit BiCubicSpline( Spline_sub_type sub_type, string_view name = "BiCubicSpline" )
+      : BiCubicSplineBase( sub_type, name )
+    {
+    }
 
     //!
     //! Spline destructor.
@@ -122,7 +125,6 @@ namespace Splines
         }
       }
     }
-
 
     char const * type_name() const override { return "BiCubic"; }
   };

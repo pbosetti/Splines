@@ -53,6 +53,7 @@ using namespace std;
 using namespace GenericContainerNamespace;
 using Splines::integer;
 using Splines::real_type;
+using Splines::Spline_sub_type;
 
 // ============================================================================
 // Color definitions and formatting utilities
@@ -129,7 +130,7 @@ void test_2d_spline_evaluation()
 
   print_info( "Creating BiQuinticSpline from array data..." );
 
-  auto          spline = make_unique<BiQuinticSpline>();
+  auto          spline = make_unique<BiQuinticSpline>( Splines::Spline_sub_type::CUBIC );
   constexpr int ldZ    = nx;
 
   try
@@ -216,9 +217,14 @@ void test_json_string_constructors()
 
   vector<pair<string, unique_ptr<Splines::SplineSurf>>> splines;
   splines.emplace_back( "Bilinear", make_unique<BilinearSpline>() );
-  splines.emplace_back( "BiCubic", make_unique<BiCubicSpline>() );
-  splines.emplace_back( "BiQuintic", make_unique<BiQuinticSpline>() );
-  splines.emplace_back( "Akima2D", make_unique<Akima2Dspline>() );
+  splines.emplace_back( "BiCubic", make_unique<BiCubicSpline>( Spline_sub_type::CUBIC ) );
+  splines.emplace_back( "BiCubic[Akima]", make_unique<BiCubicSpline>( Spline_sub_type::AKIMA ) );
+  splines.emplace_back( "BiCubic[Bessel]", make_unique<BiCubicSpline>( Spline_sub_type::BESSEL ) );
+  splines.emplace_back( "BiCubic[Pchip]", make_unique<BiCubicSpline>( Spline_sub_type::PCHIP ) );
+  splines.emplace_back( "BiQuintic", make_unique<BiQuinticSpline>( Spline_sub_type::CUBIC ) );
+  splines.emplace_back( "BiQuintic[Akima]", make_unique<BiQuinticSpline>( Spline_sub_type::AKIMA ) );
+  splines.emplace_back( "BiQuintic[Bessel]", make_unique<BiQuinticSpline>( Spline_sub_type::BESSEL ) );
+  splines.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Original grid data from JSON for verification
   vector<double>         x_nodes    = { 0.0, 2.0, 4.0, 6.0 };
@@ -460,10 +466,16 @@ void test_derivatives_with_autodiff()
   double y0 = 0.7;
 
   vector<pair<string, unique_ptr<Splines::SplineSurf>>> tests;
-  tests.emplace_back( "BiQuintic", make_unique<BiQuinticSpline>() );
-  tests.emplace_back( "BiCubic", make_unique<BiCubicSpline>() );
+
   tests.emplace_back( "Bilinear", make_unique<BilinearSpline>() );
-  tests.emplace_back( "Akima2D", make_unique<Akima2Dspline>() );
+  tests.emplace_back( "BiCubic", make_unique<BiCubicSpline>( Spline_sub_type::CUBIC ) );
+  tests.emplace_back( "BiCubic[Akima]", make_unique<BiCubicSpline>( Spline_sub_type::AKIMA ) );
+  tests.emplace_back( "BiCubic[Bessel]", make_unique<BiCubicSpline>( Spline_sub_type::BESSEL ) );
+  tests.emplace_back( "BiCubic[Pchip]", make_unique<BiCubicSpline>( Spline_sub_type::PCHIP ) );
+  tests.emplace_back( "BiQuintic", make_unique<BiQuinticSpline>( Spline_sub_type::CUBIC ) );
+  tests.emplace_back( "BiQuintic[Akima]", make_unique<BiQuinticSpline>( Spline_sub_type::AKIMA ) );
+  tests.emplace_back( "BiQuintic[Bessel]", make_unique<BiQuinticSpline>( Spline_sub_type::BESSEL ) );
+  tests.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Build all splines
   for ( auto & [name, spline] : tests )
@@ -475,17 +487,14 @@ void test_derivatives_with_autodiff()
   // Print derivatives table
   fmt::print(
     fg( Color::TABLE_HEADER ) | fmt::emphasis::bold,
-    "\n┌──────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐\n" );
-  fmt::print(
-    fg( Color::TABLE_HEADER ) | fmt::emphasis::bold,
-    "│ Spline Type  │    f(x,y)  │    f_x     │    f_y     │   f_xx     │   f_xy     │   f_yy     │\n" );
-  fmt::print(
-    fg( Color::TABLE_HEADER ) | fmt::emphasis::bold,
-    "├──────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤\n" );
+    "\n"
+    "┌──────────────────────┬────────────┬────────────┬────────────┬────────────┬────────────┬────────────┐\n"
+    "│     Spline Type      │    f(x,y)  │    f_x     │    f_y     │   f_xx     │   f_xy     │   f_yy     │\n"
+    "├──────────────────────┼────────────┼────────────┼────────────┼────────────┼────────────┼────────────┤\n" );
 
   for ( const auto & [name, spline] : tests )
   {
-    fmt::print( fg( Color::TABLE_ROW ), "│ {:12} │", name );
+    fmt::print( fg( Color::TABLE_ROW ), "│ {:20} │", name );
 
     try
     {
@@ -522,7 +531,7 @@ void test_derivatives_with_autodiff()
 
   fmt::print(
     fg( Color::TABLE_HEADER ) | fmt::emphasis::bold,
-    "└──────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘\n" );
+    "└──────────────────────┴────────────┴────────────┴────────────┴────────────┴────────────┴────────────┘\n" );
 
   print_info( "\nNote: Higher order derivatives may not be available for all spline types" );
 }
@@ -607,7 +616,7 @@ void test_comprehensive_file_operations()
   try
   {
     // Create a spline
-    auto          spline = make_unique<BiCubicSpline>();
+    auto          spline = make_unique<BiCubicSpline>( Spline_sub_type::CUBIC );
     constexpr int ldZ    = nx;
     spline->build( x_grid, 1, y_grid, 1, z_data, ldZ, nx, ny, false, false );
 

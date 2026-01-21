@@ -37,8 +37,7 @@ Y = [ 0,    2.76429e-5, 4.37498e-2, 0.169183, 0.469428, 0.943740, 0.998636, 0.99
 data.spline0.spline_type = 'cubic';
 data.spline0.xdata       = X;
 data.spline0.ydata       = Y;
-data.spline1.spline_type = 'quintic';
-data.spline1.spline_sub_type = 'pchip';
+data.spline1.spline_type = 'quintic_pchip';
 data.spline1.xdata       = X;
 data.spline1.ydata       = Y;
 

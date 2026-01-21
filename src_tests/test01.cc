@@ -28,29 +28,9 @@
 using namespace SplinesLoad;
 using namespace std;
 using Splines::integer;
-using Splines::QuinticSpline_sub_type;
 using Splines::real_type;
+using Splines::Spline_sub_type;
 using Utils::m_pi;
-
-// Aggiungi prima del main() un template wrapper:
-template <QuinticSpline_sub_type SubType> class QuinticSplineWrapper : public QuinticSpline
-{
-public:
-  QuinticSplineWrapper( string_view name = "Spline" ) : QuinticSpline( name ) { set_quintic_type( SubType ); }
-
-  void build() override
-  {
-    set_quintic_type( SubType );
-    QuinticSpline::build();
-  }
-
-  void build( const vector<real_type> & X, const vector<real_type> & Y )
-  {
-    set_quintic_type( SubType );
-    QuinticSpline::build( X, Y );
-  }
-};
-
 
 // ============================================================================
 // TEST DATASETS
@@ -711,21 +691,22 @@ template <typename SplineType> DerivativeErrors1D check_derivatives_1D(
 
 // Compute maximum error between spline and exact function
 real_type compute_max_error(
-  Splines::Spline &         spline,
+  Splines::Spline *         spline,
   const vector<real_type> & eval_points,
   TestFunctionPtr           exact_func )
 {
   real_type max_error = 0.0;
   for ( const auto & x : eval_points )
   {
-    real_type error = abs( spline( x ) - exact_func( x ) );
+    real_type error = abs( spline->eval( x ) - exact_func( x ) );
     if ( error > max_error ) max_error = error;
   }
   return max_error;
 }
 
 // Perform convergence test with hierarchical refinement for non-uniform meshes
-template <typename SplineType> ConvergenceResult test_convergence_nonuniform_hierarchical(
+ConvergenceResult test_convergence_nonuniform_hierarchical(
+  Spline *        spline,
   const string &  spline_name,
   const string &  test_func_name,
   real_type       a,
@@ -752,8 +733,7 @@ template <typename SplineType> ConvergenceResult test_convergence_nonuniform_hie
     for ( integer i = 0; i < N; ++i ) { Y[i] = test_func( current_mesh[i] ); }
 
     // Build spline
-    SplineType spline;
-    spline.build( current_mesh, Y );
+    spline->build( current_mesh, Y );
 
     // Compute maximum error
     real_type error = compute_max_error( spline, eval_points, test_func );
@@ -771,18 +751,19 @@ template <typename SplineType> ConvergenceResult test_convergence_nonuniform_hie
   }
 
   // Compute convergence orders using actual mesh sizes
+  auto eps = 1e-12;
   for ( size_t i = 0; i < result.errors.size() - 1; ++i )
   {
     real_type h1 = result.mesh_sizes[i];
     real_type h2 = result.mesh_sizes[i + 1];
 
     // Check for very small errors
-    if ( result.errors[i] < 1e-15 && result.errors[i + 1] < 1e-15 )
+    if ( result.errors[i] < eps && result.errors[i + 1] < eps )
     {
       result.orders.push_back( std::numeric_limits<real_type>::infinity() );
     }
-    else if ( result.errors[i + 1] < 1e-15 ) { result.orders.push_back( std::numeric_limits<real_type>::infinity() ); }
-    else if ( result.errors[i] < 1e-15 ) { result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() ); }
+    else if ( result.errors[i + 1] < eps ) { result.orders.push_back( std::numeric_limits<real_type>::infinity() ); }
+    else if ( result.errors[i] < eps ) { result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() ); }
     else
     {
       // Compute order using actual mesh sizes
@@ -797,7 +778,8 @@ template <typename SplineType> ConvergenceResult test_convergence_nonuniform_hie
 }
 
 // Perform convergence test for a specific spline type and test function
-template <typename SplineType> ConvergenceResult test_convergence(
+ConvergenceResult test_convergence(
+  Spline *        spline,
   const string &  spline_name,
   const string &  test_func_name,
   bool            uniform_mesh,
@@ -827,8 +809,7 @@ template <typename SplineType> ConvergenceResult test_convergence(
       for ( integer i = 0; i < N; ++i ) { Y[i] = test_func( X[i] ); }
 
       // Build spline
-      SplineType spline;
-      spline.build( X, Y );
+      spline->build( X, Y );
 
       // Compute maximum error
       real_type error = compute_max_error( spline, eval_points, test_func );
@@ -842,23 +823,24 @@ template <typename SplineType> ConvergenceResult test_convergence(
     }
 
     // Compute convergence orders with protection against division by zero
+    auto eps = 1e-12;
     for ( size_t i = 0; i < result.errors.size() - 1; ++i )
     {
       real_type h1 = result.mesh_sizes[i];
       real_type h2 = result.mesh_sizes[i + 1];
 
       // Check for very small errors (machine precision)
-      if ( result.errors[i] < 1e-15 && result.errors[i + 1] < 1e-15 )
+      if ( result.errors[i] < eps && result.errors[i + 1] < eps )
       {
         // Both errors are essentially zero, convergence is perfect
         result.orders.push_back( std::numeric_limits<real_type>::infinity() );
       }
-      else if ( result.errors[i + 1] < 1e-15 )
+      else if ( result.errors[i + 1] < eps )
       {
         // Only the finer mesh error is zero, perfect convergence
         result.orders.push_back( std::numeric_limits<real_type>::infinity() );
       }
-      else if ( result.errors[i] < 1e-15 )
+      else if ( result.errors[i] < eps )
       {
         // Coarse mesh error is zero but fine mesh is not (shouldn't happen)
         result.orders.push_back( std::numeric_limits<real_type>::quiet_NaN() );
@@ -878,7 +860,8 @@ template <typename SplineType> ConvergenceResult test_convergence(
   else
   {
     // Use hierarchical refinement for non-uniform meshes
-    return test_convergence_nonuniform_hierarchical<SplineType>(
+    return test_convergence_nonuniform_hierarchical(
+      spline,
       spline_name,
       test_func_name,
       a,
@@ -1251,16 +1234,10 @@ int main()
   CubicSpline    cs;
   BesselSpline   be;
   PchipSpline    pc;
-  QuinticSpline  qs_cubic;
-  QuinticSpline  qs_pchip;
-  QuinticSpline  qs_akima;
-  QuinticSpline  qs_bessel;
-
-  // Imposta i sottotipi
-  qs_cubic.set_quintic_type( QuinticSpline_sub_type::CUBIC );
-  qs_pchip.set_quintic_type( QuinticSpline_sub_type::PCHIP );
-  qs_akima.set_quintic_type( QuinticSpline_sub_type::AKIMA );
-  qs_bessel.set_quintic_type( QuinticSpline_sub_type::BESSEL );
+  QuinticSpline  qs_cubic( Spline_sub_type::CUBIC );
+  QuinticSpline  qs_pchip( Spline_sub_type::PCHIP );
+  QuinticSpline  qs_akima( Spline_sub_type::AKIMA );
+  QuinticSpline  qs_bessel( Spline_sub_type::BESSEL );
 
   // Open output files
   ofstream file_li, file_co, file_ak, file_cs, file_be, file_pc, file_qs_cubic, file_qs_pchip, file_qs_akima,
@@ -1444,66 +1421,61 @@ int main()
 
     vector<ConvergenceResult> uniform_results;
 
+
     // Test ALL spline types on uniform mesh
     uniform_results.push_back(
-      test_convergence<
-        Splines::LinearSpline>( "Linear", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &li, "Linear", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence<
-        Splines::ConstantSpline>( "Constant", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &co, "Constant", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence<
-        Splines::CubicSpline>( "Cubic", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &cs, "Cubic", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence<
-        Splines::AkimaSpline>( "Akima", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &ak, "Akima", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence<
-        Splines::BesselSpline>( "Bessel", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &be, "Bessel", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence<
-        Splines::PchipSpline>( "Pchip", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &pc, "Pchip", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
-    uniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::CUBIC>>(
-        "Quintic (CUBIC)",
-        test_func.name,
-        true,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    uniform_results.push_back( test_convergence(
+      &qs_cubic,
+      "Quintic (CUBIC)",
+      test_func.name,
+      true,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
-    uniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::PCHIP>>(
-        "Quintic (PCHIP)",
-        test_func.name,
-        true,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    uniform_results.push_back( test_convergence(
+      &qs_pchip,
+      "Quintic (PCHIP)",
+      test_func.name,
+      true,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
-    uniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::AKIMA>>(
-        "Quintic (AKIMA)",
-        test_func.name,
-        true,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    uniform_results.push_back( test_convergence(
+      &qs_akima,
+      "Quintic (AKIMA)",
+      test_func.name,
+      true,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
-    uniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::BESSEL>>(
-        "Quintic (BESSEL)",
-        test_func.name,
-        true,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    uniform_results.push_back( test_convergence(
+      &qs_bessel,
+      "Quintic (BESSEL)",
+      test_func.name,
+      true,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
     print_convergence_table_for_test( uniform_results, "UNIFORM", test_func, func_idx );
 
@@ -1514,65 +1486,59 @@ int main()
 
     // Test ALL spline types on non-uniform mesh
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::LinearSpline>( "Linear", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &li, "Linear", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::ConstantSpline>( "Constant", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &co, "Constant", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::CubicSpline>( "Cubic", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &cs, "Cubic", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::AkimaSpline>( "Akima", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &ak, "Akima", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::BesselSpline>( "Bessel", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &be, "Bessel", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
-      test_convergence<
-        Splines::PchipSpline>( "Pchip", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &pc, "Pchip", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     // Stesso pattern per i test non uniformi:
-    nonuniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::CUBIC>>(
-        "Quintic (CUBIC)",
-        test_func.name,
-        false,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    nonuniform_results.push_back( test_convergence(
+      &qs_cubic,
+      "Quintic (CUBIC)",
+      test_func.name,
+      false,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
-    nonuniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::PCHIP>>(
-        "Quintic (PCHIP)",
-        test_func.name,
-        false,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    nonuniform_results.push_back( test_convergence(
+      &qs_pchip,
+      "Quintic (PCHIP)",
+      test_func.name,
+      false,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
-    nonuniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::AKIMA>>(
-        "Quintic (AKIMA)",
-        test_func.name,
-        false,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    nonuniform_results.push_back( test_convergence(
+      &qs_akima,
+      "Quintic (AKIMA)",
+      test_func.name,
+      false,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
-    nonuniform_results.push_back(
-      test_convergence<QuinticSplineWrapper<QuinticSpline_sub_type::BESSEL>>(
-        "Quintic (BESSEL)",
-        test_func.name,
-        false,
-        test_func.a,
-        test_func.b,
-        test_func.func ) );
+    nonuniform_results.push_back( test_convergence(
+      &qs_bessel,
+      "Quintic (BESSEL)",
+      test_func.name,
+      false,
+      test_func.a,
+      test_func.b,
+      test_func.func ) );
 
     print_convergence_table_for_test( nonuniform_results, "NON-UNIFORM", test_func, func_idx );
 
@@ -1583,8 +1549,25 @@ int main()
 
       // Test derivative accuracy for different spline types
       test_derivative_accuracy_for_function( test_func, "Cubic", new Splines::CubicSpline() );
+      test_derivative_accuracy_for_function( test_func, "Akima", new Splines::AkimaSpline() );
       test_derivative_accuracy_for_function( test_func, "Bessel", new Splines::BesselSpline() );
-      test_derivative_accuracy_for_function( test_func, "Quintic", new Splines::QuinticSpline() );
+      test_derivative_accuracy_for_function( test_func, "Pchip", new Splines::PchipSpline() );
+      test_derivative_accuracy_for_function(
+        test_func,
+        "Quintic",
+        new Splines::QuinticSpline( Spline_sub_type::CUBIC ) );
+      test_derivative_accuracy_for_function(
+        test_func,
+        "Quintic[Akima]",
+        new Splines::QuinticSpline( Spline_sub_type::AKIMA ) );
+      test_derivative_accuracy_for_function(
+        test_func,
+        "Quintic[Bessel]",
+        new Splines::QuinticSpline( Spline_sub_type::BESSEL ) );
+      test_derivative_accuracy_for_function(
+        test_func,
+        "Quintic[Pchi]",
+        new Splines::QuinticSpline( Spline_sub_type::PCHIP ) );
     }
   }
 

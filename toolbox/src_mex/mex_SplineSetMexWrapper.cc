@@ -117,7 +117,13 @@ namespace Splines
       else if ( tname == "pchip" )
         st = SplineType1D::PCHIP;
       else if ( tname == "quintic" )
-        st = SplineType1D::QUINTIC;
+        st = SplineType1D::QUINTIC_CUBIC;
+      else if ( tname == "quintic_akima" )
+        st = SplineType1D::QUINTIC_AKIMA;
+      else if ( tname == "quintic_bessel" )
+        st = SplineType1D::QUINTIC_BESSEL;
+      else if ( tname == "quintic_pchip" )
+        st = SplineType1D::QUINTIC_PCHIP;
       else
       {
         UTILS_MEX_ASSERT0(
@@ -155,7 +161,13 @@ namespace Splines
         else if ( tname == "pchip" )
           st = SplineType1D::PCHIP;
         else if ( tname == "quintic" )
-          st = SplineType1D::QUINTIC;
+          st = SplineType1D::QUINTIC_CUBIC;
+        else if ( tname == "quintic_akima" )
+          st = SplineType1D::QUINTIC_AKIMA;
+        else if ( tname == "quintic_bessel" )
+          st = SplineType1D::QUINTIC_BESSEL;
+        else if ( tname == "quintic_pchip" )
+          st = SplineType1D::QUINTIC_PCHIP;
         else
         {
           UTILS_MEX_ASSERT0(

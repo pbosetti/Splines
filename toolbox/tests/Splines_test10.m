@@ -33,12 +33,22 @@ bottom = round((scrn(4) - height) / 2);
 % Crea la figura
 figure('Position', [left bottom width height]);
 
-type = { 'bilinear', 'bicubic', 'biquintic', 'akima' };
+type = {
+    'bilinear',
+    'bicubic',
+    'bicubic_akima',
+    'bicubic_bessel',
+    'bicubic_pchip',
+    'biquintic',
+    'biquintic_akima',
+    'biquintic_bessel',
+    'biquintic_pchip'
+    };
 set(gca,'Fontsize',16);
 
 disableDefaultInteractivity(gca)
 
-for k=1:4
+for k=1:9
 
   S = Spline2D(type{k});
   S.build('test_surf.json');
@@ -63,7 +73,7 @@ for k=1:4
     fprintf('Trovati Inf sulla superfice');
   end
 
-  subplot(2,2,k);
+  subplot(3,3,k);
 
   surf(XX,YY,ZZ,'Linestyle',':');
 

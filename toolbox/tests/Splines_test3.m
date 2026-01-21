@@ -34,11 +34,16 @@ figure('Position', [left bottom width height]);
 X = -2:0.01:2;
 Y = -2:0.01:2;
 [XX,YY] = ndgrid(X,Y);
-ZZ = peaks(XX,YY);
-bc = Spline2D('bicubic',X,Y,ZZ);
-ak = Spline2D('akima',X,Y,ZZ);
-bl = Spline2D('bilinear',X,Y,ZZ);
-bq = Spline2D('biquintic',X,Y,ZZ);
+ZZ  = peaks(XX,YY);
+bl  = Spline2D('bilinear',X,Y,ZZ);
+bc  = Spline2D('bicubic',X,Y,ZZ);
+ba  = Spline2D('bicubic_akima',X,Y,ZZ);
+bb  = Spline2D('bicubic_bessel',X,Y,ZZ);
+bp  = Spline2D('bicubic_pchip',X,Y,ZZ);
+bq  = Spline2D('biquintic',X,Y,ZZ);
+bqa = Spline2D('biquintic_akima',X,Y,ZZ);
+bqb = Spline2D('biquintic_bessel',X,Y,ZZ);
+bqp = Spline2D('biquintic_pchip',X,Y,ZZ);
 
 surf(XX,YY,ZZ), view(145,-2), set(gca,'Fontsize',16);
 
@@ -47,48 +52,76 @@ Y = -2:0.1:2;
 [XX,YY] = ndgrid(X,Y);
 ZZ = peaks(XX,YY);
 
-Z1 = bc.eval(XX,YY);
-Z2 = ak.eval(XX,YY);
-Z3 = bl.eval(XX,YY);
-Z4 = bq.eval(XX,YY);
+Z1 = bl.eval(XX,YY);
+Z2 = bc.eval(XX,YY);
+Z3 = ba.eval(XX,YY);
+Z4 = bb.eval(XX,YY);
+Z5 = bp.eval(XX,YY);
+Z6 = bq.eval(XX,YY);
+Z7 = bqa.eval(XX,YY);
+Z8 = bqb.eval(XX,YY);
+Z9 = bqp.eval(XX,YY);
 
 if any(isnan(Z1(:)))
-  fprintf('Found NaN on bicubic\n');
-end
-if any(isinf(Z1(:)))
-  fprintf('Found Inf on bicubic\n');
-end
-if any(isnan(Z2(:)))
-  fprintf('Found NaN on akima\n');
-end
-if any(isinf(Z2(:)))
-  fprintf('Found Inf on akima\n');
-end
-if any(isnan(Z3(:)))
   fprintf('Found NaN on bilinear\n');
 end
-if any(isinf(Z3(:)))
-  fprintf('Found Inf on bilinear\n');
+if any(isinf(Z2(:)))
+  fprintf('Found Inf on bicubic\n');
 end
-if any(isnan(Z4(:)))
-  fprintf('Found NaN on biquintic\n');
+if any(isnan(Z3(:)))
+  fprintf('Found NaN on bicubic akima\n');
 end
 if any(isinf(Z4(:)))
+  fprintf('Found Inf on bicubic bessel\n');
+end
+if any(isnan(Z5(:)))
+  fprintf('Found NaN on bicubic pchip\n');
+end
+if any(isinf(Z6(:)))
   fprintf('Found Inf on biquintic\n');
 end
+if any(isnan(Z7(:)))
+  fprintf('Found NaN on biquintic akima\n');
+end
+if any(isinf(Z8(:)))
+  fprintf('Found Inf on biquintic bessel\n');
+end
+if any(isinf(Z9(:)))
+  fprintf('Found Inf on biquintic pchip\n');
+end
 
-subplot(2,2,1);
+subplot(3,3,1);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('bilinear');
+
+subplot(3,3,2);
 surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
 title('bicubic');
 
-subplot(2,2,2);
-surf(XX,YY,Z2,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
-title('akima');
+subplot(3,3,3);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('bicubic akima');
 
-subplot(2,2,3);
-surf(XX,YY,Z3,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
-title('bilinear');
+subplot(3,3,4);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('bicubic bessel');
 
-subplot(2,2,4);
-surf(XX,YY,Z4,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+subplot(3,3,5);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('bicubic pchip');
+
+subplot(3,3,6);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
 title('biquintic');
+
+subplot(3,3,7);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('biquintic akima');
+
+subplot(3,3,8);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('biquintic bessel');
+
+subplot(3,3,9);
+surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
+title('biquintic pchip');

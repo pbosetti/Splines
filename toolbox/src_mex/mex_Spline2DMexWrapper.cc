@@ -72,18 +72,29 @@ namespace Splines
     if ( tname == "bilinear" )
       v = new Splines::BilinearSpline();
     else if ( tname == "bicubic" )
-      v = new Splines::BiCubicSpline();
-    else if ( tname == "akima" )
-      v = new Splines::Akima2Dspline();
+      v = new Splines::BiCubicSpline( Spline_sub_type::CUBIC );
+    else if ( tname == "bicubic_akima" )
+      v = new Splines::BiCubicSpline( Spline_sub_type::AKIMA );
+    else if ( tname == "bicubic_bessel" )
+      v = new Splines::BiCubicSpline( Spline_sub_type::BESSEL );
+    else if ( tname == "bicubic_pchip" )
+      v = new Splines::BiCubicSpline( Spline_sub_type::PCHIP );
     else if ( tname == "biquintic" )
-      v = new Splines::BiQuinticSpline();
+      v = new Splines::BiQuinticSpline( Spline_sub_type::CUBIC );
+    else if ( tname == "biquintic_akima" )
+      v = new Splines::BiQuinticSpline( Spline_sub_type::AKIMA );
+    else if ( tname == "biquintic_bessel" )
+      v = new Splines::BiQuinticSpline( Spline_sub_type::BESSEL );
+    else if ( tname == "biquintic_pchip" )
+      v = new Splines::BiQuinticSpline( Spline_sub_type::PCHIP );
     else
     {
       UTILS_MEX_ASSERT0(
         false,
         CMD
         ": second argument must be one of the strings:\n"
-        "'bilinear', 'bicubic', 'akima', 'biquintic'" );
+        "'bilinear', 'bicubic', 'bicubic_akima', 'bicubic_bessel', 'bicubic_pchip', "
+        "'biquintic', 'biquintic_akima', 'biquintic_bessel', 'biquintic_pchip'" );
     }
 
     arg_out_0 = Utils::mex_convert_ptr_to_mx<SplineSurf>( v );

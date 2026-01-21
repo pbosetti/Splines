@@ -56,7 +56,10 @@ namespace Splines
         case SplineType1D::AKIMA: return std::make_unique<AkimaSpline>( _name );
         case SplineType1D::BESSEL: return std::make_unique<BesselSpline>( _name );
         case SplineType1D::PCHIP: return std::make_unique<PchipSpline>( _name );
-        case SplineType1D::QUINTIC: return std::make_unique<QuinticSpline>( _name );
+        case SplineType1D::QUINTIC_CUBIC: return std::make_unique<QuinticSpline>( Spline_sub_type::CUBIC, _name );
+        case SplineType1D::QUINTIC_AKIMA: return std::make_unique<QuinticSpline>( Spline_sub_type::AKIMA, _name );
+        case SplineType1D::QUINTIC_BESSEL: return std::make_unique<QuinticSpline>( Spline_sub_type::BESSEL, _name );
+        case SplineType1D::QUINTIC_PCHIP: return std::make_unique<QuinticSpline>( Spline_sub_type::PCHIP, _name );
         case SplineType1D::HERMITE: break;
         case SplineType1D::SPLINE_SET: break;
         case SplineType1D::SPLINE_VEC: break;
@@ -232,7 +235,13 @@ namespace Splines
       else if ( spl_type == "pchip" )
         tp = SplineType1D::PCHIP;
       else if ( spl_type == "quintic" )
-        tp = SplineType1D::QUINTIC;
+        tp = SplineType1D::QUINTIC_CUBIC;
+      else if ( spl_type == "quintic_akima" )
+        tp = SplineType1D::QUINTIC_AKIMA;
+      else if ( spl_type == "quintic_bessel" )
+        tp = SplineType1D::QUINTIC_BESSEL;
+      else if ( spl_type == "quintic_pchip" )
+        tp = SplineType1D::QUINTIC_PCHIP;
       else
       {
         UTILS_ERROR(

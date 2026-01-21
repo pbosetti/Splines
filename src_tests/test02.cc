@@ -48,6 +48,7 @@ using namespace SplinesLoad;
 using namespace std;
 using Splines::integer;
 using Splines::real_type;
+using Splines::Spline_sub_type;
 
 static real_type x_data[] = { 0, 1, 2, 3, 4, 5 };
 static real_type y_data[] = { 0, 1, 2, 3, 4, 5 };
@@ -157,9 +158,9 @@ void print_2D_spline_table( const vector<Spline2DInfo> & results )
   fmt::print(
     fg( fmt::color::yellow ) | fmt::emphasis::bold,
     "\n"
-    "┌──────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐\n"
-    "│ {:^12} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │\n"
-    "├──────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤\n",
+    "┌──────────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐\n"
+    "│ {:^20} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │ {:^8} │\n"
+    "├──────────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤\n",
     "Spline Type",
     "x_min",
     "x_max",
@@ -175,7 +176,7 @@ void print_2D_spline_table( const vector<Spline2DInfo> & results )
     const auto & r         = results[i];
     auto         row_color = ( i % 2 == 0 ) ? fg( fmt::color::light_green ) : fg( fmt::color::light_blue );
 
-    fmt::print( row_color, "│ {:<12} ", r.name );
+    fmt::print( row_color, "│ {:<20} ", r.name );
     fmt::print( row_color, "│ {:>8.3f} ", r.x_min );
     fmt::print( row_color, "│ {:>8.3f} ", r.x_max );
     fmt::print( row_color, "│ {:>8.3f} ", r.y_min );
@@ -192,7 +193,7 @@ void print_2D_spline_table( const vector<Spline2DInfo> & results )
 
   fmt::print(
     fg( fmt::color::yellow ) | fmt::emphasis::bold,
-    "└──────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘\n" );
+    "└──────────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘\n" );
 }
 
 // Function to format error with color based on tolerance
@@ -231,11 +232,11 @@ void print_detailed_derivative_table(
   fmt::print(
     fg( fmt::color::light_blue ) | fmt::emphasis::bold,
     "\n"
-    "┌─{:─^144}─┐\n"
-    "│ {:^144} │\n"
-    "├─{:─^12}─┬─{:─^30}─┬─{:─^30}─┬─{:─^30}─┬─{:─^30}─┤\n"
-    "│ {:^12} │ {:^30} │ {:^30} │ {:^30} │ {:^30} │\n"
-    "├─{:─^12}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┤\n",
+    "┌─{:─^152}─┐\n"
+    "│ {:^152} │\n"
+    "├─{:─^20}─┬─{:─^30}─┬─{:─^30}─┬─{:─^30}─┬─{:─^30}─┤\n"
+    "│ {:^20} │ {:^30} │ {:^30} │ {:^30} │ {:^30} │\n"
+    "├─{:─^20}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┤\n",
     "",
     fmt::format( "DERIVATIVE {}", derivative_name ),
     "",
@@ -354,7 +355,7 @@ void print_detailed_derivative_table(
       tol_avg_intersection );
 
     // Print row
-    fmt::print( row_color, "│ {:<12} ", name );
+    fmt::print( row_color, "│ {:<20} ", name );
     fmt::print( "│ {} ", interior_cell );
     fmt::print( "│ {} ", x_knots_cell );
     fmt::print( "│ {} ", y_knots_cell );
@@ -364,7 +365,7 @@ void print_detailed_derivative_table(
     {
       fmt::print(
         fg( fmt::color::light_blue ),
-        "├─{:─^12}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┤\n",
+        "├─{:─^20}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┼─{:─^30}─┤\n",
         "",
         "",
         "",
@@ -375,7 +376,7 @@ void print_detailed_derivative_table(
 
   fmt::print(
     fg( fmt::color::light_blue ) | fmt::emphasis::bold,
-    "└─{:─^12}─┴─{:─^30}─┴─{:─^30}─┴─{:─^30}─┴─{:─^30}─┘\n",
+    "└─{:─^20}─┴─{:─^30}─┴─{:─^30}─┴─{:─^30}─┴─{:─^30}─┘\n",
     "",
     "",
     "",
@@ -753,9 +754,14 @@ int main()
     y_data[0],
     y_data[5] );
 
-  BiQuinticSpline bq;
-  BiCubicSpline   bc;
-  Akima2Dspline   ak;
+  BiQuinticSpline bq_cubic( Spline_sub_type::CUBIC );
+  BiQuinticSpline bq_akima( Spline_sub_type::AKIMA );
+  BiQuinticSpline bq_bessel( Spline_sub_type::BESSEL );
+  BiQuinticSpline bq_pchip( Spline_sub_type::PCHIP );
+  BiCubicSpline   bc_cubic( Spline_sub_type::CUBIC );
+  BiCubicSpline   bc_akima( Spline_sub_type::AKIMA );
+  BiCubicSpline   bc_bessel( Spline_sub_type::BESSEL );
+  BiCubicSpline   bc_pchip( Spline_sub_type::PCHIP );
   BilinearSpline  bl;
 
   real_type X[6], Y[6], Z[6 * 6];
@@ -766,14 +772,29 @@ int main()
 
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n🔨 Building 2D splines...\n" );
 
-  bq.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  bq_cubic.build( X, 1, Y, 1, Z, 6, 6, 6 );
   fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline built\n" );
 
-  bc.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  bq_akima.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[akima] built\n" );
+
+  bq_bessel.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[bessel] built\n" );
+
+  bq_pchip.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[pchip] built\n" );
+
+  bc_cubic.build( X, 1, Y, 1, Z, 6, 6, 6 );
   fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline built\n" );
 
-  ak.build( X, 1, Y, 1, Z, 6, 6, 6 );
-  fmt::print( fg( fmt::color::green ), "   ✓ Akima2Dspline built\n" );
+  bc_akima.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[akima] built\n" );
+
+  bc_bessel.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[bessel] built\n" );
+
+  bc_pchip.build( X, 1, Y, 1, Z, 6, 6, 6 );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[pchip] built\n" );
 
   bl.build( X, 1, Y, 1, Z, 6, 6, 6 );
   fmt::print( fg( fmt::color::green ), "   ✓ BilinearSpline built\n" );
@@ -781,9 +802,14 @@ int main()
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n📈 Analyzing spline properties...\n" );
 
   vector<Spline2DInfo> spline_results;
-  spline_results.push_back( analyze_2D_spline( bq, "BiQuintic" ) );
-  spline_results.push_back( analyze_2D_spline( bc, "BiCubic" ) );
-  spline_results.push_back( analyze_2D_spline( ak, "Akima2D" ) );
+  spline_results.push_back( analyze_2D_spline( bc_cubic, "BiCubic" ) );
+  spline_results.push_back( analyze_2D_spline( bc_akima, "BiCubic[Akima]" ) );
+  spline_results.push_back( analyze_2D_spline( bc_bessel, "BiCubic[Bessel]" ) );
+  spline_results.push_back( analyze_2D_spline( bc_pchip, "BiCubic[Pchip]" ) );
+  spline_results.push_back( analyze_2D_spline( bq_cubic, "BiQuintic" ) );
+  spline_results.push_back( analyze_2D_spline( bq_akima, "BiQuintic[Akima]" ) );
+  spline_results.push_back( analyze_2D_spline( bq_bessel, "BiQuintic[Bessel]" ) );
+  spline_results.push_back( analyze_2D_spline( bq_pchip, "BiQuintic[Pchip]" ) );
   spline_results.push_back( analyze_2D_spline( bl, "Bilinear" ) );
 
   print_2D_spline_table( spline_results );
@@ -791,9 +817,31 @@ int main()
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n🔍 Checking derivatives by region...\n" );
 
   vector<pair<string, AllDerivativeErrors>> errors_by_region;
-  errors_by_region.emplace_back( "BiQuintic", check_derivatives_by_region( bq, "BiQuinticSpline", X, 6, Y, 6, 30 ) );
-  errors_by_region.emplace_back( "BiCubic", check_derivatives_by_region( bc, "BiCubicSpline", X, 6, Y, 6, 30 ) );
-  errors_by_region.emplace_back( "Akima2D", check_derivatives_by_region( ak, "Akima2Dspline", X, 6, Y, 6, 30 ) );
+
+  errors_by_region.emplace_back( "BiCubic", check_derivatives_by_region( bc_cubic, "BiCubicSpline", X, 6, Y, 6, 30 ) );
+  errors_by_region.emplace_back(
+    "BiCubic[Akima]",
+    check_derivatives_by_region( bc_akima, "BiCubicSpline[Akima]", X, 6, Y, 6, 30 ) );
+  errors_by_region.emplace_back(
+    "BiCubic[Bessel]",
+    check_derivatives_by_region( bc_bessel, "BiCubicSpline[Bessel]", X, 6, Y, 6, 30 ) );
+  errors_by_region.emplace_back(
+    "BiCubic[Pchip]",
+    check_derivatives_by_region( bc_pchip, "BiCubicSpline[Pchip]", X, 6, Y, 6, 30 ) );
+
+  errors_by_region.emplace_back(
+    "BiQuintic",
+    check_derivatives_by_region( bq_cubic, "BiQuinticSpline", X, 6, Y, 6, 30 ) );
+  errors_by_region.emplace_back(
+    "BiQuintic[Akima]",
+    check_derivatives_by_region( bq_akima, "BiQuinticSpline[Akima]", X, 6, Y, 6, 30 ) );
+  errors_by_region.emplace_back(
+    "BiQuintic[Bessel]",
+    check_derivatives_by_region( bq_bessel, "BiQuinticSpline[Bessel]", X, 6, Y, 6, 30 ) );
+  errors_by_region.emplace_back(
+    "BiQuintic[Pchip]",
+    check_derivatives_by_region( bq_pchip, "BiQuinticSpline[Pchip]", X, 6, Y, 6, 30 ) );
+
   errors_by_region.emplace_back( "Bilinear", check_derivatives_by_region( bl, "BilinearSpline", X, 6, Y, 6, 30 ) );
 
   fmt::print( fg( fmt::color::magenta ) | fmt::emphasis::bold, "\n📊 DERIVATIVE ERROR ANALYSIS BY REGION:\n" );
@@ -864,9 +912,16 @@ int main()
 
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n💾 Writing spline data to files...\n" );
 
-  generate_grid_data( bq, "biquintic", "BiQuinticSpline" );
-  generate_grid_data( bc, "bicubic", "BiCubicSpline" );
-  generate_grid_data( ak, "akima2d", "Akima2Dspline" );
+  generate_grid_data( bc_cubic, "bicubic", "BiCubicSpline" );
+  generate_grid_data( bc_akima, "bicubic[Akima]", "BiCubicSpline[Akima]" );
+  generate_grid_data( bc_bessel, "bicubic[Bessel]", "BiCubicSpline[Bessel]" );
+  generate_grid_data( bc_pchip, "bicubic[Pchip]", "BiCubicSpline[Pchip]" );
+
+  generate_grid_data( bq_cubic, "biquintic", "BiQuinticSpline" );
+  generate_grid_data( bq_akima, "biquintic[Akima]", "BiQuinticSpline[Akima]" );
+  generate_grid_data( bq_bessel, "biquintic[Bessel]", "BiQuinticSpline[Bessel]" );
+  generate_grid_data( bq_pchip, "biquintic[Pchip]", "BiQuinticSpline[Pchip]" );
+
   generate_grid_data( bl, "bilinear", "BilinearSpline" );
 
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n📁 Generated Files Summary:\n" );

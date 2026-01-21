@@ -170,7 +170,7 @@ int main()
   integer   npts = npt;
   real_type val[7], val_D[7];
 
-  char const * headers[] = { "constant", "linear", "cubic", "akima", "bessel", "pchip", "quintic" };
+  char const * headers[] = { "constant", "linear", "cubic", "akima", "bessel", "pchip", "quintic_pchip" };
 
   real_type const * Y[] = { yy, yy, yy, yy, yy, yy, yy, yy };
 

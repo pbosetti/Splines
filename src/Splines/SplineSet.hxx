@@ -2385,7 +2385,10 @@ namespace Splines
       {
         switch ( stype[spl] )
         {
-          case SplineType1D::QUINTIC:
+          case SplineType1D::QUINTIC_CUBIC:
+          case SplineType1D::QUINTIC_AKIMA:
+          case SplineType1D::QUINTIC_BESSEL:
+          case SplineType1D::QUINTIC_PCHIP:
             mem += npts;  // Y, Yp, Ypp
             [[fallthrough]];
           case SplineType1D::CUBIC:
@@ -2440,7 +2443,10 @@ namespace Splines
         pYpp = pYp = nullptr;
         switch ( stype[spl] )
         {
-          case SplineType1D::QUINTIC: pYpp = m_mem( m_npts ); [[fallthrough]];
+          case SplineType1D::QUINTIC_CUBIC:
+          case SplineType1D::QUINTIC_AKIMA:
+          case SplineType1D::QUINTIC_BESSEL:
+          case SplineType1D::QUINTIC_PCHIP: pYpp = m_mem( m_npts ); [[fallthrough]];
           case SplineType1D::CUBIC:
           case SplineType1D::AKIMA:
           case SplineType1D::BESSEL:
@@ -2510,7 +2516,7 @@ namespace Splines
             S->reserve_external( m_npts, m_X, pY, pYp );
             S->m_npts = m_npts;
             S->build();
-            m_is_monotone[spl] = check_cubic_spline_monotonicity( m_X, pY, pYp, m_npts );
+            m_is_monotone[spl] = S->is_monotone();
             s                  = std::move( S );
           }
           break;
@@ -2521,7 +2527,7 @@ namespace Splines
             S->reserve_external( m_npts, m_X, pY, pYp );
             S->m_npts = m_npts;
             S->build();
-            m_is_monotone[spl] = check_cubic_spline_monotonicity( m_X, pY, pYp, m_npts );
+            m_is_monotone[spl] = S->is_monotone();
             s                  = std::move( S );
           }
           break;
@@ -2532,7 +2538,7 @@ namespace Splines
             S->reserve_external( m_npts, m_X, pY, pYp );
             S->m_npts = m_npts;
             S->build();
-            m_is_monotone[spl] = check_cubic_spline_monotonicity( m_X, pY, pYp, m_npts );
+            m_is_monotone[spl] = S->is_monotone();
             s                  = std::move( S );
           }
           break;
@@ -2543,7 +2549,7 @@ namespace Splines
             S->reserve_external( m_npts, m_X, pY, pYp );
             S->m_npts = m_npts;
             S->build();
-            m_is_monotone[spl] = check_cubic_spline_monotonicity( m_X, pY, pYp, m_npts );
+            m_is_monotone[spl] = S->is_monotone();
             s                  = std::move( S );
           }
           break;
@@ -2554,18 +2560,52 @@ namespace Splines
             S->reserve_external( m_npts, m_X, pY, pYp );
             S->m_npts = m_npts;
             S->build();
-            m_is_monotone[spl] = check_cubic_spline_monotonicity( m_X, pY, pYp, m_npts );
+            m_is_monotone[spl] = S->is_monotone();
             s                  = std::move( S );
           }
           break;
 
-          case SplineType1D::QUINTIC:
+          case SplineType1D::QUINTIC_CUBIC:
           {
-            auto S = std::make_unique<QuinticSpline>( h );
+            auto S = std::make_unique<QuinticSpline>( Spline_sub_type::CUBIC, h );
             S->reserve_external( m_npts, m_X, pY, pYp, pYpp );
             S->m_npts = m_npts;
             S->build();
-            s = std::move( S );
+            m_is_monotone[spl] = S->is_monotone();
+            s                  = std::move( S );
+          }
+          break;
+
+          case SplineType1D::QUINTIC_AKIMA:
+          {
+            auto S = std::make_unique<QuinticSpline>( Spline_sub_type::AKIMA, h );
+            S->reserve_external( m_npts, m_X, pY, pYp, pYpp );
+            S->m_npts = m_npts;
+            S->build();
+            m_is_monotone[spl] = S->is_monotone();
+            s                  = std::move( S );
+          }
+          break;
+
+          case SplineType1D::QUINTIC_BESSEL:
+          {
+            auto S = std::make_unique<QuinticSpline>( Spline_sub_type::BESSEL, h );
+            S->reserve_external( m_npts, m_X, pY, pYp, pYpp );
+            S->m_npts = m_npts;
+            S->build();
+            m_is_monotone[spl] = S->is_monotone();
+            s                  = std::move( S );
+          }
+          break;
+
+          case SplineType1D::QUINTIC_PCHIP:
+          {
+            auto S = std::make_unique<QuinticSpline>( Spline_sub_type::PCHIP, h );
+            S->reserve_external( m_npts, m_X, pY, pYp, pYpp );
+            S->m_npts = m_npts;
+            S->build();
+            m_is_monotone[spl] = S->is_monotone();
+            s                  = std::move( S );
           }
           break;
 

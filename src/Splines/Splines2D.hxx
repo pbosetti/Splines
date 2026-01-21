@@ -38,14 +38,28 @@ namespace Splines
   \*/
 
   //!
-  //! Bi-quintic spline base class
+  //! \class Spline2D
+  //! \brief A wrapper class for 2D spline surfaces (bilinear, bicubic, biquintic, etc.)
+  //!
+  //! This class provides a unified interface for various types of 2D spline surfaces.
+  //! It manages the construction, evaluation, and querying of spline surfaces defined
+  //! over a rectangular grid in the x-y plane.
+  //!
+  //! The surface is defined by:
+  //!   - A set of nodal points (x_i, y_j) forming a rectangular grid.
+  //!   - A matrix of z-values Z(i,j) defined at each grid point.
+  //!
+  //! The Z matrix can be stored in different memory layouts (row-major or column-major)
+  //! and can optionally be transposed. See the build() methods for detailed storage descriptions.
   //!
   class Spline2D
   {
   protected:
-    std::string  m_name;
-    SplineSurf * m_spline_2D{ nullptr };
+    std::string  m_name;            ///< Name identifier for the spline surface
+    SplineSurf * m_spline_2D{ nullptr }; ///< Pointer to the actual spline implementation
 
+    //! \brief Internal method to create a new spline of the specified type
+    //! \param[in] tp The type of spline surface to create (e.g., bilinear, bicubic, biquintic)
     void new_spline( SplineType2D tp )
     {
       if ( m_spline_2D != nullptr )
@@ -56,30 +70,28 @@ namespace Splines
       switch ( tp )
       {
         case SplineType2D::BILINEAR: m_spline_2D = new BilinearSpline( m_name ); break;
-        case SplineType2D::BICUBIC: m_spline_2D = new BiCubicSpline( m_name ); break;
-        case SplineType2D::BIQUINTIC: m_spline_2D = new BiQuinticSpline( m_name ); break;
-        case SplineType2D::AKIMA2D:
-          m_spline_2D = new Akima2Dspline( m_name );
+        case SplineType2D::BICUBIC_CUBIC: m_spline_2D = new BiCubicSpline( Spline_sub_type::CUBIC, m_name ); break;
+        case SplineType2D::BICUBIC_AKIMA: m_spline_2D = new BiCubicSpline( Spline_sub_type::AKIMA, m_name ); break;
+        case SplineType2D::BICUBIC_BESSEL: m_spline_2D = new BiCubicSpline( Spline_sub_type::BESSEL, m_name ); break;
+        case SplineType2D::BICUBIC_PCHIP: m_spline_2D = new BiCubicSpline( Spline_sub_type::PCHIP, m_name ); break;
+        case SplineType2D::BIQUINTIC_CUBIC: m_spline_2D = new BiQuinticSpline( Spline_sub_type::CUBIC, m_name ); break;
+        case SplineType2D::BIQUINTIC_AKIMA: m_spline_2D = new BiQuinticSpline( Spline_sub_type::AKIMA, m_name ); break;
+        case SplineType2D::BIQUINTIC_BESSEL:
+          m_spline_2D = new BiQuinticSpline( Spline_sub_type::BESSEL, m_name );
           break;
-          //    default:
-          //      UTILS_ERROR( "new_spline, type `{}` unknown\n", tp );
+        case SplineType2D::BIQUINTIC_PCHIP: m_spline_2D = new BiQuinticSpline( Spline_sub_type::PCHIP, m_name ); break;
       }
     }
 
   public:
-    //! \name Constructors
+    //! \name Constructors and Destructor
     ///@{
 
-    //!
-    //! Build an empty spline of `Spline2D` type
-    //!
-    //! \param name the name of the spline
-    //!
+    //! \brief Constructs an empty spline surface with the given name.
+    //! \param[in] name Optional name identifier for the spline (default: "Spline2D")
     explicit Spline2D( string_view name = "Spline2D" ) : m_name( name ) {}
 
-    //!
-    //! Spline destructor.
-    //!
+    //! \brief Destructor. Safely deletes the internal spline object.
     virtual ~Spline2D()
     {
       if ( m_spline_2D != nullptr )
@@ -91,177 +103,138 @@ namespace Splines
 
     ///@}
 
-    //!
-    //! \name Open/Close/Bound
-    //!
+    //! \name Open/Close/Boundary Conditions
+    //! Methods to control periodicity and extrapolation behavior.
     ///@{
 
-    //!
-    //! Return `true` if the surface is assumed closed in the `x` direction
-    //!
+    //! \brief Returns true if the surface is closed (periodic) in the x-direction.
     bool is_x_closed() const { return m_spline_2D->is_x_closed(); }
 
-    //!
-    //! Setup the surface as closed in the `x` direction.
-    //!
+    //! \brief Makes the surface closed (periodic) in the x-direction.
     void make_x_closed() { m_spline_2D->make_x_closed(); }
 
-    //!
-    //! Setup the surface as open in the `x` direction.
-    //!
+    //! \brief Makes the surface open (non‑periodic) in the x‑direction.
     void make_x_opened() { m_spline_2D->make_x_opened(); }
 
-    //!
-    //! Return `true` if the surface is assumed closed in the `y` direction.
-    //!
+    //! \brief Returns true if the surface is closed (periodic) in the y-direction.
     bool is_y_closed() const { return m_spline_2D->is_y_closed(); }
 
-    //!
-    //! Setup the surface as closed in the `y` direction.
-    //!
+    //! \brief Makes the surface closed (periodic) in the y-direction.
     void make_y_closed() { m_spline_2D->make_y_closed(); }
 
-    //!
-    //! Setup the surface as open in the `y` direction.
-    //!
+    //! \brief Makes the surface open (non‑periodic) in the y‑direction.
     void make_y_opened() { m_spline_2D->make_y_opened(); }
 
-    //!
-    //! Return `true` if the parameter `x` assumed bounded.
-    //! If false the spline is estrapolated for `x` values
-    //! outside the range.
-    //!
+    //! \brief Returns true if x-values are bounded (no extrapolation).
+    //! If false, the spline will extrapolate for x outside the defined range.
     bool is_x_bounded() const { return m_spline_2D->is_x_bounded(); }
 
-    //!
-    //! Make the spline surface unbounded in the `x` direction.
-    //!
+    //! \brief Allows extrapolation in the x‑direction (unbounded).
     void make_x_unbounded() { m_spline_2D->make_x_unbounded(); }
 
-    //!
-    //! Make the spline surface bounded in the `x` direction.
-    //!
+    //! \brief Restricts evaluation to the defined x‑range (bounded).
     void make_x_bounded() { m_spline_2D->make_x_bounded(); }
 
-    //!
-    //! Return `true` if the parameter `y` assumed bounded.
-    //! If false the spline is estrapolated for `y` values
-    //! outside the range.
-    //!
+    //! \brief Returns true if y-values are bounded (no extrapolation).
+    //! If false, the spline will extrapolate for y outside the defined range.
     bool is_y_bounded() const { return m_spline_2D->is_y_bounded(); }
 
-    //!
-    //! Make the spline surface unbounded in the `y` direction
-    //!
+    //! \brief Allows extrapolation in the y‑direction (unbounded).
     void make_y_unbounded() { m_spline_2D->make_y_unbounded(); }
 
-    //!
-    //! Make the spline surface bounded in the `y` direction
-    //!
+    //! \brief Restricts evaluation to the defined y‑range (bounded).
     void make_y_bounded() { m_spline_2D->make_y_bounded(); }
 
     ///@}
 
-    //!
-    //! \name Info
-    //!
+    //! \name Information and Accessors
+    //! Methods to query spline properties and nodal data.
     ///@{
 
-    //!
-    //! \return string with the name of the spline
-    //!
+    //! \brief Returns the name of the spline surface.
     string_view name() const { return m_spline_2D->name(); }
 
-    //!
-    //! Return the number of support points of the spline along x direction.
-    //!
+    //! \brief Returns the number of grid points in the x-direction.
     integer num_point_x() const { return m_spline_2D->num_point_x(); }
 
-    //!
-    //! Return the number of support points of the spline along y direction.
-    //!
+    //! \brief Returns the number of grid points in the y-direction.
     integer num_point_y() const { return m_spline_2D->num_point_y(); }
 
-    //!
-    //! Return the i-th node of the spline (x component).
-    //!
+    //! \brief Returns the x-coordinate of the i-th grid node.
+    //! \param[in] i Index of the node in the x-direction (0‑based).
     real_type x_node( integer const i ) const { return m_spline_2D->x_node( i ); }
 
-    //!
-    //! Return the i-th node of the spline (y component).
-    //!
+    //! \brief Returns the y-coordinate of the i-th grid node.
+    //! \param[in] i Index of the node in the y-direction (0‑based).
     real_type y_node( integer const i ) const { return m_spline_2D->y_node( i ); }
 
-    //!
-    //! Return the i-th node of the spline (y component).
-    //!
+    //! \brief Returns the z-value at grid node (i, j).
+    //! \param[in] i Index in the x-direction (0‑based).
+    //! \param[in] j Index in the y-direction (0‑based).
     real_type z_node( integer const i, integer const j ) const { return m_spline_2D->z_node( i, j ); }
 
     ///@}
 
-    //!
-    //! Cancel the support points, empty the spline.
-    //!
+    //! \brief Clears all support points, leaving the spline empty.
     void clear() { m_spline_2D->clear(); }
 
-    //!
-    //! \name Get bounds
-    //!
+    //! \name Bounding Box Queries
+    //! Methods to get the min/max ranges of the spline domain and values.
     ///@{
 
-    //!
-    //! Return x-minumum spline value.
-    //!
+    //! \brief Minimum x-coordinate of the spline domain.
     real_type x_min() const { return m_spline_2D->x_min(); }
 
-    //!
-    //! Return x-maximum spline value.
-    //!
+    //! \brief Maximum x-coordinate of the spline domain.
     real_type x_max() const { return m_spline_2D->x_max(); }
 
-    //!
-    //! Return y-minumum spline value.
-    //!
+    //! \brief Minimum y-coordinate of the spline domain.
     real_type y_min() const { return m_spline_2D->y_min(); }
 
-    //!
-    //! Return y-maximum spline value
-    //!
+    //! \brief Maximum y-coordinate of the spline domain.
     real_type y_max() const { return m_spline_2D->y_max(); }
 
-    //!
-    //! Return z-minumum spline value
-    //!
+    //! \brief Minimum z-value over all grid points.
     real_type z_min() const { return m_spline_2D->z_min(); }
 
-    //!
-    //! Return z-maximum spline value
-    //!
+    //! \brief Maximum z-value over all grid points.
     real_type z_max() const { return m_spline_2D->z_max(); }
 
     ///@}
 
-    //!
-    //! \name Constructors
-    //!
+    //! \name Construction Methods
+    //! Methods to build the spline surface from data.
+    //! The Z matrix can be stored in several layouts:
+    //!   - Row‑major (C style): Z(i,j) = z[i * ny + j] with ldZ = ny.
+    //!   - Column‑major (Fortran style): Z(i,j) = z[i + j * nx] with ldZ = nx.
+    //!   - Transposed: swaps the roles of rows and columns.
+    //! See each overload for specific parameter descriptions.
     ///@{
 
+    //! \brief Builds a spline surface from raw arrays.
     //!
-    //! Build surface spline
+    //! \param[in] tp              Type of spline surface (e.g., bilinear, bicubic).
+    //! \param[in] x               Array of x-coordinates (length nx).
+    //! \param[in] incx            Stride between consecutive x elements (typically 1).
+    //! \param[in] y               Array of y-coordinates (length ny).
+    //! \param[in] incy            Stride between consecutive y elements (typically 1).
+    //! \param[in] z               Flat array containing the matrix of z‑values.
+    //! \param[in] ldZ             Leading dimension of the Z matrix in memory.
+    //!                            For C storage (row‑major), ldZ is the number of columns (ny).
+    //!                            For Fortran storage (column‑major), ldZ is the number of rows (nx).
+    //! \param[in] nx              Number of grid points in the x‑direction.
+    //! \param[in] ny              Number of grid points in the y‑direction.
+    //! \param[in] fortran_storage If true, z is stored column‑major (Fortran style).
+    //!                            If false, z is stored row‑major (C style).
+    //! \param[in] transposed      If true, the Z matrix is stored transposed.
+    //!                            When transposed, the indexing changes:
+    //!                            - C storage: Z(i,j) = z[j * ldZ + i] (with ldZ = nx).
+    //!                            - Fortran storage: Z(i,j) = z[j + i * ldZ] (with ldZ = ny).
     //!
-    //! \param tp              spline type
-    //! \param x               vector of x-coordinates
-    //! \param incx            access elements as `x[0]`, `x[incx]`, `x[2*incx]`,...
-    //! \param y               vector of y-coordinates
-    //! \param incy            access elements as `y[0]`, `y[incx]`, `y[2*incx]`,...
-    //! \param z               matrix of z-values. Elements are stored
-    //!                        by row Z(i,j) = z[i*ny+j] as C-matrix
-    //! \param ldZ             leading dimension of `z`
-    //! \param nx              number of points in `x` direction
-    //! \param ny              number of points in `y` direction
-    //! \param fortran_storage if true elements are stored by column
-    //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
-    //! \param transposed      if true matrix Z is stored transposed
+    //! Example (C storage, not transposed):
+    //!   Given nx=3, ny=2, ldZ=ny=2, the flat array z[6] contains:
+    //!     [ Z(0,0), Z(0,1), Z(1,0), Z(1,1), Z(2,0), Z(2,1) ]
+    //!   Access: Z(i,j) = z[i*2 + j].
     //!
     void build(
       SplineType2D    tp,
@@ -280,18 +253,17 @@ namespace Splines
       m_spline_2D->build( x, incx, y, incy, z, ldZ, nx, ny, fortran_storage, transposed );
     }
 
+    //! \brief Builds a spline surface from std::vector containers.
     //!
-    //! Build surface spline
+    //! \param[in] tp              Type of spline surface.
+    //! \param[in] x               Vector of x-coordinates (length nx).
+    //! \param[in] y               Vector of y-coordinates (length ny).
+    //! \param[in] z               Vector containing the matrix of z‑values, stored as a flat array.
+    //! \param[in] fortran_storage If true, z is stored column‑major (Fortran style).
+    //!                            If false, z is stored row‑major (C style).
+    //! \param[in] transposed      If true, the Z matrix is stored transposed.
     //!
-    //! \param tp              spline type
-    //! \param x               vector of x-coordinates, nx = x.size()
-    //! \param y               vector of y-coordinates, ny = y.size()
-    //! \param z               matrix of z-values. Elements are stored
-    //!                        by row Z(i,j) = z[i*ny+j] as C-matrix
-    //! \param fortran_storage if true elements are stored by column
-    //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
-    //! \param transposed      if true matrix Z is stored transposed
-    //!
+    //! The vector z must have size nx * ny. Storage and transposition behave as in the raw‑array version.
     void build(
       SplineType2D              tp,
       vector<real_type> const & x,
@@ -304,20 +276,20 @@ namespace Splines
       m_spline_2D->build( x, y, z, fortran_storage, transposed );
     }
 
+    //! \brief Builds a spline surface with uniformly spaced x and y grids.
     //!
-    //! Build surface spline
+    //! The x-grid is assumed to be 0, 1, ..., nx-1.
+    //! The y-grid is assumed to be 0, 1, ..., ny-1.
     //!
-    //! \param tp              spline type
-    //! \param z               matrix of z-values. Elements are stored
-    //!                        by row Z(i,j) = z[i*ny+j] as C-matrix
-    //! \param ldZ             leading dimension of the matrix. Elements are stored
-    //!                        by row Z(i,j) = z[i*ldZ+j] as C-matrix
-    //! \param nx              x-dimension
-    //! \param ny              y-dimension
-    //! \param fortran_storage if true elements are stored by column
-    //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
-    //! \param transposed      if true matrix Z is stored transposed
-    //!
+    //! \param[in] tp              Type of spline surface.
+    //! \param[in] z               Flat array containing the matrix of z‑values.
+    //! \param[in] ldZ             Leading dimension of Z in memory.
+    //!                            For C storage (row‑major): ldZ = ny.
+    //!                            For Fortran storage (column‑major): ldZ = nx.
+    //! \param[in] nx              Number of grid points in the x‑direction.
+    //! \param[in] ny              Number of grid points in the y‑direction.
+    //! \param[in] fortran_storage If true, z is stored column‑major.
+    //! \param[in] transposed      If true, the Z matrix is stored transposed.
     void build(
       SplineType2D    tp,
       real_type const z[],
@@ -331,20 +303,16 @@ namespace Splines
       m_spline_2D->build( z, ldZ, nx, ny, fortran_storage, transposed );
     }
 
+    //! \brief Builds a spline surface with uniformly spaced grids using a vector for Z.
     //!
-    //! Build surface spline
+    //! The x-grid is 0, 1, ..., nx-1; the y-grid is 0, 1, ..., ny-1.
     //!
-    //! \param tp              spline type
-    //! \param z               matrix of z-values. Elements are stored
-    //!                        by row Z(i,j) = z[i*ny+j] as C-matrix.
-    //!                        ldZ leading dimension of the matrix is ny for C-storage
-    //!                        and nx for Fortran storage.
-    //! \param nx              x-dimension
-    //! \param ny              y-dimension
-    //! \param fortran_storage if true elements are stored by column
-    //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
-    //! \param transposed      if true matrix Z is stored transposed
-    //!
+    //! \param[in] tp              Type of spline surface.
+    //! \param[in] z               Vector containing the matrix of z‑values (size must be nx * ny).
+    //! \param[in] nx              Number of grid points in the x‑direction.
+    //! \param[in] ny              Number of grid points in the y‑direction.
+    //! \param[in] fortran_storage If true, z is stored column‑major.
+    //! \param[in] transposed      If true, the Z matrix is stored transposed.
     void build(
       SplineType2D              tp,
       vector<real_type> const & z,
@@ -357,16 +325,16 @@ namespace Splines
       m_spline_2D->build( z, nx, ny, fortran_storage, transposed );
     }
 
+    //! \brief Configures the spline from a GenericContainer.
     //!
-    //! Build spline surface using `gc`
+    //! The GenericContainer must contain a key "spline_type" with a string value:
+    //!   - "bilinear"  : bilinear spline surface.
+    //!   - "bicubic"   : bicubic spline surface.
+    //!   - "biquintic" : biquintic spline surface.
+    //!   - "Akima" or "akima": cubic spline using Akima algorithm.
     //!
-    //! - gc("spline_type")
-    //!     - "bilinear" build a bilinear spline surface
-    //!     - "bicubic" build a spline surface with cubic spline
-    //!     - "biquintic" build a spline surface with quintic spline
-    //!     - "Akima" or "akima "build a spline surface with cubic spline
-    //!        using Akima algorithm to avoid obscillation
-    //!
+    //! Other parameters (grid and Z data) are also read from the container.
+    //! \param[in] gc The GenericContainer holding the spline configuration.
     void setup( GenericContainer const & gc )
     {
       string const   where{ fmt::format( "Spline2D[{}]::setup( gc ):", m_name ) };
@@ -375,38 +343,40 @@ namespace Splines
       m_spline_2D->setup( gc );
     }
 
-    //!
-    //! Build a spline using data in `GenericContainer`
-    //!
+    //! \brief Alias for setup().
     void build( GenericContainer const & gc ) { setup( gc ); }
 
     ///@}
 
-    //!
-    //! \name Evaluate
-    //!
+    //! \name Evaluation
+    //! Methods to evaluate the spline surface and its derivatives.
     ///@{
 
-    //!
-    //! Evaluate spline value at `(x,y)`.
-    //!
+    //! \brief Evaluates the spline at (x, y).
+    //! \param[in] x x-coordinate.
+    //! \param[in] y y-coordinate.
+    //! \return The interpolated value S(x, y).
     real_type operator()( real_type const x, real_type const y ) const { return m_spline_2D->eval( x, y ); }
 
-    //!
-    //! Evaluate spline value at `(x,y)`.
-    //!
+    //! \brief Evaluates the spline at (x, y).
+    //! \param[in] x x-coordinate.
+    //! \param[in] y y-coordinate.
+    //! \return The interpolated value S(x, y).
     real_type eval( real_type const x, real_type const y ) const { return m_spline_2D->eval( x, y ); }
 
 #ifdef AUTODIFF_SUPPORT
+    //! \brief Evaluates the spline using first‑order automatic differentiation.
     autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
     {
       return m_spline_2D->eval( x, y );
     }
+    //! \brief Evaluates the spline using second‑order automatic differentiation.
     autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
     {
       return m_spline_2D->eval( x, y );
     }
 
+    //! \brief Evaluates the spline with higher‑order automatic differentiation.
     template <typename T1, typename T2>
     autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval( T1 const & x, T2 const & y )
       const
@@ -418,120 +388,89 @@ namespace Splines
 
     ///@}
 
-    //! \name First derivatives:
+    //! \name First Derivatives
+    //! Methods to compute first derivatives of the spline surface.
     ///@{
-    //!
-    //! Value and first derivatives at point \f$ (x,y) \f$:
-    //!
-    //! - d[0] value of the spline \f$ S(x,y) \f$
-    //! - d[1] derivative respect to \f$ x \f$ of the spline: \f$ S_x(x,y) \f$
-    //! - d[2] derivative respect to \f$ y \f$ of the spline: \f$ S_y(x,y) \f$
-    //!
+
+    //! \brief Computes value and first derivatives at (x, y).
+    //! \param[in]  x  x-coordinate.
+    //! \param[in]  y  y-coordinate.
+    //! \param[out] d  Array of size 3 where:
+    //!                - d[0] = S(x, y)
+    //!                - d[1] = ∂S/∂x (x, y)
+    //!                - d[2] = ∂S/∂y (x, y)
     void D( real_type const x, real_type const y, real_type d[3] ) const { return m_spline_2D->D( x, y, d ); }
 
-    //!
-    //! First derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_x(x,y) \f$.
-    //!
+    //! \brief Returns ∂S/∂x at (x, y).
     real_type Dx( real_type const x, real_type const y ) const { return m_spline_2D->Dx( x, y ); }
 
-    //!
-    //! First derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_x(x,y) \f$.
-    //!
+    //! \brief Returns ∂S/∂y at (x, y).
     real_type Dy( real_type const x, real_type const y ) const { return m_spline_2D->Dy( x, y ); }
 
-    //!
-    //! First derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_x(x,y) \f$.
-    //!
+    //! \brief Alias for Dx().
     real_type eval_D_1( real_type const x, real_type const y ) const { return this->Dx( x, y ); }
 
-    //!
-    //! First derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_x(x,y) \f$.
-    //!
+    //! \brief Alias for Dy().
     real_type eval_D_2( real_type const x, real_type const y ) const { return this->Dy( x, y ); }
 
     ///@}
 
-    //!
-    //! \name Second derivatives:
-    //!
+    //! \name Second Derivatives
+    //! Methods to compute second derivatives of the spline surface.
     ///@{
-    //!
-    //! Value, first and second derivatives at point \f$ (x,y) \f$:
-    //!
-    //! - dd[0] value of the spline \f$ S(x,y) \f$
-    //! - dd[1] derivative respect to \f$ x \f$ of the spline: \f$ S_x(x,y) \f$
-    //! - dd[2] derivative respect to \f$ y \f$ of the spline: \f$ S_y(x,y) \f$
-    //! - dd[3] second derivative respect to \f$ x \f$ of the spline: \f$ S_{xx}(x,y) \f$
-    //! - dd[4] mixed second derivative: \f$ S_{xy}(x,y) \f$
-    //! - dd[5] second derivative respect to \f$ y \f$ of the spline: \f$ S_{yy}(x,y) \f$
-    //!
+
+    //! \brief Computes value, first and second derivatives at (x, y).
+    //! \param[in]  x   x-coordinate.
+    //! \param[in]  y   y-coordinate.
+    //! \param[out] dd  Array of size 6 where:
+    //!                 - dd[0] = S(x, y)
+    //!                 - dd[1] = ∂S/∂x
+    //!                 - dd[2] = ∂S/∂y
+    //!                 - dd[3] = ∂²S/∂x²
+    //!                 - dd[4] = ∂²S/∂x∂y
+    //!                 - dd[5] = ∂²S/∂y²
     void DD( real_type const x, real_type const y, real_type dd[6] ) const { return m_spline_2D->DD( x, y, dd ); }
 
-    //!
-    //! Second derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_{xx}(x,y) \f$.
-    //!
+    //! \brief Returns ∂²S/∂x² at (x, y).
     real_type Dxx( real_type const x, real_type const y ) const { return m_spline_2D->Dxx( x, y ); }
 
-    //!
-    //! Mixed second derivatives: \f$ S_{xy}(x,y) \f$.
-    //!
+    //! \brief Returns ∂²S/∂x∂y at (x, y).
     real_type Dxy( real_type const x, real_type const y ) const { return m_spline_2D->Dxy( x, y ); }
 
-    //!
-    //! Second derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_{xx}(x,y) \f$.
-    //!
+    //! \brief Returns ∂²S/∂y² at (x, y).
     real_type Dyy( real_type const x, real_type const y ) const { return m_spline_2D->Dyy( x, y ); }
 
-    //!
-    //! Second derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_{xx}(x,y) \f$.
-    //!
+    //! \brief Alias for Dxx().
     real_type eval_D_1_1( real_type const x, real_type const y ) const { return this->Dxx( x, y ); }
 
-    //!
-    //! Mixed second derivatives: \f$ S_{xy}(x,y) \f$.
-    //!
+    //! \brief Alias for Dxy().
     real_type eval_D_1_2( real_type const x, real_type const y ) const { return this->Dxy( x, y ); }
 
-    //!
-    //! Second derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
-    //! of the spline: \f$ S_{xx}(x,y) \f$.
-    //!
+    //! \brief Alias for Dyy().
     real_type eval_D_2_2( real_type const x, real_type const y ) const { return this->Dyy( x, y ); }
     ///@}
 
-    //!
-    //! Print spline coefficients.
-    //!
+    //! \name Output and Debugging
+    //! Methods for printing spline information and data.
+    ///@{
+
+    //! \brief Writes a human‑readable representation of the spline to a stream.
     void write_to_stream( ostream_type & s ) const { return m_spline_2D->write_to_stream( s ); }
 
-    //!
-    //! Return spline typename
-    //!
+    //! \brief Returns the spline type name as a C‑string.
     char const * type_name() const { return m_spline_2D->type_name(); }
 
-    //!
-    //! String information of the kind and order of the spline
-    //!
+    //! \brief Returns a string describing the spline kind and order.
     string info() const { return m_spline_2D->info(); }
 
-    //!
-    //! Print information of the kind and order of the spline
-    //!
+    //! \brief Prints the spline information to a stream.
     void info( ostream_type & stream ) const { m_spline_2D->info( stream ); }
 
-    //!
-    //! Dump spline values on the streams
-    //!
+    //! \brief Dumps all spline data (grid and coefficients) to a stream.
     void dump_data( ostream_type & stream ) const { m_spline_2D->dump_data( stream ); }
 
 #ifdef SPLINES_BACK_COMPATIBILITY
+    // Legacy method names (camelCase) for backward compatibility.
     integer   numPointX() const { return m_spline_2D->num_point_x(); }
     integer   numPointY() const { return m_spline_2D->num_point_y(); }
     real_type xNode( integer i ) const { return this->x_node( i ); }

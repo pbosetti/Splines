@@ -52,10 +52,9 @@ type = 'quintic';
 %type = 'akima';
 %type = 'bessel';
 %subtype = 'pchip';
-subtype = 'cubic';
-Xs = Spline1D( type, t, PNTS(1,:), subtype );
-Ys = Spline1D( type, t, PNTS(2,:), subtype );
-Zs = Spline1D( type, t, PNTS(3,:), subtype );
+Xs = Spline1D( 'quintic_akima', t, PNTS(1,:) );
+Ys = Spline1D( 'quintic_akima', t, PNTS(2,:) );
+Zs = Spline1D( 'quintic_akima', t, PNTS(3,:) );
 plot3( Xs.eval(tt), Ys.eval(tt), Zs.eval(tt), fmt3{:} ) ;
 
 figure();

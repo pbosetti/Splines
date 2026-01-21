@@ -34,57 +34,6 @@
 namespace Splines
 {
 
-
-  inline void Akima_build(
-    real_type const X[],  // puntatori ai dati
-    real_type const Y[],
-    real_type       Yp[],
-    real_type       m[],
-    int             N )
-  {
-    assert( N >= 2 && "Akima_build requires at least 2 points" );
-
-    if ( N == 2 )
-    {
-      Yp[0] = Yp[1] = ( Y[1] - Y[0] ) / ( X[1] - X[0] );
-      return;
-    }
-
-    const int n = N - 1;
-
-    for ( integer i = 0; i < n; ++i ) m[i] = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
-
-    auto slope = [&]( int i ) -> real_type
-    {
-      if ( i == -2 ) return 2 * m[0] - m[1];
-      if ( i == -1 ) return 2 * ( 2 * m[0] - m[1] ) - m[0];
-      if ( i >= 0 && i <= n - 1 ) return m[i];
-      if ( i == n ) return 2 * m[n - 1] - m[n - 2];
-      if ( i == n + 1 ) return 2 * ( 2 * m[n - 1] - m[n - 2] ) - m[n - 1];
-      return 0.0;
-    };
-
-    real_type m_i   = slope( 0 );
-    real_type m_im1 = slope( 0 - 1 );
-    real_type m_im2 = slope( 0 - 2 );
-    real_type m_ip1 = slope( 0 + 1 );
-    for ( integer i = 0; i <= n; ++i )
-    {
-      real_type w1    = std::abs( m_ip1 - m_i ) + 0.5 * std::abs( m_ip1 + m_i );
-      real_type w2    = std::abs( m_im1 - m_im2 ) + 0.5 * std::abs( m_im1 + m_im2 );
-      real_type sum_w = w1 + w2;
-
-      if ( sum_w > 1e-12 )
-        Yp[i] = ( w1 * m_im1 + w2 * m_i ) / sum_w;
-      else
-        Yp[i] = 0.5 * ( m_im1 + m_i );  // fallback stabile
-      m_im2 = m_im1;
-      m_im1 = m_i;
-      m_i   = m_ip1;
-      m_ip1 = slope( i + 2 );
-    }
-  }
-
   //!
   //! Smooth Curve Fitting Based on Local Procedures
   //!

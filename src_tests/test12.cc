@@ -28,31 +28,12 @@
 using namespace SplinesLoad;
 using namespace std;
 using Splines::integer;
-using Splines::QuinticSpline_sub_type;
 using Splines::real_type;
+using Splines::Spline_sub_type;
 using Utils::m_pi;
 
 auto TABLE_COLOR = fg( fmt::color::cyan ) | fmt::emphasis::bold;
 auto INFO_COLOR  = fg( fmt::color::light_blue );
-
-// Template wrapper per QuinticSpline con sottotipo specifico
-template <QuinticSpline_sub_type SubType> class QuinticSplineWrapper : public QuinticSpline
-{
-public:
-  QuinticSplineWrapper( string_view name = "Spline" ) : QuinticSpline( name ) { set_quintic_type( SubType ); }
-
-  void build() override
-  {
-    set_quintic_type( SubType );
-    QuinticSpline::build();
-  }
-
-  void build( const vector<real_type> & X, const vector<real_type> & Y )
-  {
-    set_quintic_type( SubType );
-    QuinticSpline::build( X, Y );
-  }
-};
 
 // ============================================================================
 // TEST DATASETS
@@ -589,10 +570,10 @@ int main()
     PchipSpline    pc;
 
     // Quintic spline subtypes
-    QuinticSplineWrapper<QuinticSpline_sub_type::CUBIC>  qs_cubic( "Quintic (CUBIC)" );
-    QuinticSplineWrapper<QuinticSpline_sub_type::PCHIP>  qs_pchip( "Quintic (PCHIP)" );
-    QuinticSplineWrapper<QuinticSpline_sub_type::AKIMA>  qs_akima( "Quintic (AKIMA)" );
-    QuinticSplineWrapper<QuinticSpline_sub_type::BESSEL> qs_bessel( "Quintic (BESSEL)" );
+    QuinticSpline qs_cubic( Spline_sub_type::CUBIC, "Quintic (CUBIC)" );
+    QuinticSpline qs_pchip( Spline_sub_type::PCHIP, "Quintic (PCHIP)" );
+    QuinticSpline qs_akima( Spline_sub_type::AKIMA, "Quintic (AKIMA)" );
+    QuinticSpline qs_bessel( Spline_sub_type::BESSEL, "Quintic (BESSEL)" );
 
     vector<pair<Splines::Spline *, string>> splines = { { &li, "Linear" },
                                                         { &co, "Constant" },

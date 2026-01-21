@@ -43,12 +43,22 @@ V2 = flip(V2,2);
 X2 = 1:1:10;
 Y2 = 1:1:11;
 
-type = { 'bilinear', 'bicubic', 'biquintic', 'akima' };
+type = {
+    'bilinear',
+    'bicubic',
+    'bicubic_akima',
+    'bicubic_bessel',
+    'bicubic_pchip',
+    'biquintic',
+    'biquintic_akima',
+    'biquintic_bessel',
+    'biquintic_pchip'
+    };
 set(gca,'Fontsize',16);
 
 tic;
 
-for k=1:4
+for k=1:9
 
   fprintf('Plot n.%d\n',k);
 
@@ -74,7 +84,7 @@ for k=1:4
     fprintf('Trovati Inf sulla superfice\n');
   end
 
-  subplot(2,2,k);
+  subplot(3,3,k);
 
   surf(XX,YY,ZZ,'Linestyle',':');
   title(type{k});

@@ -58,17 +58,17 @@ namespace Splines
       m_DXXY  = m_mem_biquintic( dim );
       m_DXXYY = m_mem_biquintic( dim );
 
-      make_derivative_x( m_Z, m_DX );
-      make_derivative_y( m_Z, m_DY );
-      make_derivative_xy( m_DX, m_DY, m_DXY );
+      make_derivative_x( m_sub_type, m_Z, m_DX );
+      make_derivative_y( m_sub_type, m_Z, m_DY );
+      make_derivative_xy( m_sub_type, m_DX, m_DY, m_DXY );
 
-      make_derivative_x( m_DX, m_DXX );
-      make_derivative_y( m_DY, m_DYY );
+      make_derivative_x( m_sub_type, m_DX, m_DXX );
+      make_derivative_y( m_sub_type, m_DY, m_DYY );
 
-      make_derivative_y( m_DXX, m_DXXY );
-      make_derivative_x( m_DYY, m_DXYY );
+      make_derivative_y( m_sub_type, m_DXX, m_DXXY );
+      make_derivative_x( m_sub_type, m_DYY, m_DXYY );
 
-      make_derivative_xy( m_DXXY, m_DXYY, m_DXXYY );
+      make_derivative_xy( m_sub_type, m_DXXY, m_DXYY, m_DXXYY );
 
       m_search_x.must_reset();
       m_search_y.must_reset();
@@ -80,7 +80,10 @@ namespace Splines
     //!
     //! \param name the name of the spline
     //!
-    explicit BiQuinticSpline( string_view name = "BiQuinticSpline" ) : BiQuinticSplineBase( name ) {}
+    explicit BiQuinticSpline( Spline_sub_type sub_type, string_view name = "BiQuinticSpline" )
+      : BiQuinticSplineBase( sub_type, name )
+    {
+    }
 
     //!
     //! Spline destructor.
