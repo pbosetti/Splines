@@ -55,8 +55,8 @@ namespace Splines
   class Spline2D
   {
   protected:
-    std::string  m_name;            ///< Name identifier for the spline surface
-    SplineSurf * m_spline_2D{ nullptr }; ///< Pointer to the actual spline implementation
+    std::string  m_name;                  ///< Name identifier for the spline surface
+    SplineSurf * m_spline_2D{ nullptr };  ///< Pointer to the actual spline implementation
 
     //! \brief Internal method to create a new spline of the specified type
     //! \param[in] tp The type of spline surface to create (e.g., bilinear, bicubic, biquintic)

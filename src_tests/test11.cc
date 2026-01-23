@@ -33,9 +33,9 @@ namespace SplinesTest
 
   using namespace Splines;
   using namespace std;
-  using Eigen::VectorXd;
-  using Eigen::MatrixXd;
   using Eigen::Map;
+  using Eigen::MatrixXd;
+  using Eigen::VectorXd;
 
   // ===========================================================================
   // TEST FUNCTIONS - Well-behaved smooth functions for spline testing
@@ -460,8 +460,8 @@ namespace SplinesTest
 
     // Create and build spline
     Spline2D spline( type_name );
-    integer nx = static_cast<integer>( x_grid.size() );
-    integer ny = static_cast<integer>( y_grid.size() );
+    integer  nx = static_cast<integer>( x_grid.size() );
+    integer  ny = static_cast<integer>( y_grid.size() );
     spline.build( spline_type, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny );
 
     // Get bounds
@@ -483,7 +483,7 @@ namespace SplinesTest
       {
         real_type x          = x_grid[i];
         real_type y          = y_grid[j];
-        real_type exact_val  = z_data(i, j);
+        real_type exact_val  = z_data( i, j );
         real_type spline_val = spline.eval( x, y );
         results.grid_interp.update( x, y, exact_val, spline_val );
       }
@@ -492,7 +492,7 @@ namespace SplinesTest
     fmt::print( fg( fmt::color::light_green ), "    Grid points tested: {} × {} = {}\n", nx, ny, nx * ny );
 
     // Generate test points using Eigen (avoid boundaries)
-    std::mt19937 rng( 1000 + static_cast<unsigned>( spline_type ) );
+    std::mt19937                              rng( 1000 + static_cast<unsigned>( spline_type ) );
     std::uniform_real_distribution<real_type> dist_x( x_min * 0.9, x_max * 0.9 );
     std::uniform_real_distribution<real_type> dist_y( y_min * 0.9, y_max * 0.9 );
 
@@ -505,13 +505,13 @@ namespace SplinesTest
     auto & func_dxy = trig_dxy;
 
     // Test points - use Eigen for generating test points
-    VectorXd x_test = VectorXd::NullaryExpr(n_test_points, [&]() { return dist_x(rng); });
-    VectorXd y_test = VectorXd::NullaryExpr(n_test_points, [&]() { return dist_y(rng); });
+    VectorXd x_test = VectorXd::NullaryExpr( n_test_points, [&]() { return dist_x( rng ); } );
+    VectorXd y_test = VectorXd::NullaryExpr( n_test_points, [&]() { return dist_y( rng ); } );
 
     for ( integer i_test = 0; i_test < n_test_points; ++i_test )
     {
-      real_type x = x_test(i_test);
-      real_type y = y_test(i_test);
+      real_type x = x_test( i_test );
+      real_type y = y_test( i_test );
 
       // Avoid points too close to boundaries
       real_type margin = 0.05 * ( x_max - x_min );
@@ -570,10 +570,7 @@ namespace SplinesTest
   }
 
   // Test interpolation at grid points
-  void test_interpolation_accuracy(
-    const VectorXd & x_grid,
-    const VectorXd & y_grid,
-    const MatrixXd & z_data )
+  void test_interpolation_accuracy( const VectorXd & x_grid, const VectorXd & y_grid, const MatrixXd & z_data )
   {
     fmt::print(
       fg( fmt::color::light_blue ) | fmt::emphasis::bold,
@@ -584,8 +581,8 @@ namespace SplinesTest
 
     // Test with Bicubic spline (should interpolate exactly for all types)
     Spline2D spline( "TestSpline" );
-    integer nx = static_cast<integer>( x_grid.size() );
-    integer ny = static_cast<integer>( y_grid.size() );
+    integer  nx = static_cast<integer>( x_grid.size() );
+    integer  ny = static_cast<integer>( y_grid.size() );
     spline.build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny );
 
     real_type max_error   = 0.0;
@@ -598,7 +595,7 @@ namespace SplinesTest
     {
       for ( integer j = 0; j < ny; ++j )
       {
-        real_type exact  = z_data(i, j);
+        real_type exact  = z_data( i, j );
         real_type interp = spline.eval( x_grid[i], y_grid[j] );
         real_type error  = abs( interp - exact );
 
@@ -633,10 +630,7 @@ namespace SplinesTest
   }
 
   // Test derivative method consistency
-  void test_derivative_consistency(
-    Spline2D &       spline,
-    const VectorXd & x_grid,
-    const VectorXd & y_grid )
+  void test_derivative_consistency( Spline2D & spline, const VectorXd & x_grid, const VectorXd & y_grid )
   {
     fmt::print(
       fg( fmt::color::light_blue ) | fmt::emphasis::bold,
@@ -645,9 +639,9 @@ namespace SplinesTest
       "║          Derivative Method Consistency Test              ║\n"
       "╚══════════════════════════════════════════════════════════╝\n" );
 
-    std::mt19937 rng( 1234 );
-    std::uniform_real_distribution<real_type> dist_x( x_grid(0) * 0.8, x_grid.tail(1)(0) * 0.8 );
-    std::uniform_real_distribution<real_type> dist_y( y_grid(0) * 0.8, y_grid.tail(1)(0) * 0.8 );
+    std::mt19937                              rng( 1234 );
+    std::uniform_real_distribution<real_type> dist_x( x_grid( 0 ) * 0.8, x_grid.tail( 1 )( 0 ) * 0.8 );
+    std::uniform_real_distribution<real_type> dist_y( y_grid( 0 ) * 0.8, y_grid.tail( 1 )( 0 ) * 0.8 );
 
     real_type max_D_error   = 0.0;
     real_type max_DD_error  = 0.0;
@@ -656,19 +650,19 @@ namespace SplinesTest
     integer   test_count = 0;
 
     // Generate test points using Eigen
-    VectorXd x_test = VectorXd::NullaryExpr(100, [&]() { return dist_x(rng); });
-    VectorXd y_test = VectorXd::NullaryExpr(100, [&]() { return dist_y(rng); });
+    VectorXd x_test = VectorXd::NullaryExpr( 100, [&]() { return dist_x( rng ); } );
+    VectorXd y_test = VectorXd::NullaryExpr( 100, [&]() { return dist_y( rng ); } );
 
     for ( integer i = 0; i < 100; ++i )
     {
-      real_type x = x_test(i);
-      real_type y = y_test(i);
+      real_type x = x_test( i );
+      real_type y = y_test( i );
 
       // Skip boundary regions
-      real_type margin = 0.1 * ( x_grid.tail(1)(0) - x_grid(0) );
+      real_type margin = 0.1 * ( x_grid.tail( 1 )( 0 ) - x_grid( 0 ) );
       if (
-        x < x_grid(0) + margin || x > x_grid.tail(1)(0) - margin || y < y_grid(0) + margin ||
-        y > y_grid.tail(1)(0) - margin )
+        x < x_grid( 0 ) + margin || x > x_grid.tail( 1 )( 0 ) - margin || y < y_grid( 0 ) + margin ||
+        y > y_grid.tail( 1 )( 0 ) - margin )
         continue;
 
       // Test D() method
@@ -756,13 +750,14 @@ int main()
   real_type YMAX = M_PI;
 
   // Create uniform grid using Eigen
-  VectorXd x_grid = VectorXd::LinSpaced(nx, XMIN, XMAX);
-  VectorXd y_grid = VectorXd::LinSpaced(ny, YMIN, YMAX);
+  VectorXd x_grid = VectorXd::LinSpaced( nx, XMIN, XMAX );
+  VectorXd y_grid = VectorXd::LinSpaced( ny, YMIN, YMAX );
 
   // Generate data using trigonometric function (well-behaved)
-  MatrixXd z_data = MatrixXd::NullaryExpr(nx, ny, [&](Eigen::Index i, Eigen::Index j) {
-    return trig_function(x_grid(i), y_grid(j));
-  });
+  MatrixXd z_data = MatrixXd::NullaryExpr(
+    nx,
+    ny,
+    [&]( Eigen::Index i, Eigen::Index j ) { return trig_function( x_grid( i ), y_grid( j ) ); } );
 
   fmt::print(
     "Test configuration:\n"
@@ -791,7 +786,7 @@ int main()
 
   // Test derivative consistency
   Spline2D test_spline( "ConsistencyTest" );
-  
+
   test_spline.build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny );
   test_derivative_consistency( test_spline, x_grid, y_grid );
 

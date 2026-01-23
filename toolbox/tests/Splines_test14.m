@@ -30,9 +30,6 @@ height = round(scrn(4) * 0.8);
 left = round((scrn(3) - width) / 2);
 bottom = round((scrn(4) - height) / 2);
 
-% Crea la figura
-figure('Position', [left bottom width height]);
-
 type = {
     'bilinear',
     'bicubic',
@@ -44,11 +41,15 @@ type = {
     'biquintic_bessel',
     'biquintic_pchip'
     };
-set(gca,'Fontsize',16);
-
-disableDefaultInteractivity(gca)
 
 for k=1:9
+
+  % Crea la figura
+  figure('Position', [left bottom width height]);
+
+  set(gca,'Fontsize',16);
+
+  disableDefaultInteractivity(gca)
 
   S = Spline2D(type{k});
   S.build('test_surf.json');
@@ -61,27 +62,48 @@ for k=1:9
   X = x_min:0.05:x_max;
   Y = y_min:0.01:y_max;
   [XX,YY] = ndgrid(X,Y);
+  
+  for kk=1:6
 
-  ZZ = S.eval(XX,YY);
+    switch (kk)
+    case 1
+        deriv = 'f(x, y)';
+        ZZ = S.eval(XX, YY);
+    case 2
+        deriv = '∂f/∂x';
+        ZZ = S.eval_Dx(XX, YY);
+    case 3
+        deriv = '∂f/∂y';
+        ZZ = S.eval_Dy(XX, YY);
+    case 4
+        deriv = '∂²f/∂x∂y';
+        ZZ = S.eval_Dxy(XX, YY);
+    case 5
+        deriv = '∂²f/∂x²';
+        ZZ = S.eval_Dxx(XX, YY);
+    case 6
+        deriv = '∂²f/∂y²';
+        ZZ = S.eval_Dyy(XX, YY);
+    end
+    
+    if any(isnan(ZZ(:)))
+      fprintf('Trovati NaN sulla superfice');
+    end
+    if any(isinf(ZZ(:)))
+      fprintf('Trovati Inf sulla superfice');
+    end
 
-  if any(isnan(ZZ(:)))
-    fprintf('Trovati NaN sulla superfice');
+    subplot(2,3,kk);
+
+    surf(XX,YY,ZZ,'Linestyle',':');
+
+    axis tight
+
+    %zlim([-1,70]);
+
+    view(60,60);
+
+    title(sprintf('%s %s',type{k},deriv));
   end
-  if any(isinf(ZZ(:)))
-    fprintf('Trovati Inf sulla superfice');
-  end
-
-  subplot(3,3,k);
-
-  surf(XX,YY,ZZ,'Linestyle',':');
-
-  axis tight
-
-  zlim([-1,70]);
-
-  view(60,60);
-
-  title(type{k});
-
 end
 
