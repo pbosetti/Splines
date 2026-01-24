@@ -27,11 +27,13 @@
 #endif
 
 #ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++98-compat"
-#pragma clang diagnostic ignored "-Wglobal-constructors"
 #pragma clang diagnostic ignored "-Wc++98-compat-pedantic"
+#pragma clang diagnostic ignored "-Wc++98-compat"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
+#pragma clang diagnostic ignored "-Wglobal-constructors"
 #pragma clang diagnostic ignored "-Wpoison-system-directories"
+#pragma clang diagnostic ignored "-Wundefined-func-template"
+#pragma clang diagnostic ignored "-Wsign-conversion"
 #endif
 
 #include "SplinesConfig.hh"
@@ -65,6 +67,14 @@ namespace Splines
   using Malloc_real  = Utils::Malloc<real_type>;
   using ostream_type = basic_ostream<char>;
   using istream_type = basic_istream<char>;
+
+  using GC_namespace::GC_type;
+  using GC_namespace::map_type;
+  using GC_namespace::mat_real_type;
+  using GC_namespace::vec_int_type;
+  using GC_namespace::vec_real_type;
+  using GC_namespace::vec_string_type;
+  using GC_namespace::vector_type;
 
   void backtrace( ostream_type & );
 
