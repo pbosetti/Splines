@@ -28,13 +28,8 @@
 
 #pragma once
 
-#ifndef SPLINEVEC_HH
-#define SPLINEVEC_HH
-
-#include "Splines.hh"
-#include "Utils_fmt.hh"
-#include <cmath>
-#include <set>
+#ifndef SPLINEVEC_HXX
+#define SPLINEVEC_HXX
 
 /**
  * \file SplineVec.hxx

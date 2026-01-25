@@ -37,9 +37,12 @@
 #endif
 
 #include "SplinesConfig.hh"
-#include "Utils_search_intervals2.hh"
+
+#include "Utils_fmt.hh"
 #include "Utils_FD.hh"
+#include "Utils_search_intervals2.hh"
 #include "Utils_TridiagonalSolver.hh"
+#include "Utils_AlgoHNewton.hh"
 
 //!
 //! Namespace of Splines library

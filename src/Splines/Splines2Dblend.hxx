@@ -22,10 +22,6 @@
 #ifndef SPLINES2DBLEND_HXX
 #define SPLINES2DBLEND_HXX
 
-#include "Splines.hh"
-#include "Utils_fmt.hh"
-#include <set>
-
 namespace Splines
 {
 

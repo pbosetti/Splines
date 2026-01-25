@@ -29,8 +29,6 @@
 #ifndef SPLINE_UTILS_HXX
 #define SPLINE_UTILS_HXX
 
-#include <cmath>
-
 namespace Splines
 {
   /**

@@ -22,15 +22,6 @@
 #ifndef SPLINESET_HXX
 #define SPLINESET_HXX
 
-#include "Splines.hh"
-#include "Utils_fmt.hh"
-#include "Utils_AlgoHNewton.hh"
-
-#include <limits>
-#include <cmath>
-#include <set>
-#include <algorithm>
-
 namespace Splines
 {
 

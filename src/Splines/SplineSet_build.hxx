@@ -42,40 +42,61 @@ void build(
   real_type const * const Y[],
   real_type const * const Yp[] = nullptr )
 {
-  string msg{ fmt::format( "SplineSet[{}]::build(...):", m_name ) };
+  string const msg = fmt::format( "SplineSet[{}]::build(...):", m_name );
+  
+  // Validazione input
   UTILS_ASSERT( nspl > 0, "{} expected positive nspl = {}\n", msg, nspl );
   UTILS_ASSERT( npts > 1, "{} expected npts = {} greater than 1", msg, npts );
+  UTILS_ASSERT( headers != nullptr, "{} headers array is null\n", msg );
+  UTILS_ASSERT( stype != nullptr, "{} stype array is null\n", msg );
+  UTILS_ASSERT( X != nullptr, "{} X array is null\n", msg );
+  UTILS_ASSERT( Y != nullptr, "{} Y array is null\n", msg );
+  
   m_nspl = nspl;
   m_npts = npts;
-  // allocate memory
+  
+  // Allocazione memoria per le strutture principali
   m_splines.resize( m_nspl );
   m_is_monotone = m_mem_int.realloc( m_nspl );
-
   m_header_to_position.clear();
 
-  integer mem{ npts };
-  for ( integer spl{ 0 }; spl < nspl; ++spl )
+  // ===================================================================
+  // FASE 1: Calcolo della memoria totale necessaria
+  // ===================================================================
+  integer mem = npts;  // Spazio base per X
+  
+  for ( integer spl = 0; spl < nspl; ++spl )
   {
+    UTILS_ASSERT( headers[spl] != nullptr, "{} headers[{}] array is null\n", msg, spl );
+
     switch ( stype[spl] )
     {
+      // Spline quintiche: necessitano Y, Yp, Ypp (3 * npts)
       case SplineType1D::QUINTIC_CUBIC:
       case SplineType1D::QUINTIC_AKIMA:
       case SplineType1D::QUINTIC_BESSEL:
       case SplineType1D::QUINTIC_PCHIP:
-        mem += npts;  // Y, Yp, Ypp
+        mem += npts;  // Spazio per Ypp
         [[fallthrough]];
+      
+      // Spline cubiche/hermitiane: necessitano Y, Yp (2 * npts)
       case SplineType1D::CUBIC:
       case SplineType1D::AKIMA:
       case SplineType1D::BESSEL:
       case SplineType1D::PCHIP:
       case SplineType1D::HERMITE:
-        mem += npts;  // Y, Yp
+        mem += npts;  // Spazio per Yp
         [[fallthrough]];
+      
+      // Spline lineari/costanti: necessitano solo Y (npts)
       case SplineType1D::CONSTANT:
-      case SplineType1D::LINEAR: mem += npts; break;
+      case SplineType1D::LINEAR: 
+        mem += npts;  // Spazio per Y
+        break;
+      
+      // Tipi non supportati
       case SplineType1D::SPLINE_SET:
       case SplineType1D::SPLINE_VEC:
-        // default:
         UTILS_ERROR(
           "{} At spline n.{} named {} cannot be done for type = {}\n",
           msg,
@@ -85,9 +106,13 @@ void build(
     }
   }
 
+  // ===================================================================
+  // FASE 2: Allocazione memoria
+  // ===================================================================
   m_mem.reallocate( mem + 2 * nspl );
-  m_mem_p.reallocate( 3 * nspl );
+  m_mem_p.reallocate( 3 * nspl );  // Per Y, Yp, Ypp pointers
 
+  // Assegnazione dei puntatori alle sezioni di memoria
   m_Y    = m_mem_p( m_nspl );
   m_Yp   = m_mem_p( m_nspl );
   m_Ypp  = m_mem_p( m_nspl );
@@ -95,14 +120,29 @@ void build(
   m_Ymin = m_mem( m_nspl );
   m_Ymax = m_mem( m_nspl );
 
+  // Copia dei nodi X (condivisi da tutte le spline)
   copy_n( X, npts, m_X );
+  
+  // ===================================================================
+  // FASE 3: Costruzione delle singole spline
+  // ===================================================================
   for ( integer spl{ 0 }; spl < nspl; ++spl )
   {
-    real_type *& pY{ m_Y[spl] };
-    real_type *& pYp{ m_Yp[spl] };
-    real_type *& pYpp{ m_Ypp[spl] };
+    UTILS_ASSERT( Y[spl] != nullptr, "{} Y[{}] array is null\n", msg, spl );
+
+    // Riferimenti ai puntatori per questa spline
+    real_type *& pY   = m_Y[spl];
+    real_type *& pYp  = m_Yp[spl];
+    real_type *& pYpp = m_Ypp[spl];
+    
+    // Allocazione e copia dei valori Y
     pY = m_mem( m_npts );
     copy_n( Y[spl], npts, pY );
+    
+    // ---------------------------------------------------------------
+    // Calcolo min/max per questa spline
+    // ---------------------------------------------------------------
+    // NOTA: Per CONSTANT si esclude l'ultimo punto (comportamento corretto?)
     if ( stype[spl] == SplineType1D::CONSTANT )
     {
       m_Ymin[spl] = *std::min_element( pY, pY + npts - 1 );
@@ -113,19 +153,30 @@ void build(
       m_Ymin[spl] = *std::min_element( pY, pY + npts );
       m_Ymax[spl] = *std::max_element( pY, pY + npts );
     }
+    
+    // Inizializzazione puntatori derivate
     pYpp = pYp = nullptr;
+    
+    // ---------------------------------------------------------------
+    // Allocazione memoria per derivate se necessario
+    // ---------------------------------------------------------------
     switch ( stype[spl] )
     {
       case SplineType1D::QUINTIC_CUBIC:
       case SplineType1D::QUINTIC_AKIMA:
       case SplineType1D::QUINTIC_BESSEL:
-      case SplineType1D::QUINTIC_PCHIP: pYpp = m_mem( m_npts ); [[fallthrough]];
+      case SplineType1D::QUINTIC_PCHIP: 
+        pYpp = m_mem( m_npts );  // Alloca seconda derivata
+        [[fallthrough]];
+      
       case SplineType1D::CUBIC:
       case SplineType1D::AKIMA:
       case SplineType1D::BESSEL:
       case SplineType1D::PCHIP:
       case SplineType1D::HERMITE:
-        pYp = m_mem( m_npts );
+        pYp = m_mem( m_npts );  // Alloca prima derivata
+        
+        // Per HERMITE le derivate devono essere fornite dall'utente
         if ( stype[spl] == SplineType1D::HERMITE )
         {
           UTILS_ASSERT(
@@ -138,17 +189,24 @@ void build(
           copy_n( Yp[spl], npts, pYp );
         }
         [[fallthrough]];
+      
       case SplineType1D::CONSTANT:
       case SplineType1D::LINEAR:
       case SplineType1D::SPLINE_SET:
       case SplineType1D::SPLINE_VEC:
-        // default:
         break;
     }
-    string                    h{ headers[spl] };
-    std::unique_ptr<Spline> & s{ m_splines[spl] };
+    
+    // ---------------------------------------------------------------
+    // Creazione e costruzione della spline specifica
+    // ---------------------------------------------------------------
+    string_view h = headers[spl];
+    std::unique_ptr<Spline> & s = m_splines[spl];
 
-    m_is_monotone[spl] = -1;
+    m_is_monotone[spl] = -1;  // Valore di default (sconosciuto)
+    
+    // MIGLIORAMENTO: Questo switch è molto ripetitivo
+    // Potrebbe essere refactorizzato con template o funzioni helper
     switch ( stype[spl] )
     {
       case SplineType1D::CONSTANT:
@@ -167,22 +225,28 @@ void build(
         S->reserve_external( m_npts, m_X, pY );
         S->m_npts = m_npts;
         S->build();
-        // check monotonicity of data
-        integer flag{ 1 };
+        
+        // Check manuale monotonia per spline lineari
+        // NOTA: Potrebbe essere spostato in LinearSpline::is_monotone()
+        integer flag{ 1 };  // 1 = strettamente monotona crescente
         for ( integer j = 1; j < m_npts; ++j )
         {
           if ( pY[j - 1] > pY[j] )
           {
-            flag = -1;
+            flag = -1;  // Non monotona
             break;
-          }  // non monotone data
-          if ( Utils::is_zero( pY[j - 1] - pY[j] ) && m_X[j - 1] < m_X[j] ) flag = 0;  // non strict monotone
+          }
+          // MIGLIORAMENTO: La condizione è complicata, meglio separare
+          if ( Utils::is_zero( pY[j - 1] - pY[j] ) && m_X[j - 1] < m_X[j] ) 
+            flag = 0;  // Monotona non stretta (plateau)
         }
         m_is_monotone[spl] = flag;
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
+      // NOTA: Tutti i casi seguenti sono quasi identici
+      // Solo il tipo di spline cambia
       case SplineType1D::CUBIC:
       {
         auto S = std::make_unique<CubicSpline>( h );
@@ -190,7 +254,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -201,7 +265,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -212,7 +276,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -223,7 +287,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -234,10 +298,11 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
+      // Casi quintic con seconda derivata
       case SplineType1D::QUINTIC_CUBIC:
       {
         auto S = std::make_unique<QuinticSpline>( Spline_sub_type::CUBIC, h );
@@ -245,7 +310,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -256,7 +321,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -267,7 +332,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
@@ -278,13 +343,12 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s                  = std::move( S );
+        s = std::move( S );
       }
       break;
 
       case SplineType1D::SPLINE_SET:
       case SplineType1D::SPLINE_VEC:
-        // default:
         UTILS_ERROR(
           "{} At spline n.{} named {}\n"
           "{} not allowed as spline type\n"
@@ -295,9 +359,21 @@ void build(
           to_string( stype[spl] ),
           spl );
     }
+    
+    // ---------------------------------------------------------------
+    // Registrazione del mapping nome -> indice
+    // ---------------------------------------------------------------
+    // ERRORE POTENZIALE: .data() potrebbe non essere sicuro
+    // MIGLIORAMENTO: Usare s->name() direttamente se possibile
+    // ATTENZIONE: Possibile duplicazione di nomi non gestita
     m_header_to_position.insert( { s->name().data(), static_cast<integer>( spl ) } );
   }
 
+  // ===================================================================
+  // FASE 4: Verifica finale allocazione memoria
+  // ===================================================================
+  // Controllo che tutta la memoria allocata sia stata effettivamente usata
   m_mem.must_be_empty( "SplineSet::build, baseValue" );
   m_mem_p.must_be_empty( "SplineSet::build, basePointer" );
 }
+

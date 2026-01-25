@@ -1,4 +1,3 @@
-
 /**
  * \brief Evaluate a specific spline using another spline as independent variable (index version)
  *
@@ -69,7 +68,64 @@ real_type eval2_DDD( real_type const zeta, integer const indep, real_type & x, i
   return SPL->DDD( x ) * dt3 + 3 * SPL->DD( x ) * dt * ddt + SPL->D( x ) * dddt;
 }
 
+/**
+ * \brief Evaluate a specific spline using another spline as independent variable (index version)
+ *
+ * \param[in] zeta Target value of independent spline
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return Value of spline `spl` at computed x
+ */
+real_type eval2( real_type const zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2( zeta, indep, x, spl );
+}
+
+/**
+ * \brief Evaluate first derivative using another spline as independent variable (index version)
+ *
+ * \param[in] zeta Target value of independent spline
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return First derivative with respect to independent spline value
+ */
+real_type eval2_D( real_type const zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2_D( zeta, indep, x, spl );
+}
+
+/**
+ * \brief Evaluate second derivative using another spline as independent variable (index version)
+ *
+ * \param[in] zeta Target value of independent spline
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return Second derivative with respect to independent spline value
+ */
+real_type eval2_DD( real_type const zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2_DD( zeta, indep, x, spl );
+}
+
+/**
+ * \brief Evaluate third derivative using another spline as independent variable (index version)
+ *
+ * \param[in] zeta Target value of independent spline
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return Third derivative with respect to independent spline value
+ */
+real_type eval2_DDD( real_type const zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2_DDD( zeta, indep, x, spl );
+}
+
 #ifdef AUTODIFF_SUPPORT
+
 /**
  * \brief Evaluate with first-order automatic differentiation (index version)
  *
@@ -87,6 +143,20 @@ autodiff::dual1st eval2( autodiff::dual1st const & zeta, integer const indep, re
   dual1st   res{ eval2( zv, indep, x, spl ) };
   res.grad = eval_D( x, spl ) * zeta.grad;  // x gia calcolato
   return res;
+}
+
+/**
+ * \brief Evaluate with first-order automatic differentiation (index version)
+ *
+ * \param[in] zeta Dual number target value
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return Dual number containing value and derivative
+ */
+autodiff::dual1st eval2( autodiff::dual1st const & zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2( zeta, indep, x, spl );
 }
 
 /**
@@ -115,6 +185,20 @@ autodiff::dual2nd eval2( autodiff::dual2nd const & zeta, integer const indep, re
 }
 
 /**
+ * \brief Evaluate with second-order automatic differentiation (index version)
+ *
+ * \param[in] zeta Dual number target value
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return Dual number containing value, first and second derivatives
+ */
+autodiff::dual2nd eval2( autodiff::dual2nd const & zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2( zeta, indep, x, spl );
+}
+
+/**
  * \brief Generic template for automatic differentiation (index version)
  *
  * \tparam T Input type
@@ -137,4 +221,20 @@ template <typename T> auto eval2( T const & zeta, integer const indep, real_type
     return eval2( autodiff::detail::to_dual( zeta ), indep, x, spl );
   }
 }
+
+/**
+ * \brief Generic template for automatic differentiation (index version)
+ *
+ * \tparam T Input type
+ * \param[in] zeta Target value of independent spline
+ * \param[in] indep Index of independent spline
+ * \param[in] spl Index of spline to evaluate
+ * \return Result matching input type
+ */
+template <typename T> auto eval2( T const & zeta, integer const indep, integer const spl ) const
+{
+  real_type x;
+  return eval2( zeta, indep, x, spl );
+}
+
 #endif
