@@ -317,7 +317,7 @@ fmt::color get_jump_color( real_type jump, real_type tolerance )
 }
 
 // Function to get continuity class string
-string get_continuity_class( const DerivativeContinuityResult & result, real_type tolerance )
+string get_continuity_class( const DerivativeContinuityResult & result )
 {
   if ( result.total_internal_knots == 0 ) return "N/A";
 
@@ -375,7 +375,7 @@ void print_derivative_continuity_table(
     const auto & result = results[i];
 
     // Get continuity class
-    string continuity_class = get_continuity_class( result, tolerance );
+    string continuity_class = get_continuity_class( result );
 
     // Color for the row based on worst jump
     real_type worst_jump = 0.0;
@@ -436,7 +436,7 @@ void print_derivative_continuity_table(
 }
 
 // Print detailed discontinuity information
-void print_discontinuity_details( const vector<DerivativeContinuityResult> & results, real_type tolerance )
+void print_discontinuity_details( const vector<DerivativeContinuityResult> & results )
 {
   fmt::print( fg( fmt::color::magenta ) | fmt::emphasis::bold, "\n📊 DETAILED DISCONTINUITY ANALYSIS:\n" );
 
@@ -634,7 +634,7 @@ int main()
     print_derivative_continuity_table( dataset_results, k, dataset_name, tolerance );
 
     // Print detailed discontinuity information
-    print_discontinuity_details( dataset_results, tolerance );
+    print_discontinuity_details( dataset_results );
   }
 
   // ==========================================================================

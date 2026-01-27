@@ -1298,8 +1298,17 @@ namespace Splines
      */
     void setup( integer const dim, integer const npts, real_type const * const Y[] )
     {
+      // 1. Allocazione (imposta m_dim e m_npts internamente)
       allocate( dim, npts );
-      for ( integer spl = 0; spl < m_dim; ++spl ) std::copy_n( Y[spl], m_npts, m_Y[spl] );
+
+      // 2. Controllo Early Exit
+      if ( m_npts <= 0 || m_dim <= 0 ) return;
+
+      // 3. Pre-calcolo della dimensione in byte della riga.
+      size_t const row_size_bytes = m_npts * sizeof( real_type );
+
+      // 4. Loop di copia ottimizzato
+      for ( integer spl = 0; spl < m_dim; ++spl ) std::memcpy( m_Y[spl], Y[spl], row_size_bytes );
     }
 
     /**
@@ -1361,7 +1370,7 @@ namespace Splines
      */
     void set_knots( real_type const X[] )
     {
-      std::copy_n( X, m_npts, m_X );
+      if ( m_npts > 0 ) std::memcpy( m_X, X, m_npts * sizeof( *m_X ) );
       m_search.must_reset();
     }
 

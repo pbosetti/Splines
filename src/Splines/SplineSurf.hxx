@@ -80,8 +80,8 @@ namespace Splines
       //  +--------------+
       //      nx = nc
       //
-      integer const nr{ transposed ? m_nx : m_ny };
-      integer const nc{ transposed ? m_ny : m_nx };
+      integer const nr = transposed ? m_nx : m_ny;
+      integer const nc = transposed ? m_ny : m_nx;
       if ( fortran_storage )
       {
         UTILS_ASSERT(
@@ -815,7 +815,7 @@ namespace Splines
     // Operator() per due parametri
     template <typename T1, typename T2> auto operator()( T1 const & x, T2 const & y ) const -> decltype( eval( x, y ) )
     {
-      return eval( x, y );
+      return this->eval( x, y );
     }
 #endif
 

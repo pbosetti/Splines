@@ -300,7 +300,7 @@ namespace Splines
      * Derivata dall'integrazione della derivata seconda
      */
     Yp[n] = Yp[n - 1] + DX( n - 1 ) * ( Z( n - 1 ) + Z( n ) ) * 0.5;
-    if ( Ypp != nullptr ) std::copy_n( Z.data(), npts, Ypp );
+    if ( Ypp != nullptr && npts > 0 ) std::memcpy( Ypp, Z.data(), npts * sizeof( real_type ) );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -10,8 +10,7 @@
 void eval( real_type const x, GenericContainer & gc ) const
 {
   map_type & vals = gc.set_map();
-  for ( auto const & [fst, snd] : m_header_to_position ) 
-    vals[fst] = m_splines[snd]->eval( x );
+  for ( auto const & [fst, snd] : m_header_to_position ) vals[fst] = m_splines[snd]->eval( x );
 }
 
 /**
@@ -25,8 +24,7 @@ void eval( real_type const x, GenericContainer & gc ) const
 void eval_D( real_type const x, GenericContainer & gc ) const
 {
   map_type & vals = gc.set_map();
-  for ( auto const & [fst, snd] : m_header_to_position ) 
-    vals[fst] = m_splines[snd]->eval_D( x );
+  for ( auto const & [fst, snd] : m_header_to_position ) vals[fst] = m_splines[snd]->eval_D( x );
 }
 
 /**
@@ -40,8 +38,7 @@ void eval_D( real_type const x, GenericContainer & gc ) const
 void eval_DD( real_type const x, GenericContainer & gc ) const
 {
   map_type & vals = gc.set_map();
-  for ( auto const & [fst, snd] : m_header_to_position ) 
-    vals[fst] = m_splines[snd]->eval_DD( x );
+  for ( auto const & [fst, snd] : m_header_to_position ) vals[fst] = m_splines[snd]->eval_DD( x );
 }
 
 /**
@@ -55,8 +52,7 @@ void eval_DD( real_type const x, GenericContainer & gc ) const
 void eval_DDD( real_type const x, GenericContainer & gc ) const
 {
   map_type & vals = gc.set_map();
-  for ( auto const & [fst, snd] : m_header_to_position ) 
-    vals[fst] = m_splines[snd]->eval_DDD( x );
+  for ( auto const & [fst, snd] : m_header_to_position ) vals[fst] = m_splines[snd]->eval_DDD( x );
 }
 
 /**
@@ -72,20 +68,19 @@ void eval( vec_real_type const & vec, GenericContainer & gc ) const
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   for ( auto const & [fst, snd] : m_header_to_position )
   {
     vec_real_type & v     = vals[fst].set_vec_real( npts );
     Spline const *  p_spl = m_splines[snd].get();
-    for ( integer i = 0; i < npts; ++i ) 
-      v[i] = p_spl->eval( vec[i] );
+    for ( integer i = 0; i < npts; ++i ) v[i] = p_spl->eval( vec[i] );
   }
 }
 
 /**
  * \brief Evaluate first derivatives of all splines at multiple x-values
  *
- * For each spline, creates a vector of first derivatives dy/dx corresponding 
+ * For each spline, creates a vector of first derivatives dy/dx corresponding
  * to each x in the input vector.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -95,20 +90,19 @@ void eval_D( vec_real_type const & vec, GenericContainer & gc ) const
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   for ( auto const & [fst, snd] : m_header_to_position )
   {
     vec_real_type & v     = vals[fst].set_vec_real( npts );
     Spline const *  p_spl = m_splines[snd].get();
-    for ( integer i = 0; i < npts; ++i ) 
-      v[i] = p_spl->eval_D( vec[i] );
+    for ( integer i = 0; i < npts; ++i ) v[i] = p_spl->eval_D( vec[i] );
   }
 }
 
 /**
  * \brief Evaluate second derivatives of all splines at multiple x-values
  *
- * For each spline, creates a vector of second derivatives d²y/dx² corresponding 
+ * For each spline, creates a vector of second derivatives d²y/dx² corresponding
  * to each x in the input vector.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -118,20 +112,19 @@ void eval_DD( vec_real_type const & vec, GenericContainer & gc ) const
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   for ( auto const & [fst, snd] : m_header_to_position )
   {
     vec_real_type & v     = vals[fst].set_vec_real( npts );
     Spline const *  p_spl = m_splines[snd].get();
-    for ( integer i = 0; i < npts; ++i ) 
-      v[i] = p_spl->eval_DD( vec[i] );
+    for ( integer i = 0; i < npts; ++i ) v[i] = p_spl->eval_DD( vec[i] );
   }
 }
 
 /**
  * \brief Evaluate third derivatives of all splines at multiple x-values
  *
- * For each spline, creates a vector of third derivatives d³y/dx³ corresponding 
+ * For each spline, creates a vector of third derivatives d³y/dx³ corresponding
  * to each x in the input vector.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -141,13 +134,12 @@ void eval_DDD( vec_real_type const & vec, GenericContainer & gc ) const
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   for ( auto const & [fst, snd] : m_header_to_position )
   {
     vec_real_type & v     = vals[fst].set_vec_real( npts );
     Spline const *  p_spl = m_splines[snd].get();
-    for ( integer i = 0; i < npts; ++i ) 
-      v[i] = p_spl->eval_DDD( vec[i] );
+    for ( integer i = 0; i < npts; ++i ) v[i] = p_spl->eval_DDD( vec[i] );
   }
 }
 
@@ -166,7 +158,7 @@ void eval( real_type const x, vec_string_type const & columns, GenericContainer 
   for ( auto const & S : columns )
   {
     Spline const * p_spl = get_spline( S );
-    vals[S] = p_spl->eval( x );
+    vals[S]              = p_spl->eval( x );
   }
 }
 
@@ -185,7 +177,7 @@ void eval_D( real_type const x, vec_string_type const & columns, GenericContaine
   for ( auto const & S : columns )
   {
     Spline const * p_spl = get_spline( S );
-    vals[S] = p_spl->eval_D( x );
+    vals[S]              = p_spl->eval_D( x );
   }
 }
 
@@ -204,7 +196,7 @@ void eval_DD( real_type const x, vec_string_type const & columns, GenericContain
   for ( auto const & S : columns )
   {
     Spline const * p_spl = get_spline( S );
-    vals[S] = p_spl->eval_DD( x );
+    vals[S]              = p_spl->eval_DD( x );
   }
 }
 
@@ -223,7 +215,7 @@ void eval_DDD( real_type const x, vec_string_type const & columns, GenericContai
   for ( auto const & S : columns )
   {
     Spline const * p_spl = get_spline( S );
-    vals[S] = p_spl->eval_DDD( x );
+    vals[S]              = p_spl->eval_DDD( x );
   }
 }
 
@@ -231,7 +223,7 @@ void eval_DDD( real_type const x, vec_string_type const & columns, GenericContai
  * \brief Evaluate specific splines at multiple x-values and store in GenericContainer (OPTIMIZED)
  *
  * For each specified spline, creates a vector of values corresponding to each x in the input vector.
- * 
+ *
  * \note This version pre-caches spline pointers to avoid repeated lookups in the inner loop.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -242,24 +234,24 @@ void eval( vec_real_type const & vec, vec_string_type const & columns, GenericCo
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   // Pre-allocation and cache spline pointers
   std::vector<Spline const *> spline_ptrs;
   spline_ptrs.reserve( columns.size() );
-  
+
   for ( auto const & S : columns )
   {
     spline_ptrs.push_back( get_spline( S ) );
     vals[S].set_vec_real( npts );
   }
-  
+
   // Evaluate at all points
   for ( integer i = 0; i < npts; ++i )
   {
     for ( size_t j = 0; j < columns.size(); ++j )
     {
       vec_real_type & v = vals[columns[j]].get_vec_real();
-      v[i] = spline_ptrs[j]->eval( vec[i] );
+      v[i]              = spline_ptrs[j]->eval( vec[i] );
     }
   }
 }
@@ -267,9 +259,9 @@ void eval( vec_real_type const & vec, vec_string_type const & columns, GenericCo
 /**
  * \brief Evaluate first derivatives of specific splines at multiple x-values (OPTIMIZED)
  *
- * For each specified spline, creates a vector of first derivatives dy/dx corresponding 
+ * For each specified spline, creates a vector of first derivatives dy/dx corresponding
  * to each x in the input vector.
- * 
+ *
  * \note This version pre-caches spline pointers to avoid repeated lookups in the inner loop.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -280,24 +272,24 @@ void eval_D( vec_real_type const & vec, vec_string_type const & columns, Generic
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   // Pre-allocation and cache spline pointers
   std::vector<Spline const *> spline_ptrs;
   spline_ptrs.reserve( columns.size() );
-  
+
   for ( auto const & S : columns )
   {
     spline_ptrs.push_back( get_spline( S ) );
     vals[S].set_vec_real( npts );
   }
-  
+
   // Evaluate at all points
   for ( integer i = 0; i < npts; ++i )
   {
     for ( size_t j = 0; j < columns.size(); ++j )
     {
       vec_real_type & v = vals[columns[j]].get_vec_real();
-      v[i] = spline_ptrs[j]->eval_D( vec[i] );
+      v[i]              = spline_ptrs[j]->eval_D( vec[i] );
     }
   }
 }
@@ -305,9 +297,9 @@ void eval_D( vec_real_type const & vec, vec_string_type const & columns, Generic
 /**
  * \brief Evaluate second derivatives of specific splines at multiple x-values (OPTIMIZED)
  *
- * For each specified spline, creates a vector of second derivatives d²y/dx² corresponding 
+ * For each specified spline, creates a vector of second derivatives d²y/dx² corresponding
  * to each x in the input vector.
- * 
+ *
  * \note This version pre-caches spline pointers to avoid repeated lookups in the inner loop.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -318,24 +310,24 @@ void eval_DD( vec_real_type const & vec, vec_string_type const & columns, Generi
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   // Pre-allocation and cache spline pointers
   std::vector<Spline const *> spline_ptrs;
   spline_ptrs.reserve( columns.size() );
-  
+
   for ( auto const & S : columns )
   {
     spline_ptrs.push_back( get_spline( S ) );
     vals[S].set_vec_real( npts );
   }
-  
+
   // Evaluate at all points
   for ( integer i = 0; i < npts; ++i )
   {
     for ( size_t j = 0; j < columns.size(); ++j )
     {
       vec_real_type & v = vals[columns[j]].get_vec_real();
-      v[i] = spline_ptrs[j]->eval_DD( vec[i] );
+      v[i]              = spline_ptrs[j]->eval_DD( vec[i] );
     }
   }
 }
@@ -343,9 +335,9 @@ void eval_DD( vec_real_type const & vec, vec_string_type const & columns, Generi
 /**
  * \brief Evaluate third derivatives of specific splines at multiple x-values (OPTIMIZED)
  *
- * For each specified spline, creates a vector of third derivatives d³y/dx³ corresponding 
+ * For each specified spline, creates a vector of third derivatives d³y/dx³ corresponding
  * to each x in the input vector.
- * 
+ *
  * \note This version pre-caches spline pointers to avoid repeated lookups in the inner loop.
  *
  * \param[in] vec Vector of x-values at which to evaluate
@@ -356,24 +348,24 @@ void eval_DDD( vec_real_type const & vec, vec_string_type const & columns, Gener
 {
   integer const npts = static_cast<integer>( vec.size() );
   map_type &    vals = gc.set_map();
-  
+
   // Pre-allocation and cache spline pointers
   std::vector<Spline const *> spline_ptrs;
   spline_ptrs.reserve( columns.size() );
-  
+
   for ( auto const & S : columns )
   {
     spline_ptrs.push_back( get_spline( S ) );
     vals[S].set_vec_real( npts );
   }
-  
+
   // Evaluate at all points
   for ( integer i = 0; i < npts; ++i )
   {
     for ( size_t j = 0; j < columns.size(); ++j )
     {
       vec_real_type & v = vals[columns[j]].get_vec_real();
-      v[i] = spline_ptrs[j]->eval_DDD( vec[i] );
+      v[i]              = spline_ptrs[j]->eval_DDD( vec[i] );
     }
   }
 }

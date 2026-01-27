@@ -43,7 +43,7 @@ void build(
   real_type const * const Yp[] = nullptr )
 {
   string const msg = fmt::format( "SplineSet[{}]::build(...):", m_name );
-  
+
   // Validazione input
   UTILS_ASSERT( nspl > 0, "{} expected positive nspl = {}\n", msg, nspl );
   UTILS_ASSERT( npts > 1, "{} expected npts = {} greater than 1", msg, npts );
@@ -51,10 +51,10 @@ void build(
   UTILS_ASSERT( stype != nullptr, "{} stype array is null\n", msg );
   UTILS_ASSERT( X != nullptr, "{} X array is null\n", msg );
   UTILS_ASSERT( Y != nullptr, "{} Y array is null\n", msg );
-  
+
   m_nspl = nspl;
   m_npts = npts;
-  
+
   // Allocazione memoria per le strutture principali
   m_splines.resize( m_nspl );
   m_is_monotone = m_mem_int.realloc( m_nspl );
@@ -64,7 +64,7 @@ void build(
   // FASE 1: Calcolo della memoria totale necessaria
   // ===================================================================
   integer mem = npts;  // Spazio base per X
-  
+
   for ( integer spl = 0; spl < nspl; ++spl )
   {
     UTILS_ASSERT( headers[spl] != nullptr, "{} headers[{}] array is null\n", msg, spl );
@@ -78,7 +78,7 @@ void build(
       case SplineType1D::QUINTIC_PCHIP:
         mem += npts;  // Spazio per Ypp
         [[fallthrough]];
-      
+
       // Spline cubiche/hermitiane: necessitano Y, Yp (2 * npts)
       case SplineType1D::CUBIC:
       case SplineType1D::AKIMA:
@@ -87,13 +87,13 @@ void build(
       case SplineType1D::HERMITE:
         mem += npts;  // Spazio per Yp
         [[fallthrough]];
-      
+
       // Spline lineari/costanti: necessitano solo Y (npts)
       case SplineType1D::CONSTANT:
-      case SplineType1D::LINEAR: 
+      case SplineType1D::LINEAR:
         mem += npts;  // Spazio per Y
         break;
-      
+
       // Tipi non supportati
       case SplineType1D::SPLINE_SET:
       case SplineType1D::SPLINE_VEC:
@@ -121,8 +121,8 @@ void build(
   m_Ymax = m_mem( m_nspl );
 
   // Copia dei nodi X (condivisi da tutte le spline)
-  copy_n( X, npts, m_X );
-  
+  if ( npts > 0 ) std::memcpy( m_X, X, npts * sizeof( *m_X ) );
+
   // ===================================================================
   // FASE 3: Costruzione delle singole spline
   // ===================================================================
@@ -134,11 +134,11 @@ void build(
     real_type *& pY   = m_Y[spl];
     real_type *& pYp  = m_Yp[spl];
     real_type *& pYpp = m_Ypp[spl];
-    
+
     // Allocazione e copia dei valori Y
     pY = m_mem( m_npts );
-    copy_n( Y[spl], npts, pY );
-    
+    if ( npts > 0 ) std::memcpy( pY, Y[spl], npts * sizeof( *pY ) );
+
     // ---------------------------------------------------------------
     // Calcolo min/max per questa spline
     // ---------------------------------------------------------------
@@ -153,10 +153,10 @@ void build(
       m_Ymin[spl] = *std::min_element( pY, pY + npts );
       m_Ymax[spl] = *std::max_element( pY, pY + npts );
     }
-    
+
     // Inizializzazione puntatori derivate
     pYpp = pYp = nullptr;
-    
+
     // ---------------------------------------------------------------
     // Allocazione memoria per derivate se necessario
     // ---------------------------------------------------------------
@@ -165,17 +165,17 @@ void build(
       case SplineType1D::QUINTIC_CUBIC:
       case SplineType1D::QUINTIC_AKIMA:
       case SplineType1D::QUINTIC_BESSEL:
-      case SplineType1D::QUINTIC_PCHIP: 
+      case SplineType1D::QUINTIC_PCHIP:
         pYpp = m_mem( m_npts );  // Alloca seconda derivata
         [[fallthrough]];
-      
+
       case SplineType1D::CUBIC:
       case SplineType1D::AKIMA:
       case SplineType1D::BESSEL:
       case SplineType1D::PCHIP:
       case SplineType1D::HERMITE:
         pYp = m_mem( m_npts );  // Alloca prima derivata
-        
+
         // Per HERMITE le derivate devono essere fornite dall'utente
         if ( stype[spl] == SplineType1D::HERMITE )
         {
@@ -186,25 +186,24 @@ void build(
             msg,
             spl,
             headers[spl] );
-          copy_n( Yp[spl], npts, pYp );
+          if ( npts > 0 ) std::memcpy( pYp, Yp[spl], npts * sizeof( *pYp ) );
         }
         [[fallthrough]];
-      
+
       case SplineType1D::CONSTANT:
       case SplineType1D::LINEAR:
       case SplineType1D::SPLINE_SET:
-      case SplineType1D::SPLINE_VEC:
-        break;
+      case SplineType1D::SPLINE_VEC: break;
     }
-    
+
     // ---------------------------------------------------------------
     // Creazione e costruzione della spline specifica
     // ---------------------------------------------------------------
-    string_view h = headers[spl];
+    string_view               h = headers[spl];
     std::unique_ptr<Spline> & s = m_splines[spl];
 
     m_is_monotone[spl] = -1;  // Valore di default (sconosciuto)
-    
+
     // MIGLIORAMENTO: Questo switch è molto ripetitivo
     // Potrebbe essere refactorizzato con template o funzioni helper
     switch ( stype[spl] )
@@ -225,7 +224,7 @@ void build(
         S->reserve_external( m_npts, m_X, pY );
         S->m_npts = m_npts;
         S->build();
-        
+
         // Check manuale monotonia per spline lineari
         // NOTA: Potrebbe essere spostato in LinearSpline::is_monotone()
         integer flag{ 1 };  // 1 = strettamente monotona crescente
@@ -237,11 +236,10 @@ void build(
             break;
           }
           // MIGLIORAMENTO: La condizione è complicata, meglio separare
-          if ( Utils::is_zero( pY[j - 1] - pY[j] ) && m_X[j - 1] < m_X[j] ) 
-            flag = 0;  // Monotona non stretta (plateau)
+          if ( Utils::is_zero( pY[j - 1] - pY[j] ) && m_X[j - 1] < m_X[j] ) flag = 0;  // Monotona non stretta (plateau)
         }
         m_is_monotone[spl] = flag;
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -254,7 +252,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -265,7 +263,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -276,7 +274,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -287,7 +285,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -298,7 +296,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -310,7 +308,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -321,7 +319,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -332,7 +330,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -343,7 +341,7 @@ void build(
         S->m_npts = m_npts;
         S->build();
         m_is_monotone[spl] = S->is_monotone();
-        s = std::move( S );
+        s                  = std::move( S );
       }
       break;
 
@@ -359,7 +357,7 @@ void build(
           to_string( stype[spl] ),
           spl );
     }
-    
+
     // ---------------------------------------------------------------
     // Registrazione del mapping nome -> indice
     // ---------------------------------------------------------------
@@ -376,4 +374,3 @@ void build(
   m_mem.must_be_empty( "SplineSet::build, baseValue" );
   m_mem_p.must_be_empty( "SplineSet::build, basePointer" );
 }
-

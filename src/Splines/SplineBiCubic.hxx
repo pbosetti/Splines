@@ -79,17 +79,38 @@ namespace Splines
 
     void write_to_stream( ostream_type & s ) const override
     {
-      fmt::print( "Nx = {} Ny = {}\n", m_nx, m_ny );
+      // Stampa intestazione
+      fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
+
+      using MatrixView = Eigen::Map<const Eigen::Matrix<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>;
+      using VectorView = Eigen::Map<const Eigen::VectorX<real_type>>;
+
+      // Map dei vettori delle coordinate
+      VectorView X( m_X, m_nx );
+      VectorView Y( m_Y, m_ny );
+
+      // Map delle matrici dei coefficienti
+      // Assumiamo che m_Z e gli altri abbiano dimensione m_nx * m_ny
+      MatrixView Z( m_Z, m_nx, m_ny );
+      MatrixView DX( m_DX, m_nx, m_ny );
+      MatrixView DY( m_DY, m_nx, m_ny );
+      MatrixView DXY( m_DXY, m_nx, m_ny );
+
       for ( integer i = 1; i < m_nx; ++i )
       {
-        real_type dx{ m_X[i] - m_X[i - 1] };
+        // Accesso diretto al vettore mappato
+        real_type const dx = X[i] - X[i - 1];
+
         for ( integer j = 1; j < m_ny; ++j )
         {
-          integer const   i00{ ipos_C( i - 1, j - 1 ) };
-          integer const   i10{ ipos_C( i, j - 1 ) };
-          integer const   i01{ ipos_C( i - 1, j ) };
-          integer const   i11{ ipos_C( i, j ) };
-          real_type const dy{ m_Y[j] - m_Y[j - 1] };
+          real_type const dy = Y[j] - Y[j - 1];
+
+          // Indici base per la patch corrente
+          integer const r0 = i - 1;
+          integer const r1 = i;
+          integer const c0 = j - 1;
+          integer const c1 = j;
+
           fmt::print(
             s,
             "patch ({},{})\n"
@@ -106,22 +127,26 @@ namespace Splines
             j,
             dx,
             dy,
-            m_Z[i00],
-            m_Z[i10],
-            m_Z[i01],
-            m_Z[i11],
-            m_DX[i00],
-            m_DX[i10],
-            m_DX[i01],
-            m_DX[i11],
-            m_DY[i00],
-            m_DY[i10],
-            m_DY[i01],
-            m_DY[i11],
-            m_DXY[i00],
-            m_DXY[i10],
-            m_DXY[i01],
-            m_DXY[i11] );
+            // Z values
+            Z( r0, c0 ),
+            Z( r1, c0 ),
+            Z( r0, c1 ),
+            Z( r1, c1 ),
+            // DX values
+            DX( r0, c0 ),
+            DX( r1, c0 ),
+            DX( r0, c1 ),
+            DX( r1, c1 ),
+            // DY values
+            DY( r0, c0 ),
+            DY( r1, c0 ),
+            DY( r0, c1 ),
+            DY( r1, c1 ),
+            // DXY values
+            DXY( r0, c0 ),
+            DXY( r1, c0 ),
+            DXY( r0, c1 ),
+            DXY( r1, c1 ) );
         }
       }
     }

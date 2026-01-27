@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------*\
  |                                                                          |
- |  Copyright (C) 2016                                                      |
+ |  Copyright (C) 2026                                                      |
  |                                                                          |
  |         , __                 , __                                        |
  |        /|/  \               /|/  \                                       |
@@ -225,6 +225,15 @@ namespace Splines
   */
 
 #ifdef AUTODIFF_SUPPORT
+  template <typename T> inline void Hermite3( T const & x, real_type const H, T base[4] )
+  {
+    T const X = x / H;
+    base[1]   = X * X * ( 3 - 2 * X );
+    base[0]   = 1 - base[1];
+    base[2]   = x * ( X * ( X - 2 ) + 1 );
+    base[3]   = x * X * ( X - 1 );
+  }
+
   template <typename T> inline void Hermite5( T const & x, real_type H, T base[6] )
   {
     const real_type invH  = real_type( 1 ) / H;
@@ -250,15 +259,331 @@ namespace Splines
     base[4] = c * xm3 * x2;
     base[5] = c * xm2 * x3;
   }
-
 #endif
 
-  void Hermite5( real_type const x, real_type const H, real_type base[6] );
-  void Hermite5_D( real_type const x, real_type const H, real_type base_D[6] );
-  void Hermite5_DD( real_type const x, real_type const H, real_type base_DD[6] );
-  void Hermite5_DDD( real_type const x, real_type const H, real_type base_DDD[6] );
-  void Hermite5_DDDD( real_type const x, real_type const H, real_type base_DDDD[6] );
-  void Hermite5_DDDDD( real_type const x, real_type const H, real_type base_DDDDD[6] );
+  inline void Hermite3( real_type const x, real_type const H, real_type base[4] )
+  {
+    real_type const X = x / H;
+    base[1]           = X * X * ( 3 - 2 * X );
+    base[0]           = 1 - base[1];
+    base[2]           = x * ( X * ( X - 2 ) + 1 );
+    base[3]           = x * X * ( X - 1 );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite3_D( real_type const x, real_type const H, real_type base_D[4] )
+  {
+    real_type const X = x / H;
+    base_D[0]         = 6.0 * X * ( X - 1.0 ) / H;
+    base_D[1]         = -base_D[0];
+    base_D[2]         = ( ( 3 * X - 4 ) * X + 1 );
+    base_D[3]         = X * ( 3 * X - 2 );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite3_DD( real_type const x, real_type const H, real_type base_DD[4] )
+  {
+    real_type const X = x / H;
+    base_DD[0]        = ( 12 * X - 6 ) / ( H * H );
+    base_DD[1]        = -base_DD[0];
+    base_DD[2]        = ( 6 * X - 4 ) / H;
+    base_DD[3]        = ( 6 * X - 2 ) / H;
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite3_DDD( real_type, real_type const H, real_type base_DDD[4] )
+  {
+    base_DDD[0] = 12 / ( H * H * H );
+    base_DDD[1] = -base_DDD[0];
+    base_DDD[2] = 6 / ( H * H );
+    base_DDD[3] = base_DDD[2];
+  }
+
+  // --------------------------------------------------------------------------
+
+  inline void Hermite5( real_type x, real_type H, real_type base[6] )
+  {
+    // 1. Normalizzazione: t va da 0 a 1
+    // Sostituisce le costose divisioni ripetute (invH, invH4, invH5)
+    const real_type s = 1 / H;
+    const real_type t = x * s;
+    const real_type u = 1 - t;  // u è il complemento (H-x)/H
+
+    // 2. Precalcolo delle potenze di t e u
+    // Usiamo t*t invece di pow() per velocità
+    const real_type t2 = t * t;
+    const real_type t3 = t2 * t;
+
+    const real_type u2 = u * u;
+    const real_type u3 = u2 * u;
+
+    // 3. Calcolo delle funzioni di base
+    // Polinomio base: h00 = (1 + 3t + 6t^2) * u^3
+    const real_type poly_t = 1 + t * ( 3 + 6 * t );
+    const real_type poly_u = 1 + u * ( 3 + 6 * u );
+
+    // base[0]: Valore al nodo sinistro (x=0)
+    base[0] = u3 * poly_t;
+
+    // base[1]: Valore al nodo destro (x=H)
+    // Sfrutta la simmetria: scambia t con u
+    base[1] = t3 * poly_u;
+
+    // base[2]: Derivata prima al nodo sinistro
+    // Scala originale: H * t * (1+3t) * u^3
+    base[2] = H * t * u3 * ( 1 + 3 * t );
+
+    // base[3]: Derivata prima al nodo destro
+    // Scala originale: -H * u * (1+3u) * t^3
+    base[3] = -H * u * t3 * ( 1 + 3 * u );
+
+    // base[4]: Derivata seconda al nodo sinistro
+    // Scala originale: 0.5 * H^2 * t^2 * u^3
+    const real_type H2_half = ( H * H ) / 2;
+    base[4]                 = H2_half * t2 * u3;
+
+    // base[5]: Derivata seconda al nodo destro
+    // Scala originale: 0.5 * H^2 * u^2 * t^3
+    base[5] = H2_half * u2 * t3;
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite5_D( real_type x, real_type H, real_type base_D[6] )
+  {
+    // 1. Normalizzazione
+    // t = x/H, u = (H-x)/H = 1-t
+    const real_type s = 1 / H;
+    const real_type t = x * s;
+    const real_type u = 1 - t;
+
+    // 2. Precalcolo potenze
+    const real_type t2 = t * t;
+    const real_type u2 = u * u;
+
+    // 3. Calcolo Derivate
+    // Nota: La derivata rispetto a x scala di (1/H) rispetto alla derivata su t.
+
+    // --- Basi 0 e 1 (Valori ai nodi) ---
+    // Derivata del Quintic Step: 30 * t^2 * u^2 / H
+    // common = 30 * t^2 * u^2 * s
+    const real_type common = ( 30 * s ) * t2 * u2;
+
+    base_D[0] = -common;
+    base_D[1] = common;
+
+    // --- Basi 2 e 3 (Derivate Prime ai nodi) ---
+    // Polinomio derivato base: p(t) = (1 - 3t) * (1 + 5t)
+    // base_D[2] = u^2 * p(t)
+    // base_D[3] = t^2 * p(u)  <-- Simmetria perfetta
+
+    // Espressione fattorizzata per stabilità e velocità
+    base_D[2] = u2 * ( 1 - 3 * t ) * ( 1 + 5 * t );
+
+    base_D[3] = t2 * ( 1 - 3 * u ) * ( 1 + 5 * u );
+
+    // --- Basi 4 e 5 (Derivate Seconde ai nodi) ---
+    // Polinomio derivato base: q(t) = t * (2 - 5t)
+    // Scala fisica: 0.5 * H
+
+    const real_type h_half = H / 2;
+
+    base_D[4] = h_half * u2 * t * ( 2 - 5 * t );
+
+    // Nota il segno meno per simmetria speculare sulla derivata
+    base_D[5] = -h_half * t2 * u * ( 2 - 5 * u );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite5_DD( real_type x, real_type H, real_type base_DD[6] )
+  {
+    // 1. Normalizzazione
+    // s = 1/H, s2 = 1/H^2
+    const real_type s  = 1 / H;
+    const real_type s2 = s * s;
+
+    // t = x/H (da 0 a 1), u = 1 - t
+    const real_type t = x * s;
+    const real_type u = 1 - t;
+
+    // 2. Termini comuni
+    // Molte basi condividono il termine t * u
+    const real_type tu = t * u;
+
+    // --- Basi 0 e 1 (Valori ai nodi) ---
+    // Formula originale normalizzata: 60/H^2 * t * u * (1 - 2t)
+    // Nota: (1 - 2t) è equivalente a (u - t)
+
+    const real_type common = ( 60 * s2 ) * tu * ( u - t );
+
+    base_DD[0] = -common;
+    base_DD[1] = common;
+
+    // --- Basi 2 e 3 (Derivate Prime ai nodi) ---
+    // Scala fisica: 1/H
+    // Base 2: 12/H * t * u * (5t - 3)
+    // Base 3: 12/H * t * u * (5t - 2)
+
+    const real_type k_tan = ( 12 * s ) * tu;
+
+    base_DD[2] = k_tan * ( 5 * t - 3 );
+    base_DD[3] = k_tan * ( 5 * t - 2 );
+
+    // --- Basi 4 e 5 (Derivate Seconde ai nodi) ---
+    // Scala fisica: 1 (Adimensionale rispetto a H nella derivata seconda)
+    // Base 4: u * (1 - 8t + 10t^2)
+    // Base 5: t * (3 - 12t + 10t^2)
+
+    // Sfruttiamo la simmetria: Base5(t) = Base4(u)
+    // Calcoliamo il polinomio 'p' usando t per base 4, e u per base 5.
+    // p(v) = 1 - 8v + 10v^2
+
+    // Base 4 (lato sinistro, usa t per il polinomio interno)
+    // Nota: L'espressione u * (...) deriva dalla fattorizzazione
+    base_DD[4] = u * ( 1 + t * ( 10 * t - 8 ) );
+
+    // Base 5 (lato destro, usa u per il polinomio interno per simmetria)
+    // Equivale a: t * (3 - 12t + 10t^2)
+    base_DD[5] = t * ( 1 + u * ( 10 * u - 8 ) );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  inline void Hermite5_DDD( real_type x, real_type H, real_type base_DDD[6] )
+  {
+    // 1. Normalizzazione
+    const real_type s = 1 / H;
+    const real_type t = x * s;
+
+    // t^2 per valutare le quadratiche
+    const real_type t2 = t * t;
+
+    // 2. Fattori di scala precalcolati
+    // Base 0,1 scalano con 1/H^3
+    // Base 2,3 scalano con 1/H^2
+    // Base 4,5 scalano con 1/H
+    const real_type s2 = s * s;
+    const real_type s3 = s2 * s;
+
+    // --- Basi 0 e 1 ---
+    // Polinomio: 60 * (6t - 6t^2 - 1)
+    const real_type k0     = 60 * s3;
+    const real_type common = k0 * ( 6 * ( t - t2 ) - 1 );
+
+    base_DDD[0] = common;
+    base_DDD[1] = -common;
+
+    // --- Basi 2 e 3 ---
+    // Base 2: 12 * (16t - 15t^2 - 3)
+    // Base 3: 12 * (14t - 15t^2 - 2)
+    const real_type k1 = real_type( 12 ) * s2;
+
+    // Fattorizzazione di Horner per risparmiare 1 mul: t*(16 - 15t) - 3
+    base_DDD[2] = k1 * ( t * ( 16 - 15 * t ) - real_type( 3 ) );
+
+    // Fattorizzazione: t*(14 - 15t) - 2
+    base_DDD[3] = k1 * ( t * ( 14 - 15 * t ) - real_type( 2 ) );
+
+    // --- Basi 4 e 5 ---
+    // Base 4: 3 * (12t - 10t^2 - 3)
+    // Base 5: 3 * (10t^2 - 8t + 1)
+    const real_type k2 = 3 * s;
+
+    base_DDD[4] = k2 * ( t * ( 12 - 10 * t ) - 3 );
+
+    base_DDD[5] = k2 * ( t * ( 10 * t - 8 ) + 1 );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite5_DDDD( real_type x, real_type H, real_type base_DDDD[6] )
+  {
+    // 1. Normalizzazione
+    // s = 1/H, t = x/H
+    const real_type s = 1 / H;
+    const real_type t = x * s;
+
+    // 2. Fattori di scala
+    // Base 0,1 scalano con 1/H^4
+    // Base 2,3 scalano con 1/H^3
+    // Base 4,5 scalano con 1/H^2
+    const real_type s2 = s * s;
+    const real_type s3 = s2 * s;
+    const real_type s4 = s2 * s2;
+
+    // --- Basi 0 e 1 ---
+    // Originale: (360*H - 720*x) / H^5
+    // Normalizzato: 360/H^4 * (1 - 2t)
+    const real_type k0    = 360 * s4;
+    const real_type term0 = k0 * ( 1 - 2 * t );
+
+    base_DDDD[0] = term0;
+    base_DDDD[1] = -term0;
+
+    // --- Basi 2 e 3 ---
+    // Costante comune: 24 / H^3
+    const real_type k1 = 24 * s3;
+
+    // Base 2: k1 * (8 - 15t)
+    base_DDDD[2] = k1 * ( 8 - 15 * t );
+
+    // Base 3: k1 * (7 - 15t)
+    base_DDDD[3] = k1 * ( 7 - 15 * t );
+
+    // --- Basi 4 e 5 ---
+    // Costante comune: 12 / H^2
+    const real_type k2 = 12 * s2;
+
+    // Base 4: k2 * (3 - 5t)
+    base_DDDD[4] = k2 * ( 3 - 5 * t );
+
+    // Base 5: k2 * (5t - 2)
+    base_DDDD[5] = k2 * ( 5 * t - 2 );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  inline void Hermite5_DDDDD( real_type /*x*/, real_type H, real_type base_DDDDD[6] )
+  {
+    // 1. Unica divisione necessaria
+    const real_type s = 1 / H;
+
+    // 2. Calcolo delle potenze di s (moltiplicazioni)
+    // s3 = 1/H^3, s4 = 1/H^4, s5 = 1/H^5
+    const real_type s2 = s * s;
+    const real_type s3 = s2 * s;
+    const real_type s4 = s2 * s2;  // Oppure s3 * s
+    const real_type s5 = s4 * s;
+
+    // 3. Calcolo delle costanti
+    // Nota: Le derivate sono costanti, quindi calcoliamo solo i valori scalari.
+
+    // --- Basi 0 e 1 (Valore) ---
+    // Derivata 5a scala con 1/H^5
+    const real_type c0 = 720 * s5;
+
+    base_DDDDD[0] = -c0;
+    base_DDDDD[1] = c0;
+
+    // --- Basi 2 e 3 (Derivata) ---
+    // Derivata 5a scala con 1/H^4 (poiché H^1 * H^-5 = H^-4)
+    const real_type c1 = 360 * s4;
+
+    // Entrambe negative perché il coefficiente di x^5 nelle basi originali
+    // ha lo stesso segno relativo per le derivate (antisimmetria nello sviluppo)
+    base_DDDDD[2] = -c1;
+    base_DDDDD[3] = -c1;
+
+    // --- Basi 4 e 5 (Curvatura) ---
+    // Derivata 5a scala con 1/H^3 (poiché H^2 * H^-5 = H^-3)
+    const real_type c2 = 60 * s3;
+
+    base_DDDDD[4] = -c2;
+    base_DDDDD[5] = c2;
+  }
 
   //!
   //! Convert polynomial defined using Hermite base
@@ -268,6 +593,7 @@ namespace Splines
   //! to standard form
   //!
   //! \f[ p(x) = A t^3 + B t^2 + C t + D \f]
+  //!
   //!
   //!
   static inline void Hermite3_to_poly(
@@ -282,12 +608,23 @@ namespace Splines
     real_type & D )
   {
     const real_type invH  = real_type( 1 ) / H;
-    const real_type invH2 = invH * invH;
-    const real_type dP    = P1 - P0;
+    const real_type slope = ( P1 - P0 ) * invH;  // Pendenza media (Secante)
 
-    A = ( DP0 + DP1 - 2 * dP * invH ) * invH2;
-    B = ( 3 * dP * invH - ( 2 * DP0 + DP1 ) ) * invH;
+    // Precalcolo inverso quadrato
+    const real_type invH2 = invH * invH;
+
+    // A = (Sum(derivs) - 2*slope) / H^2
+    // Corrisponde a: (DP0 + DP1 - 2*(P1-P0)/H) / H^2
+    A = ( ( DP0 + DP1 ) - 2 * slope ) * invH2;
+
+    // B = (3*slope - (2*DP0 + DP1)) / H
+    // Corrisponde a: (3*(P1-P0)/H - 2*DP0 - DP1) / H
+    B = ( 3 * slope - ( 2 * DP0 + DP1 ) ) * invH;
+
+    // C = Derivata iniziale
     C = DP0;
+
+    // D = Posizione iniziale
     D = P0;
   }
 
@@ -320,24 +657,72 @@ namespace Splines
     real_type & E,
     real_type & F )
   {
-    const real_type invH  = real_type( 1 ) / h;
+    // 1. Inverso di h (type-safe)
+    const real_type invH = 1 / h;
+
+    // 2. Precalcoli
+    // Pendenza media (Velocità secante)
+    const real_type slope = ( P1 - P0 ) * invH;
+
+    // Accelerazioni dimezzate (moltiplicazione vs divisione)
+    const real_type half_DDP0 = DDP0 / 2;
+    const real_type half_DDP1 = DDP1 / 2;
+
+    // 3. Potenze dell'inverso
     const real_type invH2 = invH * invH;
     const real_type invH3 = invH2 * invH;
 
-    const real_type dP = P1 - P0;
+    // 4. Calcolo Coefficienti
 
-    A = ( real_type( 0.5 ) * ( DDP1 - DDP0 ) + invH * ( 6 * dP * invH - 3 * ( DP0 + DP1 ) ) ) * invH3;
-    B = ( real_type( 1.5 ) * DDP0 - DDP1 + invH * ( ( 8 * DP0 + 7 * DP1 ) - 15 * dP * invH ) ) * invH2;
-    C = ( real_type( 0.5 ) * DDP1 - real_type( 1.5 ) * DDP0 + invH * ( 10 * dP * invH - ( 6 * DP0 + 4 * DP1 ) ) ) *
-        invH;
-    D = real_type( 0.5 ) * DDP0;
-    E = DP0;
+    // Grado 0, 1, 2
     F = P0;
+    E = DP0;
+    D = half_DDP0;
+
+    // Grado 3 (C)
+    // Correzione: Parentesi aggiunte per moltiplicare TUTTO per invH
+    // Struttura: ( [Accelerazione] + [Velocità]*invH ) * invH
+    // Risultato dimensionale: Accelerazione/H -> P/H^3
+    C = ( ( half_DDP1 - 3 * half_DDP0 ) + invH * ( 10 * slope - ( 6 * DP0 + 4 * DP1 ) ) ) * invH;
+
+    // Grado 4 (B)
+    // Struttura: ( [Accelerazione] + [Velocità]*invH ) * invH^2
+    // Risultato dimensionale: Accelerazione/H^2 -> P/H^4
+    B = ( ( 3 * half_DDP0 - 2 * half_DDP1 ) + invH * ( ( 8 * DP0 + 7 * DP1 ) - 15 * slope ) ) * invH2;
+
+    // Grado 5 (A)
+    // Struttura: ( [Accelerazione] + [Velocità]*invH ) * invH^3
+    // Risultato dimensionale: Accelerazione/H^3 -> P/H^5
+    A = ( ( half_DDP1 - half_DDP0 ) + invH * ( 6 * slope - 3 * ( DP0 + DP1 ) ) ) * invH3;
   }
 
-  real_type bilinear3( real_type const p[4], real_type const M[4][4], real_type const q[4] );
+  // --------------------------------------------------------------------------
 
-  real_type bilinear5( real_type const p[6], real_type const M[6][6], real_type const q[6] );
+  static inline real_type bilinear3( real_type const p[4], real_type const M[4][4], real_type const q[4] )
+  {
+    return p[0] * ( M[0][0] * q[0] + M[0][1] * q[1] + M[0][2] * q[2] + M[0][3] * q[3] ) +
+           p[1] * ( M[1][0] * q[0] + M[1][1] * q[1] + M[1][2] * q[2] + M[1][3] * q[3] ) +
+           p[2] * ( M[2][0] * q[0] + M[2][1] * q[1] + M[2][2] * q[2] + M[2][3] * q[3] ) +
+           p[3] * ( M[3][0] * q[0] + M[3][1] * q[1] + M[3][2] * q[2] + M[3][3] * q[3] );
+  }
+
+  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  static inline real_type bilinear5( real_type const p[6], real_type const M[6][6], real_type const q[6] )
+  {
+    return p[0] *
+             ( M[0][0] * q[0] + M[0][1] * q[1] + M[0][2] * q[2] + M[0][3] * q[3] + M[0][4] * q[4] + M[0][5] * q[5] ) +
+           p[1] *
+             ( M[1][0] * q[0] + M[1][1] * q[1] + M[1][2] * q[2] + M[1][3] * q[3] + M[1][4] * q[4] + M[1][5] * q[5] ) +
+           p[2] *
+             ( M[2][0] * q[0] + M[2][1] * q[1] + M[2][2] * q[2] + M[2][3] * q[3] + M[2][4] * q[4] + M[2][5] * q[5] ) +
+           p[3] *
+             ( M[3][0] * q[0] + M[3][1] * q[1] + M[3][2] * q[2] + M[3][3] * q[3] + M[3][4] * q[4] + M[3][5] * q[5] ) +
+           p[4] *
+             ( M[4][0] * q[0] + M[4][1] * q[1] + M[4][2] * q[2] + M[4][3] * q[3] + M[4][4] * q[4] + M[4][5] * q[5] ) +
+           p[5] *
+             ( M[5][0] * q[0] + M[5][1] * q[1] + M[5][2] * q[2] + M[5][3] * q[3] + M[5][4] * q[4] + M[5][5] * q[5] );
+  }
 
 }  // namespace Splines
 
@@ -758,19 +1143,22 @@ namespace Splines
       if ( m_npts_reserved == 0 ) { reserve( 2 ); }
       else if ( m_npts >= m_npts_reserved )
       {
-        // riallocazione & copia
-        integer const saved_npts = m_npts;  // salvo npts perche reserve lo azzera
+        // Versione "Fall-back" se devi per forza usare il buffer temporaneo
+        integer const saved_npts = m_npts;
         Malloc_real   mem( "Spline::push_back" );
         mem.allocate( 2 * m_npts );
         real_type * Xsaved = mem( m_npts );
         real_type * Ysaved = mem( m_npts );
 
-        std::copy_n( m_X, m_npts, Xsaved );
-        std::copy_n( m_Y, m_npts, Ysaved );
-        reserve( ( m_npts + 1 ) * 2 );
+        // memcpy è più veloce di copy_n per array raw
+        std::memcpy( Xsaved, m_X, m_npts * sizeof( real_type ) );
+        std::memcpy( Ysaved, m_Y, m_npts * sizeof( real_type ) );
+
+        reserve( ( m_npts + 1 ) * 2 );  // La tua funzione distruttiva
+
         m_npts = saved_npts;
-        std::copy_n( Xsaved, m_npts, m_X );
-        std::copy_n( Ysaved, m_npts, m_Y );
+        std::memcpy( m_X, Xsaved, m_npts * sizeof( real_type ) );
+        std::memcpy( m_Y, Ysaved, m_npts * sizeof( real_type ) );
       }
       m_X[m_npts] = x;
       m_Y[m_npts] = y;
@@ -813,9 +1201,24 @@ namespace Splines
     void set_range( real_type xmin, real_type xmax )
     {
       UTILS_ASSERT( xmax > xmin, "Spline[{}]::set_range({},{}) bad range ", m_name, xmin, xmax );
-      real_type const S  = ( xmax - xmin ) / ( m_X[m_npts - 1] - m_X[0] );
+
+      // Calcolo range attuale (delta)
+      real_type const dx_old = m_X[m_npts - 1] - m_X[0];
+
+      // Opzionale: Protezione divisione per zero se la spline è collassata su un punto
+      // UTILS_ASSERT( std::abs(dx_old) > epsilon, ... );
+
+      real_type const S  = ( xmax - xmin ) / dx_old;
       real_type const Tx = xmin - S * m_X[0];
-      for ( real_type * ix = m_X; ix < m_X + m_npts; ++ix ) *ix = *ix * S + Tx;
+
+      // EIGEN IMPLEMENTATION
+      // Usiamo Eigen::Array invece di Matrix perché l'operazione è element-wise (scalare)
+      // Map crea una vista sui dati esistenti senza copiare memoria.
+      Eigen::Map<Eigen::Array<real_type, Eigen::Dynamic, 1>> map_X( m_X, m_npts );
+
+      // Operazione in-place: x[i] = x[i] * S + Tx
+      // Eigen utilizzerà istruzioni vettoriali (es. vfmadd su AVX2)
+      map_X = map_X * S + Tx;
     }
     ///@}
 
@@ -1031,137 +1434,113 @@ namespace Splines
   };
 
   //!
-  //! compute curvature of a planar curve
+  //! Compute curvature of a planar curve
+  //! Formula: k = (v x a) / |v|^3
   //!
-  inline real_type curvature( real_type s, Spline const & X, Spline const & Y )
+  static inline real_type curvature( real_type s, Spline const & X, Spline const & Y )
   {
-    const real_type dx  = X.D( s );
-    const real_type dy  = Y.D( s );
-    const real_type ddx = X.DD( s );
-    const real_type ddy = Y.DD( s );
+    // Definizione di un vettore 2D a dimensione fissa (allocato sullo stack, zero overhead)
+    using Vec2 = Eigen::Matrix<real_type, 2, 1>;
 
-    const real_type speed2 = dx * dx + dy * dy;
-    const real_type speed  = std::sqrt( speed2 );
+    // Helper function: Determinante 2D (analogo al prodotto vettoriale "cross" in 3D)
+    // Restituisce v1.x * v2.y - v1.y * v2.x
+    auto kross = []( const Vec2 & a, const Vec2 & b ) -> real_type { return a.x() * b.y() - a.y() * b.x(); };
 
-    return ( dx * ddy - dy * ddx ) / ( speed2 * speed );
-  }
+    // Eigen caricherà questi valori direttamente nei registri CPU
+    Vec2 v( X.D( s ), Y.D( s ) );    // Velocità
+    Vec2 a( X.DD( s ), Y.DD( s ) );  // Accelerazione
 
-  //!
-  //! compute curvature derivative of a planar curve
-  //!
-  inline real_type curvature_D( real_type s, Spline const & X, Spline const & Y )
-  {
-    const real_type dx   = X.D( s );
-    const real_type dy   = Y.D( s );
-    const real_type ddx  = X.DD( s );
-    const real_type ddy  = Y.DD( s );
-    const real_type dddx = X.DDD( s );
-    const real_type dddy = Y.DDD( s );
+    const real_type speed2 = v.squaredNorm();  // |v|^2
 
-    const real_type dx2 = dx * dx;
-    const real_type dy2 = dy * dy;
+    // Protezione divisione per zero
+    if ( speed2 <= 1e-12 ) return 0;
 
-    const real_type speed2 = dx2 + dy2;            // |r'|^2
-    const real_type speed  = std::sqrt( speed2 );  // |r'|
+    // Numeratore: v x a
+    const real_type num = kross( v, a );
 
-    const real_type a = dddy * dx - dy * dddx;
-    const real_type b = 3 * ddy * ddx;
-
-    const real_type num = dx2 * ( a - b ) + dy2 * ( a + b ) + 3 * dx * dy * ( ddx * ddx - ddy * ddy );
-
-    return num / ( speed * speed2 * speed2 );
+    // Denominatore: |v|^3 = speed2 * sqrt(speed2)
+    return num / ( speed2 * std::sqrt( speed2 ) );
   }
 
   //!
-  //! compute curvature second derivative of a planar curve
+  //! Compute curvature derivative
+  //! Formula vettoriale compatta: k' = ( |v|^2 (v x j) - 3 (v x a) (v . a) ) / |v|^5
   //!
-  inline real_type curvature_DD( real_type s, Spline const & X, Spline const & Y )
+  static inline real_type curvature_D( real_type s, Spline const & X, Spline const & Y )
   {
-    const real_type dx = X.D( s ), dy = Y.D( s );
-    const real_type ddx = X.DD( s ), ddy = Y.DD( s );
-    const real_type dddx = X.DDD( s ), dddy = Y.DDD( s );
-    const real_type ddddx = X.DDDD( s ), ddddy = Y.DDDD( s );
+    // Definizione di un vettore 2D a dimensione fissa (allocato sullo stack, zero overhead)
+    using Vec2 = Eigen::Matrix<real_type, 2, 1>;
 
-    const real_type dx2 = dx * dx, dy2 = dy * dy;
-    const real_type dx3 = dx2 * dx, dy3 = dy2 * dy;
+    // Helper function: Determinante 2D (analogo al prodotto vettoriale "cross" in 3D)
+    // Restituisce v1.x * v2.y - v1.y * v2.x
+    auto kross = []( const Vec2 & a, const Vec2 & b ) -> real_type { return a.x() * b.y() - a.y() * b.x(); };
 
-    const real_type ddx2 = ddx * ddx, ddy2 = ddy * ddy;
-    const real_type ddx3 = ddx2 * ddx, ddy3 = ddy2 * ddy;
+    Vec2 v( X.D( s ), Y.D( s ) );
+    Vec2 a( X.DD( s ), Y.DD( s ) );
+    Vec2 j( X.DDD( s ), Y.DDD( s ) );  // Jerk (Derivata terza)
 
-    const real_type speed2 = dx2 + dy2;
-    if ( speed2 == real_type( 0 ) ) return real_type( 0 );
+    const real_type v2 = v.squaredNorm();  // |v|^2
+    if ( v2 <= 1e-12 ) return 0;
 
-    const real_type inv_speed7 = real_type( 1 ) / ( std::sqrt( speed2 ) * speed2 * speed2 * speed2 );
+    // Termini vettoriali comuni
+    const real_type v_cross_a = kross( v, a );
+    const real_type v_dot_a   = v.dot( a );
+    const real_type v_cross_j = kross( v, j );
 
-    const real_type dx_dddx     = dx * dddx;
-    const real_type dx_ddy_dddy = dx * ddy * dddy;
+    // Applicazione formula derivata del quoziente vettoriale
+    const real_type num = v2 * v_cross_j - 3 * v_cross_a * v_dot_a;
 
-    const real_type num = dy2 * dy2 * ( dx * ddddy + 4 * ddx * dddy + 5 * dddx * ddy - dy * ddddx )
-
-                          + dy3 * ( 3 * ddx3 + ddx * ( 9 * dx_dddx - 12 * ddy2 ) - 2 * ddddx * dx2 - 9 * dx_ddy_dddy )
-
-                          + dy2 * ( dx * ( 12 * ddy3 - 33 * ddy * ddx2 ) + dx2 * ( ddy * dddx - dddy * ddx ) +
-                                    2 * ddddy * dx3 )
-
-                          - dy * dx2 * ( 12 * ddx3 - ddx * ( 9 * dx_dddx + 33 * ddy2 ) + ddddx * dx2 + 9 * dx_ddy_dddy )
-
-                          + dx3 * ( ddy * ( 12 * ddx2 - 4 * dx_dddx ) + ddddy * dx2 - 5 * dx * ddx * dddy - 3 * ddy3 );
-
-    return num * inv_speed7;
+    // Denominatore: |v|^5
+    return num / ( v2 * v2 * std::sqrt( v2 ) );
   }
 
-
-  inline void Hermite3( real_type const x, real_type const H, real_type base[4] )
+  //!
+  //! Compute curvature second derivative
+  //! Sostituisce l'espansione polinomiale manuale con algebra vettoriale esatta
+  //! Riduce drasticamente il numero di moltiplicazioni e migliora la precisione.
+  //!
+  static inline real_type curvature_DD( real_type s, Spline const & X, Spline const & Y )
   {
-    real_type const X = x / H;
-    base[1]           = X * X * ( 3 - 2 * X );
-    base[0]           = 1 - base[1];
-    base[2]           = x * ( X * ( X - 2 ) + 1 );
-    base[3]           = x * X * ( X - 1 );
+    // Definizione di un vettore 2D a dimensione fissa (allocato sullo stack, zero overhead)
+    using Vec2 = Eigen::Matrix<real_type, 2, 1>;
+
+    // Helper function: Determinante 2D (analogo al prodotto vettoriale "cross" in 3D)
+    // Restituisce v1.x * v2.y - v1.y * v2.x
+    auto kross = []( const Vec2 & a, const Vec2 & b ) -> real_type { return a.x() * b.y() - a.y() * b.x(); };
+
+    // Recupero dati (idealmente la classe Spline dovrebbe avere una funzione eval_all(s, ...) per farlo in una
+    // chiamata)
+    Vec2 v( X.D( s ), Y.D( s ) );
+    Vec2 a( X.DD( s ), Y.DD( s ) );
+    Vec2 j( X.DDD( s ), Y.DDD( s ) );
+    Vec2 s_snap( X.DDDD( s ), Y.DDDD( s ) );  // Snap/Jounce (Derivata quarta)
+
+    const real_type v2 = v.squaredNorm();
+    if ( v2 <= 1e-12 ) return 0;
+
+    // --- Precalcoli Termini vettoriali (Cache nei registri) ---
+    const real_type v_dot_a   = v.dot( a );
+    const real_type v_cross_a = kross( v, a );
+    const real_type v_cross_j = kross( v, j );
+
+    // Termini misti derivata seconda
+    // T2 = (a x j) + (v x s)
+    const real_type T2 = kross( a, j ) + kross( v, s_snap );
+
+    // D2 = |a|^2 + v . j
+    const real_type D2 = a.squaredNorm() + v.dot( j );
+
+    // --- Calcolo Numeratore ---
+    // Formula derivata analiticamente:
+    // N = v^2 [ v^2 * T2  -  6 * (v.a) * (v x j)  -  3 * (v x a) * D2 ]  +  15 * (v x a) * (v.a)^2
+
+    const real_type term_bracket = v2 * T2 - 6 * v_dot_a * v_cross_j - 3 * v_cross_a * D2;
+    const real_type num          = v2 * term_bracket + 15 * v_cross_a * ( v_dot_a * v_dot_a );
+
+    // --- Risultato Finale ---
+    // Denominatore: |v|^7
+    return num / ( v2 * v2 * v2 * std::sqrt( v2 ) );
   }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  inline void Hermite3_D( real_type const x, real_type const H, real_type base_D[4] )
-  {
-    real_type const X = x / H;
-    base_D[0]         = 6.0 * X * ( X - 1.0 ) / H;
-    base_D[1]         = -base_D[0];
-    base_D[2]         = ( ( 3 * X - 4 ) * X + 1 );
-    base_D[3]         = X * ( 3 * X - 2 );
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  inline void Hermite3_DD( real_type const x, real_type const H, real_type base_DD[4] )
-  {
-    real_type const X = x / H;
-    base_DD[0]        = ( 12 * X - 6 ) / ( H * H );
-    base_DD[1]        = -base_DD[0];
-    base_DD[2]        = ( 6 * X - 4 ) / H;
-    base_DD[3]        = ( 6 * X - 2 ) / H;
-  }
-
-  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  inline void Hermite3_DDD( real_type, real_type const H, real_type base_DDD[4] )
-  {
-    base_DDD[0] = 12 / ( H * H * H );
-    base_DDD[1] = -base_DDD[0];
-    base_DDD[2] = 6 / ( H * H );
-    base_DDD[3] = base_DDD[2];
-  }
-
-#ifdef AUTODIFF_SUPPORT
-  template <typename T> inline void Hermite3( T const & x, real_type const H, T base[4] )
-  {
-    T const X = x / H;
-    base[1]   = X * X * ( 3 - 2 * X );
-    base[0]   = 1 - base[1];
-    base[2]   = x * ( X * ( X - 2 ) + 1 );
-    base[3]   = x * X * ( X - 1 );
-  }
-#endif
 
 }  // namespace Splines
 

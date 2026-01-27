@@ -374,13 +374,19 @@ namespace Splines
     }
 
     //! \brief Evaluates the spline with higher‑order automatic differentiation.
-    template <typename T1, typename T2>
-    autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval( T1 const & x, T2 const & y )
-      const
+    template <typename T1, typename T2> auto eval( T1 const & x, T2 const & y ) const
+      -> decltype( m_spline_2D->eval( x, y ) )
     {
-      autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> X{ x }, Y{ y };
-      return m_spline_2D->eval( X, Y );
+      return m_spline_2D->eval( x, y );
     }
+
+    // Operator() per due parametri
+    template <typename T1, typename T2> auto operator()( T1 const & x, T2 const & y ) const
+      -> decltype( m_spline_2D->eval( x, y ) )
+    {
+      return m_spline_2D->eval( x, y );
+    }
+
 #endif
 
     ///@}

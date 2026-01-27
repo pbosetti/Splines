@@ -26,7 +26,6 @@ namespace Splines
 {
 
   using std::abs;
-  using std::copy_n;
   using std::sqrt;
 
   /*\

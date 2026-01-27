@@ -61,37 +61,38 @@ namespace Splines
 
     void load( integer const i, integer const j, real_type bili3[4][4] ) const
     {
-      //
-      //  1    3
-      //
-      //  0    2
-      //
-      integer const i0 = ipos_C( i, j );
-      integer const i1 = ipos_C( i, j + 1 );
-      integer const i2 = ipos_C( i + 1, j );
-      integer const i3 = ipos_C( i + 1, j + 1 );
+      // 1. Definiamo i tipi per le Mappe.
+      // Usiamo RowMajor per corrispondere al layout C++ standard degli array e di 'bili3'.
+      using MatrixView = Eigen::Map<const Eigen::Matrix<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>;
+      using ResultView = Eigen::Map<Eigen::Matrix<real_type, 4, 4, Eigen::RowMajor>>;
 
-      bili3[0][0] = m_Z[i0];
-      bili3[0][1] = m_Z[i1];
-      bili3[0][2] = m_DY[i0];
-      bili3[0][3] = m_DY[i1];
+      // 2. Mappiamo la matrice di destinazione (4x4)
+      // &bili3[0][0] punta all'inizio dell'array raw.
+      ResultView res( &bili3[0][0] );
 
-      bili3[1][0] = m_Z[i2];
-      bili3[1][1] = m_Z[i3];
-      bili3[1][2] = m_DY[i2];
-      bili3[1][3] = m_DY[i3];
+      // 3. Mappiamo le matrici sorgente (Grandi matrici globali)
+      // Assumiamo che m_nx e m_ny siano le dimensioni della griglia.
+      MatrixView Z( m_Z, m_nx, m_ny );
+      MatrixView DY( m_DY, m_nx, m_ny );
+      MatrixView DX( m_DX, m_nx, m_ny );
+      MatrixView DXY( m_DXY, m_nx, m_ny );
 
-      bili3[2][0] = m_DX[i0];
-      bili3[2][1] = m_DX[i1];
-      bili3[2][2] = m_DXY[i0];
-      bili3[2][3] = m_DXY[i1];
+      // 4. Copia a blocchi
+      // Invece di copiare scalarmente, copiamo 4 blocchi 2x2.
+      // Eigen ottimizzerà queste operazioni usando istruzioni SIMD.
 
-      bili3[3][0] = m_DX[i2];
-      bili3[3][1] = m_DX[i3];
-      bili3[3][2] = m_DXY[i2];
-      bili3[3][3] = m_DXY[i3];
+      // Quadrante in alto a sinistra: Z
+      res.topLeftCorner<2, 2>() = Z.block<2, 2>( i, j );
+
+      // Quadrante in alto a destra: DY
+      res.topRightCorner<2, 2>() = DY.block<2, 2>( i, j );
+
+      // Quadrante in basso a sinistra: DX
+      res.bottomLeftCorner<2, 2>() = DX.block<2, 2>( i, j );
+
+      // Quadrante in basso a destra: DXY
+      res.bottomRightCorner<2, 2>() = DXY.block<2, 2>( i, j );
     }
-
 
     real_type & Dx_node_ref( integer const i, integer const j ) { return m_DX[this->ipos_C( i, j )]; }
     real_type & Dy_node_ref( integer const i, integer const j ) { return m_DY[this->ipos_C( i, j )]; }

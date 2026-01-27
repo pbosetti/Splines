@@ -61,11 +61,24 @@ namespace Splines
     //!
     void copy_spline( CubicSplineBase const & S )
     {
+      // 1. Protezione contro l'auto-assegnazione (Cruciale!)
+      if ( this == &S ) return;
+
+      // 2. Alloca memoria
       CubicSplineBase::reserve( S.m_npts );
       m_npts = S.m_npts;
-      copy_n( S.m_X, m_npts, m_X );
-      copy_n( S.m_Y, m_npts, m_Y );
-      copy_n( S.m_Yp, m_npts, m_Yp );
+
+      // 3. Copia in blocco (Bulk Copy)
+      if ( m_npts > 0 )
+      {
+        // Calcolo size in bytes una sola volta
+        size_t const byte_size = m_npts * sizeof( real_type );
+
+        std::memcpy( m_X, S.m_X, byte_size );
+        std::memcpy( m_Y, S.m_Y, byte_size );
+        std::memcpy( m_Yp, S.m_Yp, byte_size );
+      }
+
       copy_flags( S );
     }
 
@@ -84,10 +97,27 @@ namespace Splines
     //!
     void set_range( real_type xmin, real_type xmax )
     {
+      // 1. Calcola il fattore di scala PRIMA che m_X venga modificato.
+      //    Se stiamo scalando le derivate (y' = dy/dx), il fattore è OldRange / NewRange.
+      real_type const dx_old = m_X[m_npts - 1] - m_X[0];
+      real_type const dx_new = xmax - xmin;
+
+      // Protezione divisione per zero e calcolo rapporto
+      // Se dx_new è 0, evitiamo NaN.
+      real_type const recS = ( std::abs( dx_new ) > 1e-12 ) ? dx_new / dx_old : 1.0;
+
+      // 2. Chiama la classe base per scalare m_X
       Spline::set_range( xmin, xmax );
-      real_type const recS = ( m_X[m_npts - 1] - m_X[0] ) / ( xmax - xmin );
-      real_type *     iy   = m_Y;
-      while ( iy < m_Y + m_npts ) *iy++ *= recS;
+
+      // 3. Check ottimizzazione: Se il fattore è 1 (nessun cambio scala), esci.
+      if ( std::abs( recS - 1.0 ) < 1e-12 ) return;
+
+      // 4. Applica il fattore di scala usando Eigen (SIMD)
+      Eigen::Map<Eigen::Array<real_type, Eigen::Dynamic, 1>> map_vals( m_X, m_npts );
+      map_vals -= m_X[0];
+      map_vals *= recS;
+      map_vals += xmin;
+      m_X[m_npts - 1] = xmax;
     }
 
     //!
@@ -119,22 +149,22 @@ namespace Splines
       PolynomialRoots::Quadratic q;
       for ( integer i = 1; i < m_npts; ++i )
       {
-        real_type const & X0{ m_X[i - 1] };
-        real_type const & X1{ m_X[i] };
-        real_type const & P0{ m_Y[i - 1] };
-        real_type const & P1{ m_Y[i] };
-        real_type const & DP0{ m_Yp[i - 1] };
-        real_type const & DP1{ m_Yp[i] };
-        real_type const   H{ X1 - X0 };
+        real_type const & X0  = m_X[i - 1];
+        real_type const & X1  = m_X[i];
+        real_type const & P0  = m_Y[i - 1];
+        real_type const & P1  = m_Y[i];
+        real_type const & DP0 = m_Yp[i - 1];
+        real_type const & DP1 = m_Yp[i];
+        real_type const   H   = X1 - X0;
         real_type         A, B, C, D;
         Hermite3_to_poly( H, P0, P1, DP0, DP1, A, B, C, D );
         q.setup( 3 * A, 2 * B, C );
         real_type     r[2];
-        integer const nr{ q.getRootsInOpenRange( 0, H, r ) };
+        integer const nr = q.getRootsInOpenRange( 0, H, r );
         for ( integer j = 0; j < nr; ++j )
         {
-          real_type const rr{ r[j] };
-          real_type const yy{ ( ( ( A * rr ) + B ) * rr + C ) * rr + D };
+          real_type const rr = r[j];
+          real_type const yy = ( ( ( A * rr ) + B ) * rr + C ) * rr + D;
           if ( yy > y_max )
           {
             y_max     = yy;
@@ -195,22 +225,22 @@ namespace Splines
       PolynomialRoots::Quadratic q;
       for ( integer i = 1; i < m_npts; ++i )
       {
-        real_type const & X0{ m_X[i - 1] };
-        real_type const & X1{ m_X[i] };
-        real_type const & P0{ m_Y[i - 1] };
-        real_type const & P1{ m_Y[i] };
-        real_type const & DP0{ m_Yp[i - 1] };
-        real_type const & DP1{ m_Yp[i] };
-        real_type const   H{ X1 - X0 };
+        real_type const & X0  = m_X[i - 1];
+        real_type const & X1  = m_X[i];
+        real_type const & P0  = m_Y[i - 1];
+        real_type const & P1  = m_Y[i];
+        real_type const & DP0 = m_Yp[i - 1];
+        real_type const & DP1 = m_Yp[i];
+        real_type const   H   = X1 - X0;
         real_type         A, B, C, D;
         Hermite3_to_poly( H, P0, P1, DP0, DP1, A, B, C, D );
         q.setup( 3 * A, 2 * B, C );
         real_type     r[2];
-        integer const nr{ q.getRootsInOpenRange( 0, H, r ) };
+        integer const nr = q.getRootsInOpenRange( 0, H, r );
         for ( integer j = 0; j < nr; ++j )
         {
-          real_type const rr{ r[j] };
-          real_type const yy{ ( ( ( A * rr ) + B ) * rr + C ) * rr + D };
+          real_type const rr = r[j];
+          real_type const yy = ( ( ( A * rr ) + B ) * rr + C ) * rr + D;
           real_type const ddy{ 3 * A * rr + B };
           if ( ddy > 0 )
           {
@@ -227,9 +257,9 @@ namespace Splines
         }
         if ( i + 1 >= m_npts ) continue;
         if ( abs( DP1 ) > ( m_X[i + 1] - m_X[i - 1] ) * epsi ) continue;
-        real_type const & X2{ m_X[i + 1] };
-        real_type const & P2{ m_Y[i + 1] };
-        real_type const & DP2{ m_Yp[i + 1] };
+        real_type const & X2  = m_X[i + 1];
+        real_type const & P2  = m_Y[i + 1];
+        real_type const & DP2 = m_Yp[i + 1];
         real_type         A1, B1, C1, D1;
         Hermite3_to_poly( X2 - X1, P1, P2, DP1, DP2, A1, B1, C1, D1 );
         real_type const DD = 2 * A * H + B;
@@ -302,11 +332,11 @@ namespace Splines
     {
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
-      integer const   ni{ res.first };
-      real_type const X{ res.second };
+      integer const   ni = res.first;
+      real_type const X  = res.second;
+      real_type       dx = X - m_X[ni];
+      real_type       DX = m_X[ni + 1] - m_X[ni];
       real_type       base[4], base_D[4];
-      real_type       dx{ X - m_X[ni] };
-      real_type       DX{ m_X[ni + 1] - m_X[ni] };
       Splines::Hermite3( dx, DX, base );
       Splines::Hermite3_D( dx, DX, base_D );
       dd[0] = base[0] * m_Y[ni] + base[1] * m_Y[ni + 1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni + 1];
@@ -317,11 +347,11 @@ namespace Splines
     {
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
-      integer const   ni{ res.first };
-      real_type const X{ res.second };
+      integer const   ni = res.first;
+      real_type const X  = res.second;
       real_type       base[4], base_D[4], base_DD[4];
-      real_type       dx{ X - m_X[ni] };
-      real_type       DX{ m_X[ni + 1] - m_X[ni] };
+      real_type       dx = X - m_X[ni];
+      real_type       DX = m_X[ni + 1] - m_X[ni];
       Splines::Hermite3( dx, DX, base );
       Splines::Hermite3_D( dx, DX, base_D );
       Splines::Hermite3_DD( dx, DX, base_DD );
@@ -548,7 +578,7 @@ namespace Splines
     {
       UTILS_ASSERT( m_npts >= 2, "CubicSplineBase::coeffs, npts={} must be >= 2\n", m_npts );
 
-      integer const n{ m_npts - 1 };
+      integer const n = m_npts - 1;
       for ( integer i = 0; i < n; ++i )
       {
         real_type const H{ m_X[i + 1] - m_X[i] };
@@ -571,7 +601,7 @@ namespace Splines
           cfs[i + 0 * n] = d;
         }
       }
-      copy_n( m_X, m_npts, nodes );
+      if ( m_npts > 0 ) std::memcpy( nodes, m_X, m_npts * sizeof( real_type ) );
       return 4;
     }
 

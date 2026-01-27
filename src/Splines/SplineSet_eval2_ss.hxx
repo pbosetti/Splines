@@ -144,10 +144,7 @@ autodiff::dual1st eval2(
  * \param[in] name Name of spline to evaluate
  * \return Dual number containing value and derivative
  */
-autodiff::dual1st eval2(
-  autodiff::dual1st const & zeta,
-  string_view const         indep,
-  string_view const         name ) const
+autodiff::dual1st eval2( autodiff::dual1st const & zeta, string_view const indep, string_view const name ) const
 {
   real_type x;
   return eval2( zeta, indep, x, name );
@@ -190,10 +187,7 @@ autodiff::dual2nd eval2(
  * \param[in] name Name of spline to evaluate
  * \return Dual number containing value, first and second derivatives
  */
-autodiff::dual2nd eval2(
-  autodiff::dual2nd const & zeta,
-  string_view const         indep,
-  string_view const         name ) const
+autodiff::dual2nd eval2( autodiff::dual2nd const & zeta, string_view const indep, string_view const name ) const
 {
   real_type x;
   return eval2( zeta, indep, x, name );

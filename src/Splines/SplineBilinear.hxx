@@ -86,9 +86,8 @@ namespace Splines
       // Ottimizzazione: Moltiplicazione inversa invece di divisione
       real_type const DX = m_X[i + 1] - m_X[i];
       real_type const DY = m_Y[j + 1] - m_Y[j];
-      real_type const u  = ( X.second - m_X[i] ) /
-                          DX;  // Il compilatore qui usa l'inverso se ottimizza bene, ma DX serve
-      real_type const v = ( Y.second - m_Y[j] ) / DY;
+      real_type const u  = ( X.second - m_X[i] ) / DX;
+      real_type const v  = ( Y.second - m_Y[j] ) / DY;
 
       real_type const u1 = 1 - u;
       real_type const v1 = 1 - v;

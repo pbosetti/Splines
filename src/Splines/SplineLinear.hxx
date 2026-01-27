@@ -29,8 +29,6 @@
 namespace Splines
 {
 
-  using std::copy_n;
-
   //! Linear spline class
   class LinearSpline : public Spline
   {
@@ -266,7 +264,7 @@ namespace Splines
           cfs[i]     = b;
         }
       }
-      copy_n( m_X, m_npts, nodes );
+      if ( m_npts > 0 ) std::memcpy( nodes, m_X, m_npts * sizeof( *nodes ) );
       return 2;
     }
 
@@ -388,8 +386,12 @@ namespace Splines
     {
       LinearSpline::reserve( S.m_npts );
       m_npts = S.m_npts;
-      copy_n( S.m_X, m_npts, m_X );
-      copy_n( S.m_Y, m_npts, m_Y );
+      if ( m_npts > 0 )
+      {
+        size_t const size_bytes = m_npts * sizeof( *m_X );
+        std::memcpy( m_X, S.m_X, size_bytes );
+        std::memcpy( m_Y, S.m_Y, size_bytes );
+      }
       copy_flags( S );
     }
   };

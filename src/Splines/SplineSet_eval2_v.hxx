@@ -168,4 +168,3 @@ void eval2_DDD( integer const spl, real_type const zeta, real_type vals[], integ
   real_type x;
   return eval2_DDD( spl, zeta, x, vals, incy );
 }
-

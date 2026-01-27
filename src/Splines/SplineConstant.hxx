@@ -219,12 +219,19 @@ namespace Splines
       m_X = m_Y = nullptr;
     }
 
-    integer  // order
-    coeffs( real_type cfs[], real_type nodes[], [[maybe_unused]] bool transpose = false ) const override
+    integer coeffs( real_type cfs[], real_type nodes[], [[maybe_unused]] bool transpose = false ) const override
     {
-      integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
-      copy_n( m_X, m_npts, nodes );
-      copy_n( m_Y, nseg, cfs );
+      // 1. Early exit: Se non ci sono punti, non fare nulla.
+      if ( m_npts <= 0 ) return 1;
+
+      // 2. Ottimizzazione Memoria: Usa memcpy per copia diretta di byte.
+      // È la via più veloce per copiare array di numeri (bypassando gli iteratori).
+      std::memcpy( nodes, m_X, m_npts * sizeof( real_type ) );
+
+      // 3. Gestione Coeffs: Copiamo m_Y solo se ci sono segmenti (punti > 1).
+      // Nota: Se m_npts è 1, nseg è 0, quindi non copiamo nulla in cfs.
+      if ( m_npts > 1 ) std::memcpy( cfs, m_Y, ( m_npts - 1 ) * sizeof( real_type ) );
+
       return 1;
     }
 
@@ -346,10 +353,29 @@ namespace Splines
 
     void copy_spline( ConstantSpline const & S )
     {
-      ConstantSpline::reserve( S.m_npts );
+      // 1. Protezione contro l'auto-assegnamento (Self-assignment check)
+      // Se stiamo copiando l'oggetto su se stesso, non facciamo nulla.
+      if ( this == &S ) return;
+
+      // 2. Gestione casi vuoti
+      if ( S.m_npts <= 0 )
+      {
+        m_npts = 0;
+        return;
+      }
+
+      // 3. Allocazione memoria
+      // Assumiamo che reserve gestisca la riallocazione solo se necessario.
+      this->reserve( S.m_npts );
       m_npts = S.m_npts;
-      copy_n( S.m_X, m_npts, m_X );
-      copy_n( S.m_Y, m_npts - 1, m_Y );
+
+      // 4. Copia rapida della memoria (Block Copy)
+      std::memcpy( m_X, S.m_X, m_npts * sizeof( real_type ) );
+
+      // 5. Copia sicura dei valori Y (Intervalli)
+      if ( m_npts > 1 ) std::memcpy( m_Y, S.m_Y, ( m_npts - 1 ) * sizeof( real_type ) );
+
+      // 6. Copia flag e metadati
       copy_flags( S );
     }
   };

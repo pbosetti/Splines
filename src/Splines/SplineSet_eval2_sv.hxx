@@ -118,4 +118,3 @@ void eval2_DDD( integer const spl, real_type const zeta, vector<real_type> & val
   real_type x;
   return this->eval2_DDD( spl, zeta, x, vals );
 }
-
