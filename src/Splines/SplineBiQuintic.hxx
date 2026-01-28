@@ -67,8 +67,8 @@ namespace Splines
       new (&mDXXY) Eigen::Map<MatC>( m_DXXY_ptr, m_nx, m_ny );
       new (&mDXXYY) Eigen::Map<MatC>( m_DXXYY_ptr, m_nx, m_ny );
 
-      make_derivative_x( m_sub_type, m_Z_ptr, m_DX_ptr );
-      make_derivative_y( m_sub_type, m_Z_ptr, m_DY_ptr );
+      make_derivative_x( m_sub_type, mZ.data(), m_DX_ptr );
+      make_derivative_y( m_sub_type, mZ.data(), m_DY_ptr );
       make_derivative_xy( m_sub_type, m_DX_ptr, m_DY_ptr, m_DXY_ptr );
 
       make_derivative_x( m_sub_type, m_DX_ptr, m_DXX_ptr );

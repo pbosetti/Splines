@@ -53,8 +53,7 @@ namespace Splines
 
     real_type * m_X     = nullptr;
     real_type * m_Y     = nullptr;
-    real_type * m_Z_ptr = nullptr;
-    Eigen::Map<MatC> mZ{ nullptr, 0, 0 };
+    MatC mZ;
 
     real_type m_Z_min = 0;
     real_type m_Z_max = 0;
@@ -64,9 +63,8 @@ namespace Splines
 
     real_type & z_node_ref( integer const i, integer const j ) { return mZ.coeffRef(i,j); }
 
-    template <typename MAT>
-    void
-    load_Z( MAT const & Z, bool transposed ) {
+    template <typename Derived>
+    void load_Z(const Eigen::ArrayBase<Derived>& Z, bool transposed) {
       if ( transposed ) {
         for ( integer ix = 0; ix < m_nx; ++ix )
           for ( integer iy = 0; iy < m_ny; ++iy )
@@ -309,8 +307,7 @@ namespace Splines
 
       m_X = nullptr;
       m_Y = nullptr;
-      m_Z_ptr = nullptr;
-      new (&mZ) Eigen::Map<MatC>{ nullptr, 0, 0 };
+      mZ.resize(0,0);
 
       m_Z_min = 0;
       m_Z_max = 0;
@@ -418,12 +415,11 @@ namespace Splines
     {
       m_nx = nx;
       m_ny = ny;
-      m_mem.reallocate( ( nx + 1 ) * ( ny + 1 ) );
+      m_mem.reallocate( nx + ny );
       m_X = m_mem( nx );
       m_Y = m_mem( ny );
 
-      m_Z_ptr = m_mem( nx * ny );
-      new (&mZ) Eigen::Map<MatC>( m_Z_ptr, nx, ny );
+      mZ.resize( nx, ny );
 
       for ( integer i = 0; i < nx; ++i ) m_X[i] = x[i * incx];
       for ( integer j = 0; j < ny; ++j ) m_Y[j] = y[j * incy];
@@ -440,12 +436,17 @@ namespace Splines
     //!                        by row Z(i,j) = z[i*ny+j] as C-matrix
     //! \param transposed      if true matrix Z is stored transposed
     //!
+    template <typename Derived>
     void build(
-      Eigen::Ref<const Vec> x,
-      Eigen::Ref<const Vec> y,
-      Eigen::Ref<const Mat> Z,
-      bool const transposed )
+      Eigen::Ref<const Vec>             x,
+      Eigen::Ref<const Vec>             y,
+      Eigen::ArrayBase<Derived> const & Z,
+      bool const                        transposed )
     {
+      m_nx = x.size();
+      m_ny = y.size();
+      std::memcpy( m_X, x.data(), m_nx * sizeof( real_type ) );
+      std::memcpy( m_Y, y.data(), m_ny * sizeof( real_type ) );
       load_Z( Z, transposed );
       make_spline();
     }
@@ -495,8 +496,7 @@ namespace Splines
       m_X = m_mem( nx );
       m_Y = m_mem( ny );
 
-      m_Z_ptr = m_mem( nx * ny );
-      new (&mZ) Eigen::Map<MatC>( m_Z_ptr, nx, ny );
+      mZ.resize( nx, ny );
 
       for ( integer i = 0; i < nx; ++i ) m_X[i] = static_cast<real_type>( i );
       for ( integer j = 0; j < ny; ++j ) m_Y[j] = static_cast<real_type>( j );
@@ -552,12 +552,11 @@ namespace Splines
 
       m_nx = static_cast<integer>( gc_x.get_num_elements() );
       m_ny = static_cast<integer>( gc_y.get_num_elements() );
-      m_mem.reallocate( ( m_nx + 1 ) * ( m_ny + 1 ) );
+      m_mem.reallocate( m_nx + m_ny );
       m_X = m_mem( m_nx );
       m_Y = m_mem( m_ny );
 
-      m_Z_ptr = m_mem( m_nx * m_ny );
-      new (&mZ) Eigen::Map<MatC>( m_Z_ptr, m_nx, m_ny );
+      mZ.resize( m_nx, m_ny );
 
       for ( integer i = 0; i < m_nx; ++i ) m_X[i] = gc_x.get_number_at( i );
       for ( integer j = 0; j < m_ny; ++j ) m_Y[j] = gc_y.get_number_at( j );

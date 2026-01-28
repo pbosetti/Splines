@@ -61,7 +61,6 @@ namespace Splines
 
     using SplineSurf::m_X;
     using SplineSurf::m_Y;
-    using SplineSurf::m_Z_ptr;
     using SplineSurf::mZ;
 
     void load( integer const i, integer const j, real_type bili3[4][4] ) const
