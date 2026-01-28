@@ -38,29 +38,16 @@ namespace Splines
   class BiQuinticSplineBase : public SplineSurf
   {
   protected:
-    Malloc_real m_mem_biquintic{ "BiQuinticSplineBase" };
+    MatC mDX;
+    MatC mDY;
 
-    real_type * m_DX_ptr = nullptr;
-    real_type * m_DY_ptr = nullptr;
+    MatC mDXX;
+    MatC mDYY;
+    MatC mDXY;
 
-    real_type * m_DXX_ptr = nullptr;
-    real_type * m_DYY_ptr = nullptr;
-    real_type * m_DXY_ptr = nullptr;
-
-    real_type * m_DXYY_ptr  = nullptr;
-    real_type * m_DXXY_ptr  = nullptr;
-    real_type * m_DXXYY_ptr = nullptr;
-
-    Eigen::Map<MatC> mDX{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDY{ nullptr, 0, 0 };
-
-    Eigen::Map<MatC> mDXX{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDYY{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDXY{ nullptr, 0, 0 };
-
-    Eigen::Map<MatC> mDXYY{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDXXY{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDXXYY{ nullptr, 0, 0 };
+    MatC mDXYY;
+    MatC mDXXY;
+    MatC mDXXYY;
 
     Spline_sub_type m_sub_type;
 
@@ -108,7 +95,7 @@ namespace Splines
     {
     }
 
-    ~BiQuinticSplineBase() override { m_mem_biquintic.free(); }
+    ~BiQuinticSplineBase() override = default;
 
     //!
     //! \name Estimated derivatives at interpolation nodes

@@ -44,15 +44,9 @@ namespace Splines
   class BiCubicSplineBase : public SplineSurf
   {
   protected:
-    Malloc_real m_mem_bicubic;
-
-    real_type * m_DX_ptr  = nullptr;
-    real_type * m_DY_ptr  = nullptr;
-    real_type * m_DXY_ptr = nullptr;
-
-    Eigen::Map<MatC> mDX{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDY{ nullptr, 0, 0 };
-    Eigen::Map<MatC> mDXY{ nullptr, 0, 0 };
+    MatC mDX;
+    MatC mDY;
+    MatC mDXY;
 
     Spline_sub_type m_sub_type;
 
@@ -94,8 +88,10 @@ namespace Splines
     using SplineSurf::eval;
 
     //! spline constructor
-    explicit BiCubicSplineBase( Spline_sub_type sub_type, string_view name = "BiCubicSplineBase" )
-      : SplineSurf( name ), m_mem_bicubic( fmt::format( "BiCubicSplineBase[{}]", name ) ), m_sub_type( sub_type )
+    explicit BiCubicSplineBase(
+      Spline_sub_type sub_type = Spline_sub_type::PCHIP,
+      string_view     name     = "BiCubicSplineBase" )
+      : SplineSurf( name ), m_sub_type( sub_type )
     {
     }
 

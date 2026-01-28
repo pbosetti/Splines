@@ -47,37 +47,26 @@ namespace Splines
   {
     void make_spline() override
     {
-      integer const dim{ m_nx * m_ny };
-      m_mem_biquintic.reallocate( 8 * dim );
-      m_DX_ptr    = m_mem_biquintic( dim );
-      m_DY_ptr    = m_mem_biquintic( dim );
-      m_DXY_ptr   = m_mem_biquintic( dim );
-      m_DXX_ptr   = m_mem_biquintic( dim );
-      m_DYY_ptr   = m_mem_biquintic( dim );
-      m_DXYY_ptr  = m_mem_biquintic( dim );
-      m_DXXY_ptr  = m_mem_biquintic( dim );
-      m_DXXYY_ptr = m_mem_biquintic( dim );
+      mDX.resize( m_nx, m_ny );
+      mDY.resize( m_nx, m_ny );
+      mDXY.resize( m_nx, m_ny );
+      mDXX.resize( m_nx, m_ny );
+      mDYY.resize( m_nx, m_ny );
+      mDXYY.resize( m_nx, m_ny );
+      mDXXY.resize( m_nx, m_ny );
+      mDXXYY.resize( m_nx, m_ny );
 
-      new ( &mDX ) Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
-      new ( &mDY ) Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
-      new ( &mDXY ) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
-      new ( &mDXX ) Eigen::Map<MatC>( m_DXX_ptr, m_nx, m_ny );
-      new ( &mDYY ) Eigen::Map<MatC>( m_DYY_ptr, m_nx, m_ny );
-      new ( &mDXYY ) Eigen::Map<MatC>( m_DXYY_ptr, m_nx, m_ny );
-      new ( &mDXXY ) Eigen::Map<MatC>( m_DXXY_ptr, m_nx, m_ny );
-      new ( &mDXXYY ) Eigen::Map<MatC>( m_DXXYY_ptr, m_nx, m_ny );
+      make_derivative_x( m_sub_type, mZ.data(), mDX.data() );
+      make_derivative_y( m_sub_type, mZ.data(), mDY.data() );
+      make_derivative_xy( m_sub_type, mDX.data(), mDY.data(), mDXY.data() );
 
-      make_derivative_x( m_sub_type, mZ.data(), m_DX_ptr );
-      make_derivative_y( m_sub_type, mZ.data(), m_DY_ptr );
-      make_derivative_xy( m_sub_type, m_DX_ptr, m_DY_ptr, m_DXY_ptr );
+      make_derivative_x( m_sub_type, mDX.data(), mDXX.data() );
+      make_derivative_y( m_sub_type, mDY.data(), mDYY.data() );
 
-      make_derivative_x( m_sub_type, m_DX_ptr, m_DXX_ptr );
-      make_derivative_y( m_sub_type, m_DY_ptr, m_DYY_ptr );
+      make_derivative_y( m_sub_type, mDXX.data(), mDXXY.data() );
+      make_derivative_x( m_sub_type, mDYY.data(), mDXYY.data() );
 
-      make_derivative_y( m_sub_type, m_DXX_ptr, m_DXXY_ptr );
-      make_derivative_x( m_sub_type, m_DYY_ptr, m_DXYY_ptr );
-
-      make_derivative_xy( m_sub_type, m_DXXY_ptr, m_DXYY_ptr, m_DXXYY_ptr );
+      make_derivative_xy( m_sub_type, mDXXY.data(), mDXYY.data(), mDXXYY.data() );
 
       m_search_x.must_reset();
       m_search_y.must_reset();

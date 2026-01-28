@@ -38,33 +38,23 @@ namespace Splines
   //!
   class BiCubicSpline : public BiCubicSplineBase
   {
+    using BiCubicSplineBase::mDX;
+    using BiCubicSplineBase::mDXY;
+    using BiCubicSplineBase::mDY;
+
     void make_spline() override
     {
-      integer const nn{ m_nx * m_ny };
-      m_mem_bicubic.reallocate( 3 * nn );
-      m_DX_ptr  = m_mem_bicubic( nn );
-      m_DY_ptr  = m_mem_bicubic( nn );
-      m_DXY_ptr = m_mem_bicubic( nn );
+      mDX.resize( m_nx, m_ny );
+      mDY.resize( m_nx, m_ny );
+      mDXY.resize( m_nx, m_ny );
 
-      new ( &mDX ) Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
-      new ( &mDY ) Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
-      new ( &mDXY ) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
-
-      make_derivative_x( m_sub_type, mZ.data(), m_DX_ptr );
-      make_derivative_y( m_sub_type, mZ.data(), m_DY_ptr );
-      make_derivative_xy( m_sub_type, m_DX_ptr, m_DY_ptr, m_DXY_ptr );
+      make_derivative_x( m_sub_type, mZ.data(), mDX.data() );
+      make_derivative_y( m_sub_type, mZ.data(), mDY.data() );
+      make_derivative_xy( m_sub_type, mDX.data(), mDY.data(), mDXY.data() );
 
       m_search_x.must_reset();
       m_search_y.must_reset();
     }
-
-    using BiCubicSplineBase::m_DX_ptr;
-    using BiCubicSplineBase::m_DXY_ptr;
-    using BiCubicSplineBase::m_DY_ptr;
-    using BiCubicSplineBase::m_mem_bicubic;
-    using BiCubicSplineBase::mDX;
-    using BiCubicSplineBase::mDXY;
-    using BiCubicSplineBase::mDY;
 
   public:
     using BiCubicSplineBase::eval;
