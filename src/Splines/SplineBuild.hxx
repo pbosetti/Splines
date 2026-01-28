@@ -408,8 +408,8 @@ namespace Splines
       case Spline_sub_type::PCHIP: Pchip_build( X, Y, Yp, npts ); break;
       case Spline_sub_type::AKIMA:
       {
-        Malloc_real mem( "Quintic_build::work memory" );
-        Akima_build( X, Y, Yp, mem.malloc( npts ), npts );
+        Vec work( npts );
+        Akima_build( X, Y, Yp, work.data(), npts );
       }
       break;
       case Spline_sub_type::BESSEL: Bessel_build( X, Y, Yp, npts ); break;
@@ -803,9 +803,8 @@ namespace Splines
       case Spline_sub_type::PCHIP: Pchip_build( X, Y, Yp, npts ); break;
       case Spline_sub_type::AKIMA:
       {
-        Malloc_real mem( "Quintic_build2::work memory" );
-        real_type * m = mem.malloc( npts );
-        Akima_build( X, Y, Yp, m, npts );
+        Vec work( npts );
+        Akima_build( X, Y, Yp, work.data(), npts );
       }
       break;
       case Spline_sub_type::BESSEL: Bessel_build( X, Y, Yp, npts ); break;

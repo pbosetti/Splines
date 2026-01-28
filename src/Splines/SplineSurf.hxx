@@ -39,8 +39,6 @@ namespace Splines
   //!
   class SplineSurf
   {
-    Malloc_real m_mem;
-
   protected:
     string const m_name;
     bool         m_x_closed     = false;
@@ -51,11 +49,11 @@ namespace Splines
     integer m_nx = 0;
     integer m_ny = 0;
 
-    real_type *     m_X_ptr = nullptr;
-    real_type *     m_Y_ptr = nullptr;
-    Eigen::Map<Vec> mX{ nullptr, 0 };
-    Eigen::Map<Vec> mY{ nullptr, 0 };
-    MatC            mZ;
+    real_type * m_X_ptr = nullptr;
+    real_type * m_Y_ptr = nullptr;
+    Vec         mX;
+    Vec         mY;
+    MatC        mZ;
 
     real_type m_Z_min = 0;
     real_type m_Z_max = 0;
@@ -240,14 +238,11 @@ namespace Splines
       m_nx = nx;
       m_ny = ny;
 
-      // 1. Allocazione memoria interna
-      m_mem.reallocate( nx + ny );
-      m_X_ptr = m_mem( nx );
-      m_Y_ptr = m_mem( ny );
+      mX.resize( nx );
+      mY.resize( ny );
 
-      // Costruiamo le Map sulla memoria interna (il tuo "hack" col placement new)
-      new ( &mX ) Eigen::Map<Vec>( m_X_ptr, nx );
-      new ( &mY ) Eigen::Map<Vec>( m_Y_ptr, ny );
+      m_X_ptr = mX.data();
+      m_Y_ptr = mY.data();
 
       mZ.resize( nx, ny );
     }
@@ -259,7 +254,7 @@ namespace Splines
     //!
     //! Spline constructor
     //!
-    explicit SplineSurf( string_view name = "Spline" ) : m_mem( name.data() ), m_name( name )
+    explicit SplineSurf( string_view name = "Spline" ) : m_name( name )
     {
       m_search_x.setup( &m_name, &m_nx, &m_X_ptr, &m_x_closed, &m_x_can_extend );
       m_search_y.setup( &m_name, &m_ny, &m_Y_ptr, &m_y_closed, &m_y_can_extend );
@@ -346,12 +341,14 @@ namespace Splines
     //!
     void clear()
     {
-      m_mem.free();
       m_nx = 0;
       m_ny = 0;
 
       m_X_ptr = nullptr;
       m_Y_ptr = nullptr;
+
+      mX.resize( 0 );
+      mY.resize( 0 );
       mZ.resize( 0, 0 );
 
       m_Z_min = 0;
