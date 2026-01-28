@@ -1153,20 +1153,18 @@ namespace Splines
       {
         // Versione "Fall-back" se devi per forza usare il buffer temporaneo
         integer const saved_npts = m_npts;
-        Malloc_real   mem( "Spline::push_back" );
-        mem.allocate( 2 * m_npts );
-        real_type * Xsaved = mem( m_npts );
-        real_type * Ysaved = mem( m_npts );
+        Vec Xsaved( m_npts );
+        Vec Ysaved( m_npts );
 
         // memcpy è più veloce di copy_n per array raw
-        std::memcpy( Xsaved, m_X, m_npts * sizeof( real_type ) );
-        std::memcpy( Ysaved, m_Y, m_npts * sizeof( real_type ) );
+        std::memcpy( Xsaved.data(), m_X, m_npts * sizeof( real_type ) );
+        std::memcpy( Ysaved.data(), m_Y, m_npts * sizeof( real_type ) );
 
         reserve( ( m_npts + 1 ) * 2 );  // La tua funzione distruttiva
 
         m_npts = saved_npts;
-        std::memcpy( m_X, Xsaved, m_npts * sizeof( real_type ) );
-        std::memcpy( m_Y, Ysaved, m_npts * sizeof( real_type ) );
+        std::memcpy( m_X, Xsaved.data(), m_npts * sizeof( real_type ) );
+        std::memcpy( m_Y, Ysaved.data(), m_npts * sizeof( real_type ) );
       }
       m_X[m_npts] = x;
       m_Y[m_npts] = y;

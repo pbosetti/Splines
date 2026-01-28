@@ -75,14 +75,13 @@ namespace Splines
       integer ibegin = 0;
       integer iend   = 0;
 
-      Malloc_real m_mem( "AkimaSpline::work memory" );
-      real_type * m_work{ m_mem.malloc( m_npts ) };
+      Vec work( m_npts );
 
       do
       {
         // cerca intervallo monotono strettamente crescente
         for ( ++iend; iend < m_npts && m_X[iend - 1] < m_X[iend]; ++iend ) {}
-        Akima_build( m_X + ibegin, m_Y + ibegin, m_Yp + ibegin, m_work, iend - ibegin );
+        Akima_build( m_X + ibegin, m_Y + ibegin, m_Yp + ibegin, work.data(), iend - ibegin );
         ibegin = iend;
       } while ( iend < m_npts );
 
