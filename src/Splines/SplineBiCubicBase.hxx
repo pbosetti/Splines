@@ -57,31 +57,6 @@ namespace Splines
     using SplineSurf::mY;
     using SplineSurf::mZ;
 
-#if 0
-    void load( integer const i, integer const j, real_type bili3[4][4] ) const
-    {
-      // Mappiamo la matrice di destinazione (4x4)
-      // &bili3[0][0] punta all'inizio dell'array raw.
-      Eigen::Map<Eigen::Array<real_type, 4, 4, Eigen::RowMajor>> res( &bili3[0][0] );
-
-      // Copia a blocchi
-      // Invece di copiare scalarmente, copiamo 4 blocchi 2x2.
-      // Eigen ottimizzerà queste operazioni usando istruzioni SIMD.
-
-      // Quadrante in alto a sinistra: Z
-      res.topLeftCorner<2, 2>() = mZ.block<2, 2>( i, j );
-
-      // Quadrante in alto a destra: DY
-      res.topRightCorner<2, 2>() = mDY.block<2, 2>( i, j );
-
-      // Quadrante in basso a sinistra: DX
-      res.bottomLeftCorner<2, 2>() = mDX.block<2, 2>( i, j );
-
-      // Quadrante in basso a destra: DXY
-      res.bottomRightCorner<2, 2>() = mDXY.block<2, 2>( i, j );
-    }
-#endif
-
     void load( integer const i, integer const j, Mat4x4 & bili3 ) const
     {
       // Copia a blocchi

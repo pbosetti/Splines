@@ -70,20 +70,17 @@ namespace Splines
 
     real_type & Dxxyy_node_ref( integer const i, integer const j ) { return mDXXYY.coeffRef( i, j ); }
 
-    void load( integer const i, integer const j, real_type bili5[6][6] ) const
+    void load( integer const i, integer const j, Mat6x6 & bili5 ) const
     {
-      Eigen::Map<Eigen::Matrix<real_type, 6, 6, Eigen::RowMajor>> bili5_eigen( &bili5[0][0] );
-      // Usa Eigen per estrarre i blocchi direttamente
-      // Nota: richiede che mZ, mDX, ecc. siano matrici Eigen dense
-      bili5_eigen.block<2, 2>( 0, 0 ) = mZ.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 2, 0 ) = mDX.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 4, 0 ) = mDXX.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 0, 2 ) = mDY.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 0, 4 ) = mDYY.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 2, 2 ) = mDXY.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 4, 2 ) = mDXXY.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 2, 4 ) = mDXYY.block( i, j, 2, 2 );
-      bili5_eigen.block<2, 2>( 4, 4 ) = mDXXYY.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 0, 0 ) = mZ.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 2, 0 ) = mDX.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 4, 0 ) = mDXX.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 0, 2 ) = mDY.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 0, 4 ) = mDYY.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 2, 2 ) = mDXY.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 4, 2 ) = mDXXY.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 2, 4 ) = mDXYY.block( i, j, 2, 2 );
+      bili5.block<2, 2>( 4, 4 ) = mDXXYY.block( i, j, 2, 2 );
     }
 
   public:
@@ -153,7 +150,8 @@ namespace Splines
     //!
     real_type eval( real_type x, real_type y ) const override
     {
-      real_type bili5[6][6], u[6], v[6];
+      Mat6x6 bili5;
+      Vec6   u, v;
 
       std::pair<integer, real_type> X( 0, x ), Y( 0, y );
       m_search_x.find( X );
@@ -167,12 +165,12 @@ namespace Splines
       real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
       real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
-      Hermite5( dx, DX, u );
-      Hermite5( dy, DY, v );
+      Hermite5( dx, DX, u.data() );
+      Hermite5( dy, DY, v.data() );
 
       load( i, j, bili5 );
 
-      return bilinear5( u, bili5, v );
+      return u.dot( bili5 * v );
     }
 
 
@@ -185,30 +183,23 @@ namespace Splines
     //!
     void D( real_type const x, real_type const y, real_type d[3] ) const override
     {
-      real_type bili5[6][6], u[6], u_D[6], v[6], v_D[6];
+      Mat6x6 bili5;
+      Vec6   u, u_D, v, v_D;
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5( dx, DX, u );
-      Hermite5_D( dx, DX, u_D );
-      Hermite5( dy, DY, v );
-      Hermite5_D( dy, DY, v_D );
+      Hermite5( dx, DX, u.data() );
+      Hermite5_D( dx, DX, u_D.data() );
+      Hermite5( dy, DY, v.data() );
+      Hermite5_D( dy, DY, v_D.data() );
 
       load( i, j, bili5 );
+      
+      auto Bv = bili5 * v;
 
-      d[0] = bilinear5( u, bili5, v );
-      d[1] = bilinear5( u_D, bili5, v );
-      d[2] = bilinear5( u, bili5, v_D );
+      d[0] = u.dot( Bv );
+      d[1] = u_D.dot( Bv );
+      d[2] = u.dot( bili5 * v_D );
     }
 
     //!
@@ -216,26 +207,17 @@ namespace Splines
     //!
     real_type Dx( real_type const x, real_type const y ) const override
     {
-      real_type bili5[6][6], u_D[6], v[6];
+      Mat6x6 bili5;
+      Vec6   u_D, v;
+      
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5_D( dx, DX, u_D );
-      Hermite5( dy, DY, v );
+      Hermite5_D( dx, DX, u_D.data() );
+      Hermite5( dy, DY, v.data() );
 
       load( i, j, bili5 );
 
-      return bilinear5( u_D, bili5, v );
+      return u_D.dot( bili5 * v );
     }
 
     //!
@@ -243,26 +225,17 @@ namespace Splines
     //!
     real_type Dy( real_type const x, real_type const y ) const override
     {
-      real_type bili5[6][6], u[6], v_D[6];
+      Mat6x6 bili5;
+      Vec6   u, v_D;
+      
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5( dx, DX, u );
-      Hermite5_D( dy, DY, v_D );
+      Hermite5( dx, DX, u.data() );
+      Hermite5_D( dy, DY, v_D.data() );
 
       load( i, j, bili5 );
 
-      return bilinear5( u, bili5, v_D );
+      return u.dot( bili5 * v_D );
     }
 
     //!
@@ -277,35 +250,29 @@ namespace Splines
     //!
     void DD( real_type const x, real_type const y, real_type dd[6] ) const override
     {
-      real_type bili5[6][6], u[6], u_D[6], u_DD[6], v[6], v_D[6], v_DD[6];
+      Mat6x6 bili5;
+      Vec6   u, u_D, u_DD, v, v_D, v_DD;
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5( dx, DX, u );
-      Hermite5_D( dx, DX, u_D );
-      Hermite5_DD( dx, DX, u_DD );
-      Hermite5( dy, DY, v );
-      Hermite5_D( dy, DY, v_D );
-      Hermite5_DD( dy, DY, v_DD );
+      Hermite5( dx, DX, u.data() );
+      Hermite5_D( dx, DX, u_D.data() );
+      Hermite5_DD( dx, DX, u_DD.data() );
+      Hermite5( dy, DY, v.data() );
+      Hermite5_D( dy, DY, v_D.data() );
+      Hermite5_DD( dy, DY, v_DD.data() );
 
       load( i, j, bili5 );
+      
+      auto Bv   = bili5 * v;
+      auto Bv_D = bili5 * v_D;
 
-      dd[0] = bilinear5( u, bili5, v );
-      dd[1] = bilinear5( u_D, bili5, v );
-      dd[2] = bilinear5( u, bili5, v_D );
-      dd[3] = bilinear5( u_DD, bili5, v );
-      dd[4] = bilinear5( u_D, bili5, v_D );
-      dd[5] = bilinear5( u, bili5, v_DD );
+      dd[0] = u.dot( Bv );
+      dd[1] = u_D.dot( Bv );
+      dd[2] = u.dot( Bv_D );
+      dd[3] = u_DD.dot( Bv );
+      dd[4] = u_D.dot( Bv_D );
+      dd[5] = u.dot( bili5 * v_DD );
     }
 
     //!
@@ -313,26 +280,17 @@ namespace Splines
     //!
     real_type Dxx( real_type const x, real_type const y ) const override
     {
-      real_type bili5[6][6], u_DD[6], v[6];
+      Mat6x6 bili5;
+      Vec6   u_DD, v;
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5_DD( dx, DX, u_DD );
-      Hermite5( dy, DY, v );
+      Hermite5_DD( dx, DX, u_DD.data() );
+      Hermite5( dy, DY, v.data() );
 
       load( i, j, bili5 );
 
-      return bilinear5( u_DD, bili5, v );
+      return u_DD.dot( bili5 * v );
     }
 
     //!
@@ -340,26 +298,17 @@ namespace Splines
     //!
     real_type Dxy( real_type const x, real_type const y ) const override
     {
-      real_type bili5[6][6], u_D[6], v_D[6];
+      Mat6x6 bili5;
+      Vec6   u_D, v_D;
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5_D( dx, DX, u_D );
-      Hermite5_D( dy, DY, v_D );
+      Hermite5_D( dx, DX, u_D.data() );
+      Hermite5_D( dy, DY, v_D.data() );
 
       load( i, j, bili5 );
 
-      return bilinear5( u_D, bili5, v_D );
+      return u_D.dot( bili5 * v_D );
     }
 
     //!
@@ -367,26 +316,17 @@ namespace Splines
     //!
     real_type Dyy( real_type const x, real_type const y ) const override
     {
-      real_type bili5[6][6], u[6], v_DD[6];
+      Mat6x6 bili5;
+      Vec6   u, v_DD;
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i{ X.first };
-      integer const j{ Y.first };
-
-      real_type const dx{ X.second - mX.coeff( i ) };
-      real_type const dy{ Y.second - mY.coeff( j ) };
-      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
-      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
-
-      Hermite5( dx, DX, u );
-      Hermite5_DD( dy, DY, v_DD );
+      Hermite5( dx, DX, u.data() );
+      Hermite5_DD( dy, DY, v_DD.data() );
 
       load( i, j, bili5 );
 
-      return bilinear5( u, bili5, v_DD );
+      return u.dot( bili5 * v_DD );
     }
 
     ///@}

@@ -189,7 +189,7 @@ void test_json_string_constructors()
   print_header( "Test 2: JSON String Constructors" );
 
   // Create JSON data for an asymmetric grid (4x7)
-  const string json_data = R"({
+  const string json_data1 = R"({
         "xdata": [0.0, 2.0, 4.0, 6.0],
         "ydata": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         "zdata": [
@@ -201,6 +201,18 @@ void test_json_string_constructors()
         "transposed": false,
         "fortran_storage": true
     })";
+  const string json_data = R"({
+      "xdata": [0, 1, 2, 3],
+      "ydata": [4, 5, 6],
+      "zdata": [
+        [1, 2,  3, 4  ],
+        [1, 4,  9, 16 ],
+        [1, 8, 27, 64 ]
+      ],
+      "transposed": true,
+      "fortran_storage": false
+  })";
+
 
   print_info( "Testing spline construction from JSON string (4x7 grid)" );
 
@@ -674,27 +686,11 @@ int main()
   fmt::print( fg( Color::TABLE_ROW ), "  6. Run All Tests\n" );
   fmt::print( fg( Color::TABLE_ROW ), "  0. Exit\n" );
 
-  int choice;
-  fmt::print( fg( Color::INFO ), "\nSelect test to run [0-6]: " );
-  cin >> choice;
-
-  switch ( choice )
-  {
-    case 1: test_2d_spline_evaluation(); break;
-    case 2: test_json_string_constructors(); break;
-    case 3: test_derivatives_with_autodiff(); break;
-    case 4: test_generic_container_construction(); break;
-    case 5: test_comprehensive_file_operations(); break;
-    case 6:
-      test_2d_spline_evaluation();
-      test_json_string_constructors();
-      test_derivatives_with_autodiff();
-      test_generic_container_construction();
-      test_comprehensive_file_operations();
-      break;
-    case 0: fmt::print( fg( Color::INFO ), "Exiting...\n" ); return 0;
-    default: print_error( "Invalid choice!" ); return 1;
-  }
+  test_2d_spline_evaluation();
+  test_json_string_constructors();
+  test_derivatives_with_autodiff();
+  test_generic_container_construction();
+  test_comprehensive_file_operations();
 
   fmt::print( fg( Color::SUCCESS ) | fmt::emphasis::bold, "\n✨ All tests completed! ✨\n" );
 

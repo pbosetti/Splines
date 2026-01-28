@@ -113,33 +113,54 @@ namespace Splines
       //  +--------------+
       //      nx = nc
       //
+      using StrideType = Eigen::OuterStride<Eigen::Dynamic>;
       integer const tf{ ( transposed ? 1 : 0 ) + ( fortran_storage ? 2 : 0 ) };
       switch ( tf )
       {
         case 0:  // NO transpose NO fortran
         {
-          Eigen::Map<const MatC> ZZ( z, m_nx, ldZ );
+          UTILS_ASSERT(
+            ldZ >= m_ny,
+            "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
+            ldZ, fortran_storage, transposed, m_nx, m_ny
+          );
+          Eigen::Map<const MatC,0,StrideType> ZZ( z, m_nx, m_ny, StrideType(ldZ) );
           load_Z( ZZ, false );
         }
         break;
 
         case 1:  // YES transpose NO fortran
         {
-          Eigen::Map<const MatC> ZZ( z, m_ny, ldZ );
+          UTILS_ASSERT(
+            ldZ >= m_nx,
+            "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
+            ldZ, fortran_storage, transposed, m_nx, m_ny
+          );
+          Eigen::Map<const MatC,0,StrideType> ZZ( z, m_ny, m_nx, StrideType(ldZ) );
           load_Z( ZZ, true );
         }
         break;
 
         case 2:  // NO transpose YES fortran
         {
-          Eigen::Map<const Mat> ZZ( z, ldZ, m_ny );
+          UTILS_ASSERT(
+            ldZ >= m_nx,
+            "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
+            ldZ, fortran_storage, transposed, m_nx, m_ny
+          );
+          Eigen::Map<const Mat,0,StrideType> ZZ( z, m_nx, m_ny, StrideType(ldZ) );
           load_Z( ZZ, false );
         }
         break;
 
         case 3:  // YES transpose YES fortran
         {
-          Eigen::Map<const Mat> ZZ( z, ldZ, m_nx );
+          UTILS_ASSERT(
+            ldZ >= m_ny,
+            "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
+            ldZ, fortran_storage, transposed, m_nx, m_ny
+          );
+          Eigen::Map<const Mat,0,StrideType> ZZ( z, m_ny, m_nx, StrideType(ldZ) );
           load_Z( ZZ, true );
         }
         break;
