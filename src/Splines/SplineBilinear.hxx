@@ -64,105 +64,59 @@ namespace Splines
     //! Evaluate the spline at (x,y)
     real_type eval( real_type const x, real_type const y ) const override
     {
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      // Ottimizzazione: Moltiplicazione inversa invece di divisione
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(i + 1) - mY.coeff(i);
-      real_type const u  = ( X.second - mX.coeff(i) ) / DX;
-      real_type const v  = ( Y.second - mY.coeff(j) ) / DY;
-
+      real_type const u  = dx / DX;
+      real_type const v  = dy / DY;
       real_type const u1 = 1 - u;
       real_type const v1 = 1 - v;
 
-      real_type Z00 = mZ.coeff( i, j );
-      real_type Z10 = mZ.coeff( i + 1, j );
-      real_type Z01 = mZ.coeff( i, j + 1 );
-      real_type Z11 = mZ.coeff( i + 1, j + 1 );
-
-      return u1 * ( Z00 * v1 + Z01 * v ) + u * ( Z10 * v1 + Z11 * v );
+      Mat2x2 Z = mZ.block<2, 2>( i, j ).matrix();
+      return u1 * ( Z.coeff( 0.0 ) * v1 + Z.coeff( 0, 1 ) * v ) + u * ( Z.coeff( 1, 0 ) * v1 + Z.coeff( 1, 1 ) * v );
     }
 
     //! Compute x-derivative at (x,y)
     real_type Dx( real_type const x, real_type const y ) const override
     {
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i = X.first;
-      integer const j = Y.first;
+      real_type const v = dy / DY;
 
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
-      real_type const v  = ( Y.second - mY.coeff(j) ) / DY;
-
-      real_type Z00 = mZ.coeff( i, j );
-      real_type Z10 = mZ.coeff( i + 1, j );
-      real_type Z01 = mZ.coeff( i, j + 1 );
-      real_type Z11 = mZ.coeff( i + 1, j + 1 );
-
-      return ( ( Z10 - Z00 ) * ( 1 - v ) + ( Z11 - Z01 ) * v ) / DX;
+      Mat2x2 Z = mZ.block<2, 2>( i, j ).matrix();
+      return ( ( Z.coeff( 1, 0 ) - Z.coeff( 0.0 ) ) * ( 1 - v ) + ( Z.coeff( 1, 1 ) - Z.coeff( 0, 1 ) ) * v ) / DX;
     }
 
     //! Compute y-derivative at (x,y)
     real_type Dy( real_type const x, real_type const y ) const override
     {
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      integer const i = X.first;
-      integer const j = Y.first;
+      real_type const u = dx / DX;
 
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
-      real_type const u  = ( X.second - mX.coeff(i) ) / DX;
-
-      real_type Z00 = mZ.coeff( i, j );
-      real_type Z10 = mZ.coeff( i + 1, j );
-      real_type Z01 = mZ.coeff( i, j + 1 );
-      real_type Z11 = mZ.coeff( i + 1, j + 1 );
-
-      return ( ( Z01 - Z00 ) * ( 1 - u ) + ( Z11 - Z10 ) * u ) / DY;
+      Mat2x2 Z = mZ.block<2, 2>( i, j ).matrix();
+      return ( ( Z.coeff( 0, 1 ) - Z.coeff( 0.0 ) ) * ( 1 - u ) + ( Z.coeff( 1, 1 ) - Z.coeff( 1, 0 ) ) * u ) / DY;
     }
 
     //! Compute value and first derivatives at (x,y)
     void D( real_type const x, real_type const y, real_type d[3] ) const override
     {
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       // Ottimizzazione: Calcolo inversi
       real_type const invDX = 1.0 / DX;
       real_type const invDY = 1.0 / DY;
 
-      real_type const u  = ( X.second - mX.coeff(i) ) * invDX;
-      real_type const v  = ( Y.second - mY.coeff(j) ) * invDY;
+      real_type const u  = dx * invDX;
+      real_type const v  = dy * invDY;
       real_type const u1 = 1 - u;
       real_type const v1 = 1 - v;
 
-      real_type Z00 = mZ.coeff( i, j );
-      real_type Z10 = mZ.coeff( i + 1, j );
-      real_type Z01 = mZ.coeff( i, j + 1 );
-      real_type Z11 = mZ.coeff( i + 1, j + 1 );
+      Mat2x2 Z = mZ.block<2, 2>( i, j ).matrix();
 
       // Value
       // Riordino per minimizzare operazioni: interpolazione bilineare standard
-      real_type const c0 = Z00 * v1 + Z01 * v;
-      real_type const c1 = Z10 * v1 + Z11 * v;
+      real_type const c0 = Z.coeff( 0, 0 ) * v1 + Z.coeff( 0, 1 ) * v;
+      real_type const c1 = Z.coeff( 1, 0 ) * v1 + Z.coeff( 1, 1 ) * v;
       d[0]               = u1 * c0 + u * c1;
 
       // Dx
@@ -171,8 +125,8 @@ namespace Splines
 
       // Dy
       // Derivata rispetto a Y interpolata lungo X
-      real_type const dZ_dy_0 = Z01 - Z00;
-      real_type const dZ_dy_1 = Z11 - Z10;
+      real_type const dZ_dy_0 = Z.coeff( 0, 1 ) - Z.coeff( 0, 0 );
+      real_type const dZ_dy_1 = Z.coeff( 1, 1 ) - Z.coeff( 1, 0 );
       d[2]                    = ( u1 * dZ_dy_0 + u * dZ_dy_1 ) * invDY;
     }
 
@@ -181,24 +135,13 @@ namespace Splines
     {
       this->D( x, y, dd );
 
-      // Recupero indici per il calcolo del termine misto
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-      integer const i = X.first;
-      integer const j = Y.first;
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      Mat2x2 Z = mZ.block<2, 2>( i, j ).matrix();
 
-      real_type Z00 = mZ.coeff( i, j );
-      real_type Z10 = mZ.coeff( i + 1, j );
-      real_type Z01 = mZ.coeff( i, j + 1 );
-      real_type Z11 = mZ.coeff( i + 1, j + 1 );
-
-      dd[3] = 0;                                        // Dxx
-      dd[4] = ( Z11 - Z10 - Z01 + Z00 ) / ( DX * DY );  // Dxy
-      dd[5] = 0;                                        // Dyy
+      dd[3] = 0;                                                                                        // Dxx
+      dd[4] = ( Z.coeff( 1, 1 ) - Z.coeff( 1, 0 ) - Z.coeff( 0, 1 ) + Z.coeff( 0, 0 ) ) / ( DX * DY );  // Dxy
+      dd[5] = 0;                                                                                        // Dyy
     }
 
     //! Second derivatives
@@ -207,21 +150,11 @@ namespace Splines
     // FIX MATEMATICO
     real_type Dxy( real_type const x, real_type const y ) const override
     {
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-      integer const i = X.first;
-      integer const j = Y.first;
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      Mat2x2 Z = mZ.block<2, 2>( i, j ).matrix();
 
-      real_type Z00 = mZ.coeff( i, j );
-      real_type Z10 = mZ.coeff( i + 1, j );
-      real_type Z01 = mZ.coeff( i, j + 1 );
-      real_type Z11 = mZ.coeff( i + 1, j + 1 );
-
-      return ( Z11 - Z10 - Z01 + Z00 ) / ( DX * DY );
+      return ( Z.coeff( 1, 1 ) - Z.coeff( 1, 0 ) - Z.coeff( 0, 1 ) + Z.coeff( 0, 0 ) ) / ( DX * DY );
     }
 
     real_type Dyy( real_type const, real_type const ) const override { return 0; }
@@ -286,13 +219,12 @@ namespace Splines
             "  Z01   = {:<12.4}  Z11   = {:<12.4}\n",
             i,
             j,
-            mX.coeff(i) - mX.coeff(i - 1),
-            mY.coeff(j) - mY.coeff(j - 1),
+            mX.coeff( i ) - mX.coeff( i - 1 ),
+            mY.coeff( j ) - mY.coeff( j - 1 ),
             mZ.coeff( i - 1, j - 1 ),
             mZ.coeff( i, j - 1 ),
             mZ.coeff( i - 1, j ),
-            mZ.coeff( i, j )
-          );
+            mZ.coeff( i, j ) );
         }
       }
     }

@@ -583,7 +583,18 @@ namespace SplinesTest
     Spline2D spline( "TestSpline" );
     integer  nx = static_cast<integer>( x_grid.size() );
     integer  ny = static_cast<integer>( y_grid.size() );
-    spline.build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny, true, false );
+    spline.build(
+      SplineType2D::BIQUINTIC_CUBIC,
+      x_grid.data(),
+      1,
+      y_grid.data(),
+      1,
+      z_data.data(),
+      nx,
+      nx,
+      ny,
+      true,
+      false );
 
     real_type max_error   = 0.0;
     real_type max_error_x = 0.0;
@@ -787,7 +798,8 @@ int main()
   // Test derivative consistency
   Spline2D test_spline( "ConsistencyTest" );
 
-  test_spline.build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny, true, false );
+  test_spline
+    .build( SplineType2D::BIQUINTIC_CUBIC, x_grid.data(), 1, y_grid.data(), 1, z_data.data(), nx, nx, ny, true, false );
   test_derivative_consistency( test_spline, x_grid, y_grid );
 
   // Final summary

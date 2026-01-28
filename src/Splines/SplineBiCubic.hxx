@@ -45,10 +45,10 @@ namespace Splines
       m_DX_ptr  = m_mem_bicubic( nn );
       m_DY_ptr  = m_mem_bicubic( nn );
       m_DXY_ptr = m_mem_bicubic( nn );
-      
-      new (&mDX)  Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
-      new (&mDY)  Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
-      new (&mDXY) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
+
+      new ( &mDX ) Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
+      new ( &mDY ) Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
+      new ( &mDXY ) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
 
       make_derivative_x( m_sub_type, mZ.data(), m_DX_ptr );
       make_derivative_y( m_sub_type, mZ.data(), m_DY_ptr );
@@ -58,13 +58,13 @@ namespace Splines
       m_search_y.must_reset();
     }
 
-    using BiCubicSplineBase::mDX;
-    using BiCubicSplineBase::mDXY;
-    using BiCubicSplineBase::mDY;
     using BiCubicSplineBase::m_DX_ptr;
     using BiCubicSplineBase::m_DXY_ptr;
     using BiCubicSplineBase::m_DY_ptr;
     using BiCubicSplineBase::m_mem_bicubic;
+    using BiCubicSplineBase::mDX;
+    using BiCubicSplineBase::mDXY;
+    using BiCubicSplineBase::mDY;
 
   public:
     using BiCubicSplineBase::eval;
@@ -92,11 +92,11 @@ namespace Splines
       for ( integer i = 1; i < m_nx; ++i )
       {
         // Accesso diretto al vettore mappato
-        real_type const dx = mX.coeff(i) - mX.coeff(i - 1);
+        real_type const dx = mX.coeff( i ) - mX.coeff( i - 1 );
 
         for ( integer j = 1; j < m_ny; ++j )
         {
-          real_type const dy = mY.coeff(j) - mY.coeff(j - 1);
+          real_type const dy = mY.coeff( j ) - mY.coeff( j - 1 );
 
           // Indici base per la patch corrente
           integer const r0 = i - 1;

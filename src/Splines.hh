@@ -70,10 +70,14 @@ namespace Splines
   using Malloc_real  = Utils::Malloc<real_type>;
   using ostream_type = basic_ostream<char>;
   using istream_type = basic_istream<char>;
-  
+
   using Vec  = Eigen::Array<real_type, Eigen::Dynamic, 1>;
   using Mat  = Eigen::Array<real_type, Eigen::Dynamic, Eigen::Dynamic>;
   using MatC = Eigen::Array<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+  using Mat2x2 = Eigen::Matrix<real_type, 2, 2>;
+  using Mat4x4 = Eigen::Matrix<real_type, 4, 4>;
+  using Mat6x6 = Eigen::Matrix<real_type, 6, 6>;
 
   using GC_namespace::GC_type;
   using GC_namespace::map_type;

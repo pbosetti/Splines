@@ -67,7 +67,7 @@ namespace Splines
     {
       // Mappiamo la matrice di destinazione (4x4)
       // &bili3[0][0] punta all'inizio dell'array raw.
-      Eigen::Map<Eigen::Array<real_type,4,4,Eigen::RowMajor>> res( &bili3[0][0] );
+      Eigen::Map<Eigen::Array<real_type, 4, 4, Eigen::RowMajor>> res( &bili3[0][0] );
 
       // Copia a blocchi
       // Invece di copiare scalarmente, copiamo 4 blocchi 2x2.
@@ -134,17 +134,7 @@ namespace Splines
     {
       real_type bili3[4][4], u[4], v[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3( dx, DX, u );
       Hermite3( dy, DY, v );
@@ -165,17 +155,7 @@ namespace Splines
     {
       real_type bili3[4][4], u[4], u_D[4], v[4], v_D[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3( dx, DX, u );
       Hermite3_D( dx, DX, u_D );
@@ -201,13 +181,7 @@ namespace Splines
       m_search_x.find( X );
       m_search_y.find( Y );
 
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3_D( dx, DX, u_D );
       Hermite3( dy, DY, v );
@@ -224,17 +198,7 @@ namespace Splines
     {
       real_type bili3[4][4], u[4], v_D[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3( dx, DX, u );
       Hermite3_D( dy, DY, v_D );
@@ -258,17 +222,7 @@ namespace Splines
     {
       real_type bili3[4][4], u[4], u_D[4], u_DD[4], v[4], v_D[4], v_DD[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3( dx, DX, u );
       Hermite3_D( dx, DX, u_D );
@@ -295,17 +249,7 @@ namespace Splines
     {
       real_type bili3[4][4], u_DD[4], v[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3_DD( dx, DX, u_DD );
       Hermite3( dy, DY, v );
@@ -322,17 +266,7 @@ namespace Splines
     {
       real_type bili3[4][4], u_D[4], v_D[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3_D( dx, DX, u_D );
       Hermite3_D( dy, DY, v_D );
@@ -349,17 +283,7 @@ namespace Splines
     {
       real_type bili3[4][4], u[4], v_DD[4];
 
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      integer const i = X.first;
-      integer const j = Y.first;
-
-      real_type const dx = X.second - mX.coeff(i);
-      real_type const dy = Y.second - mY.coeff(j);
-      real_type const DX = mX.coeff(i + 1) - mX.coeff(i);
-      real_type const DY = mY.coeff(j + 1) - mY.coeff(j);
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
       Hermite3( dx, DX, u );
       Hermite3_DD( dy, DY, v_DD );

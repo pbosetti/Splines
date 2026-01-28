@@ -58,14 +58,14 @@ namespace Splines
       m_DXXY_ptr  = m_mem_biquintic( dim );
       m_DXXYY_ptr = m_mem_biquintic( dim );
 
-      new (&mDX) Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
-      new (&mDY) Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
-      new (&mDXY) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
-      new (&mDXX) Eigen::Map<MatC>( m_DXX_ptr, m_nx, m_ny );
-      new (&mDYY) Eigen::Map<MatC>( m_DYY_ptr, m_nx, m_ny );
-      new (&mDXYY) Eigen::Map<MatC>( m_DXYY_ptr, m_nx, m_ny );
-      new (&mDXXY) Eigen::Map<MatC>( m_DXXY_ptr, m_nx, m_ny );
-      new (&mDXXYY) Eigen::Map<MatC>( m_DXXYY_ptr, m_nx, m_ny );
+      new ( &mDX ) Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
+      new ( &mDY ) Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
+      new ( &mDXY ) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
+      new ( &mDXX ) Eigen::Map<MatC>( m_DXX_ptr, m_nx, m_ny );
+      new ( &mDYY ) Eigen::Map<MatC>( m_DYY_ptr, m_nx, m_ny );
+      new ( &mDXYY ) Eigen::Map<MatC>( m_DXYY_ptr, m_nx, m_ny );
+      new ( &mDXXY ) Eigen::Map<MatC>( m_DXXY_ptr, m_nx, m_ny );
+      new ( &mDXXYY ) Eigen::Map<MatC>( m_DXXYY_ptr, m_nx, m_ny );
 
       make_derivative_x( m_sub_type, mZ.data(), m_DX_ptr );
       make_derivative_y( m_sub_type, mZ.data(), m_DY_ptr );
@@ -104,10 +104,10 @@ namespace Splines
       fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
       for ( integer i = 1; i < m_nx; ++i )
       {
-        real_type dx = mX.coeff(i) - mX.coeff(i - 1);
+        real_type dx = mX.coeff( i ) - mX.coeff( i - 1 );
         for ( integer j = 1; j < m_ny; ++j )
         {
-          real_type const dy = mY.coeff(j) - mY.coeff(j - 1);
+          real_type const dy = mY.coeff( j ) - mY.coeff( j - 1 );
           fmt::print(
             s,
             "patch ({},{})\n"

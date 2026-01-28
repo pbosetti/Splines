@@ -40,8 +40,8 @@ namespace Splines
   protected:
     Malloc_real m_mem_biquintic{ "BiQuinticSplineBase" };
 
-    real_type * m_DX_ptr  = nullptr;
-    real_type * m_DY_ptr  = nullptr;
+    real_type * m_DX_ptr = nullptr;
+    real_type * m_DY_ptr = nullptr;
 
     real_type * m_DXX_ptr = nullptr;
     real_type * m_DYY_ptr = nullptr;
@@ -83,19 +83,20 @@ namespace Splines
 
     real_type & Dxxyy_node_ref( integer const i, integer const j ) { return mDXXYY.coeffRef( i, j ); }
 
-    void load(integer const i, integer const j, real_type bili5[6][6]) const {
-      Eigen::Map<Eigen::Matrix<real_type, 6, 6, Eigen::RowMajor>> bili5_eigen(&bili5[0][0]);
+    void load( integer const i, integer const j, real_type bili5[6][6] ) const
+    {
+      Eigen::Map<Eigen::Matrix<real_type, 6, 6, Eigen::RowMajor>> bili5_eigen( &bili5[0][0] );
       // Usa Eigen per estrarre i blocchi direttamente
       // Nota: richiede che mZ, mDX, ecc. siano matrici Eigen dense
-      bili5_eigen.block<2,2>(0,0) = mZ.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(2,0) = mDX.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(4,0) = mDXX.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(0,2) = mDY.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(0,4) = mDYY.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(2,2) = mDXY.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(4,2) = mDXXY.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(2,4) = mDXYY.block(i, j, 2, 2);
-      bili5_eigen.block<2,2>(4,4) = mDXXYY.block(i, j, 2, 2);
+      bili5_eigen.block<2, 2>( 0, 0 ) = mZ.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 2, 0 ) = mDX.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 4, 0 ) = mDXX.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 0, 2 ) = mDY.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 0, 4 ) = mDYY.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 2, 2 ) = mDXY.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 4, 2 ) = mDXXY.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 2, 4 ) = mDXYY.block( i, j, 2, 2 );
+      bili5_eigen.block<2, 2>( 4, 4 ) = mDXXYY.block( i, j, 2, 2 );
     }
 
   public:
@@ -174,10 +175,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5( dx, DX, u );
       Hermite5( dy, DY, v );
@@ -206,10 +207,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5( dx, DX, u );
       Hermite5_D( dx, DX, u_D );
@@ -237,10 +238,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5_D( dx, DX, u_D );
       Hermite5( dy, DY, v );
@@ -264,10 +265,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5( dx, DX, u );
       Hermite5_D( dy, DY, v_D );
@@ -298,10 +299,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5( dx, DX, u );
       Hermite5_D( dx, DX, u_D );
@@ -334,10 +335,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5_DD( dx, DX, u_DD );
       Hermite5( dy, DY, v );
@@ -361,10 +362,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5_D( dx, DX, u_D );
       Hermite5_D( dy, DY, v_D );
@@ -388,10 +389,10 @@ namespace Splines
       integer const i{ X.first };
       integer const j{ Y.first };
 
-      real_type const dx{ X.second - mX.coeff(i) };
-      real_type const dy{ Y.second - mY.coeff(j) };
-      real_type const DX{ mX.coeff(i + 1) - mX.coeff(i) };
-      real_type const DY{ mY.coeff(j + 1) - mY.coeff(j) };
+      real_type const dx{ X.second - mX.coeff( i ) };
+      real_type const dy{ Y.second - mY.coeff( j ) };
+      real_type const DX{ mX.coeff( i + 1 ) - mX.coeff( i ) };
+      real_type const DY{ mY.coeff( j + 1 ) - mY.coeff( j ) };
 
       Hermite5( dx, DX, u );
       Hermite5_DD( dy, DY, v_DD );

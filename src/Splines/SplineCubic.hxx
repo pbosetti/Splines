@@ -84,7 +84,6 @@ namespace Splines
     CubicSpline_BC const bc0,
     CubicSpline_BC const bcn )
   {
-
     UTILS_ASSERT( npts >= 2, "CubicSpline_build, npts={} must be >= 2\n", npts );
 
     integer const n = npts - 1;  ///< Numero di segmenti

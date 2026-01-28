@@ -893,7 +893,8 @@ void run_1D_grid_tests(
   int &                        total_passed,
   int &                        total_tested )
 {
-  fmt::print( fg( fmt::color::yellow ) | fmt::emphasis::bold,
+  fmt::print(
+    fg( fmt::color::yellow ) | fmt::emphasis::bold,
     "\n"
     "============================================================\n"
     "Testing 1D splines on {} grid\n"
@@ -943,13 +944,13 @@ void run_2D_grid_tests(
   int &                                      total_passed,
   int &                                      total_tested )
 {
-  fmt::print( fg( fmt::color::yellow ) | fmt::emphasis::bold,
+  fmt::print(
+    fg( fmt::color::yellow ) | fmt::emphasis::bold,
     "\n"
     "============================================================\n"
     "Testing 2D splines on {} grid\n"
     "============================================================\n",
-    grid_name
-  );
+    grid_name );
 
   fmt::print( "Grid size: {} x {} points\n", x.size(), y.size() );
   fmt::print( "Test points: {} random points\n", test_points.size() );
@@ -998,13 +999,13 @@ void run_2D_grid_tests(
 
 int main()
 {
-  fmt::print( fg( fmt::color::blue ) | fmt::emphasis::bold,
+  fmt::print(
+    fg( fmt::color::blue ) | fmt::emphasis::bold,
     "\n"
     "========================================\n"
     "     COMPREHENSIVE AutoDiff Testing\n"
     "      1D and 2D Splines Comparison\n"
-    "========================================\n"
-  );
+    "========================================\n" );
 
   // ============================================================================
   // PARAMETRI COMUNI
@@ -1070,8 +1071,7 @@ int main()
     "\n"
     "************************************************************\n"
     "***                 1D SPLINE TESTS                      ***\n"
-    "************************************************************\n"
-  );
+    "************************************************************\n" );
 
   // 1. TEST CON GRIGLIA UNIFORME 1D
   {
@@ -1141,8 +1141,7 @@ int main()
     "\n"
     "************************************************************\n"
     "***                  2D SPLINE TESTS                     ***\n"
-    "************************************************************\n"
-  );
+    "************************************************************\n" );
 
   // 1. TEST CON GRIGLIA UNIFORME 2D
   {
@@ -1213,12 +1212,12 @@ int main()
   // ============================================================================
   // RIEPILOGO FINALE
   // ============================================================================
-  fmt::print( fg( fmt::color::blue ) | fmt::emphasis::bold,
+  fmt::print(
+    fg( fmt::color::blue ) | fmt::emphasis::bold,
     "\n"
     "========================================\n"
     "===        FINAL TEST SUMMARY        ===\n"
-    "========================================\n"
-  );
+    "========================================\n" );
 
   // Statistiche 1D
   double percentage_1D = ( total_tested_1D > 0 ) ? 100.0 * total_passed_1D / total_tested_1D : 0.0;
@@ -1239,12 +1238,12 @@ int main()
   fmt::print( "  Results: {}/{} passed ({:.1f}%)\n", total_passed_2D, total_tested_2D, percentage_2D );
 
   // Giudizio complessivo
-  fmt::print( fg( fmt::color::blue ) | fmt::emphasis::bold,
+  fmt::print(
+    fg( fmt::color::blue ) | fmt::emphasis::bold,
     "\n"
     "========================================\n"
     "===         OVERALL ASSESSMENT       ===\n"
-    "========================================\n"
-  );
+    "========================================\n" );
 
   bool all_1D_passed = ( total_passed_1D == total_tested_1D );
   bool all_2D_passed = ( total_passed_2D == total_tested_2D );
