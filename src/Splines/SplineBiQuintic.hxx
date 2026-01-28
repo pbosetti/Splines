@@ -104,10 +104,10 @@ namespace Splines
       fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
       for ( integer i = 1; i < m_nx; ++i )
       {
-        real_type dx = m_X[i] - m_X[i - 1];
+        real_type dx = mX.coeff(i) - mX.coeff(i - 1);
         for ( integer j = 1; j < m_ny; ++j )
         {
-          real_type const dy = m_Y[j] - m_Y[j - 1];
+          real_type const dy = mY.coeff(j) - mY.coeff(j - 1);
           fmt::print(
             s,
             "patch ({},{})\n"

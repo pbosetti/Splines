@@ -51,9 +51,11 @@ namespace Splines
     integer m_nx = 0;
     integer m_ny = 0;
 
-    real_type * m_X     = nullptr;
-    real_type * m_Y     = nullptr;
-    MatC mZ;
+    real_type * m_X_ptr = nullptr;
+    real_type * m_Y_ptr = nullptr;
+    Eigen::Map<Vec> mX{ nullptr, 0 };
+    Eigen::Map<Vec> mY{ nullptr, 0 };
+    MatC            mZ;
 
     real_type m_Z_min = 0;
     real_type m_Z_max = 0;
@@ -128,7 +130,7 @@ namespace Splines
       {
         for ( integer j = 0; j < m_ny; ++j )
         {
-          S->build( m_X, 1, z + j, m_ny, m_nx );
+          S->build( mX.data(), 1, z + j, m_ny, m_nx );
           for ( integer i = 0; i < m_nx; ++i ) dx[i * m_ny + j] = S->yp_node( i );
         }
       };
@@ -151,7 +153,7 @@ namespace Splines
       {
         for ( integer i = 0; i < m_nx; ++i )
         {
-          S->build( m_Y, 1, z + i * m_ny, 1, m_ny );
+          S->build( mY.data(), 1, z + i * m_ny, 1, m_ny );
           for ( integer j = 0; j < m_ny; ++j ) dy[i * m_ny + j] = S->yp_node( j );
         }
       };
@@ -180,13 +182,13 @@ namespace Splines
         };
         for ( integer j = 0; j < m_ny; ++j )
         {
-          S->build( m_X, 1, dy + j, m_ny, m_nx );
+          S->build( mX.data(), 1, dy + j, m_ny, m_nx );
           for ( integer i = 0; i < m_nx; ++i ) dxy[i * m_ny + j] = S->yp_node( i );
         }
 
         for ( integer i = 0; i < m_nx; ++i )
         {
-          S->build( m_Y, 1, dx + i * m_ny, 1, m_ny );
+          S->build( mY.data(), 1, dx + i * m_ny, 1, m_ny );
           for ( integer j = 0; j < m_ny; ++j )
           {
             integer const ij = i * m_ny + j;
@@ -207,6 +209,22 @@ namespace Splines
       }
     }
 
+    void resize( integer const nx, integer const ny ) {
+      m_nx = nx;
+      m_ny = ny;
+      
+      // 1. Allocazione memoria interna
+      m_mem.reallocate( nx + ny );
+      m_X_ptr = m_mem( nx );
+      m_Y_ptr = m_mem( ny );
+
+      // Costruiamo le Map sulla memoria interna (il tuo "hack" col placement new)
+      new (&mX) Eigen::Map<Vec>( m_X_ptr, nx );
+      new (&mY) Eigen::Map<Vec>( m_Y_ptr, ny );
+
+      mZ.resize( nx, ny );
+    }
+
   public:
     SplineSurf( SplineSurf const & )                   = delete;  // block copy constructor
     SplineSurf const & operator=( SplineSurf const & ) = delete;  // block copy method
@@ -216,14 +234,14 @@ namespace Splines
     //!
     explicit SplineSurf( string_view name = "Spline" ) : m_mem( name.data() ), m_name( name )
     {
-      m_search_x.setup( &m_name, &m_nx, &m_X, &m_x_closed, &m_x_can_extend );
-      m_search_y.setup( &m_name, &m_ny, &m_Y, &m_y_closed, &m_y_can_extend );
+      m_search_x.setup( &m_name, &m_nx, &m_X_ptr, &m_x_closed, &m_x_can_extend );
+      m_search_y.setup( &m_name, &m_ny, &m_Y_ptr, &m_y_closed, &m_y_can_extend );
     }
 
     //!
     //! Spline destructor
     //!
-    virtual ~SplineSurf() {}
+    virtual ~SplineSurf() = default;
 
     //!
     //! \name Open/Close
@@ -305,8 +323,8 @@ namespace Splines
       m_nx = 0;
       m_ny = 0;
 
-      m_X = nullptr;
-      m_Y = nullptr;
+      m_X_ptr = nullptr;
+      m_Y_ptr = nullptr;
       mZ.resize(0,0);
 
       m_Z_min = 0;
@@ -336,12 +354,12 @@ namespace Splines
     //!
     //! Return the i-th node of the spline (x component).
     //!
-    real_type x_node( integer const i ) const { return m_X[i]; }
+    real_type x_node( integer const i ) const { return mX.coeff(i); }
 
     //!
     //! Return the i-th node of the spline (y component).
     //!
-    real_type y_node( integer const i ) const { return m_Y[i]; }
+    real_type y_node( integer const i ) const { return mY.coeff(i); }
 
     //!
     //! Return the i-th node of the spline (y component).
@@ -351,22 +369,22 @@ namespace Splines
     //!
     //! Return x-minumum spline value.
     //!
-    real_type x_min() const { return m_X[0]; }
+    real_type x_min() const { return mX.coeff(0); }
 
     //!
     //! Return x-maximum spline value.
     //!
-    real_type x_max() const { return m_X[m_nx - 1]; }
+    real_type x_max() const { return mX.coeff(mX.size()-1); }
 
     //!
     //! Return y-minumum spline value.
     //!
-    real_type y_min() const { return m_Y[0]; }
+    real_type y_min() const { return mY.coeff(0); }
 
     //!
     //! Return y-maximum spline value.
     //!
-    real_type y_max() const { return m_Y[m_ny - 1]; }
+    real_type y_max() const { return mY.coeff(mY.size()-1); }
 
     //!
     //! Return z-minumum spline value.
@@ -413,17 +431,59 @@ namespace Splines
       bool            fortran_storage = false,
       bool            transposed      = false )
     {
-      m_nx = nx;
-      m_ny = ny;
-      m_mem.reallocate( nx + ny );
-      m_X = m_mem( nx );
-      m_Y = m_mem( ny );
+      resize( nx, ny );
 
-      mZ.resize( nx, ny );
+      // -----------------------------------------------------------
+      // OTTIMIZZAZIONE 1: Copia vettoriale con Stride (No cicli for)
+      // -----------------------------------------------------------
+      // Definiamo una "vista" sui dati di input che salta 'incx' elementi
+      // Eigen userà istruzioni AVX/SSE per copiare se possibile.
+      
+      using Stride = Eigen::InnerStride<Eigen::Dynamic>;
+      
+      if ( incx == 1 ) {
+        // Caso contiguo: copia di memoria pura (memcpy ultra veloce)
+        mX = Eigen::Map<const Vec>(x, nx);
+      } else {
+        // Caso con passo: usa InnerStride
+        mX = Eigen::Map<const Vec, 0, Stride>(x, nx, Stride(incx));
+      }
 
-      for ( integer i = 0; i < nx; ++i ) m_X[i] = x[i * incx];
-      for ( integer j = 0; j < ny; ++j ) m_Y[j] = y[j * incy];
-      load_Z( z, ldZ, fortran_storage, transposed );
+      if ( incy == 1 ) {
+        mY = Eigen::Map<const Vec>(y, ny);
+      } else {
+        mY = Eigen::Map<const Vec, 0, Stride>(y, ny, Stride(incy));
+      }
+
+      // -----------------------------------------------------------
+      // OTTIMIZZAZIONE 2: Mapping intelligente di Z
+      // -----------------------------------------------------------
+      // Invece di passare pointer grezzi, creiamo una Map che gestisce 
+      // il "Leading Dimension" (ldZ) tramite OuterStride.
+      
+      if ( fortran_storage ) {
+          // Fortran = Column Major. 
+          // ldZ è la distanza tra l'inizio di due colonne consecutive.
+          using StrideType = Eigen::OuterStride<Eigen::Dynamic>;
+          using MapType    = Eigen::Map<const Mat, 0, StrideType>;
+          
+          MapType mapZ(z, nx, ny, StrideType(ldZ)); // Assumo nx righe, ny colonne logiche
+          
+          // Chiama il tuo load_Z generico (che accetta Eigen::Ref)
+          load_Z( mapZ, transposed );
+          
+      } else {
+          // C = Row Major. 
+          // ldZ è la distanza tra l'inizio di due righe consecutive.
+          using StrideType = Eigen::OuterStride<Eigen::Dynamic>;
+          using MapType    = Eigen::Map<const MatC, 0, StrideType>;
+          
+          MapType mapZ(z, nx, ny, StrideType(ldZ)); // Assumo nx righe, ny colonne logiche
+          
+          // Chiama il tuo load_Z generico (che accetta Eigen::Ref)
+          load_Z( mapZ, transposed );
+      }
+      
       make_spline();
     }
 
@@ -443,10 +503,9 @@ namespace Splines
       Eigen::ArrayBase<Derived> const & Z,
       bool const                        transposed )
     {
-      m_nx = x.size();
-      m_ny = y.size();
-      std::memcpy( m_X, x.data(), m_nx * sizeof( real_type ) );
-      std::memcpy( m_Y, y.data(), m_ny * sizeof( real_type ) );
+      resize( x.size(), y.size() );
+      mX = x;
+      mY = y;
       load_Z( Z, transposed );
       make_spline();
     }
@@ -490,16 +549,9 @@ namespace Splines
       bool            fortran_storage = false,
       bool            transposed      = false )
     {
-      m_nx = nx;
-      m_ny = ny;
-      m_mem.reallocate( ( nx + 1 ) * ( ny + 1 ) );
-      m_X = m_mem( nx );
-      m_Y = m_mem( ny );
-
-      mZ.resize( nx, ny );
-
-      for ( integer i = 0; i < nx; ++i ) m_X[i] = static_cast<real_type>( i );
-      for ( integer j = 0; j < ny; ++j ) m_Y[j] = static_cast<real_type>( j );
+      resize( nx, ny );
+      for ( integer i = 0; i < nx; ++i ) mX[i] = static_cast<real_type>( i );
+      for ( integer j = 0; j < ny; ++j ) mY[j] = static_cast<real_type>( j );
       load_Z( z, ldZ, fortran_storage, transposed );
       make_spline();
     }
@@ -550,16 +602,13 @@ namespace Splines
       GenericContainer const & gc_z{ gc( "zdata", where ) };
       keywords.erase( "zdata" );
 
-      m_nx = static_cast<integer>( gc_x.get_num_elements() );
-      m_ny = static_cast<integer>( gc_y.get_num_elements() );
-      m_mem.reallocate( m_nx + m_ny );
-      m_X = m_mem( m_nx );
-      m_Y = m_mem( m_ny );
+      integer nx = static_cast<integer>( gc_x.get_num_elements() );
+      integer ny = static_cast<integer>( gc_y.get_num_elements() );
+      
+      resize( nx, ny );
 
-      mZ.resize( m_nx, m_ny );
-
-      for ( integer i = 0; i < m_nx; ++i ) m_X[i] = gc_x.get_number_at( i );
-      for ( integer j = 0; j < m_ny; ++j ) m_Y[j] = gc_y.get_number_at( j );
+      for ( integer i = 0; i < m_nx; ++i ) mX.coeffRef(i) = gc_x.get_number_at( i );
+      for ( integer j = 0; j < m_ny; ++j ) mY.coeffRef(j) = gc_y.get_number_at( j );
 
       bool fortran_storage{ gc.get_map_bool( "fortran_storage", where ) };
       keywords.erase( "fortran_storage" );
@@ -947,10 +996,10 @@ namespace Splines
     //!
     void dump_data( ostream_type & s ) const
     {
-      s << "X = [ " << m_X[0];
-      for ( integer i = 1; i < m_nx; ++i ) s << ", " << m_X[i];
-      s << " ]\nY = [ " << m_Y[0];
-      for ( integer j = 1; j < m_ny; ++j ) s << ", " << m_Y[j];
+      s << "X = [ " << mX[0];
+      for ( integer i = 1; i < m_nx; ++i ) s << ", " << mX[i];
+      s << " ]\nY = [ " << mY[0];
+      for ( integer j = 1; j < m_ny; ++j ) s << ", " << mY[j];
       s << " ]\nZ = [\n";
       for ( integer j = 0; j < m_ny; ++j )
       {

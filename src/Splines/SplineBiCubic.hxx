@@ -89,18 +89,14 @@ namespace Splines
       // Stampa intestazione
       fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
 
-      // Map dei vettori delle coordinate
-      Eigen::Map<Vec> X( m_X, m_nx );
-      Eigen::Map<Vec> Y( m_Y, m_ny );
-
       for ( integer i = 1; i < m_nx; ++i )
       {
         // Accesso diretto al vettore mappato
-        real_type const dx = X[i] - X[i - 1];
+        real_type const dx = mX.coeff(i) - mX.coeff(i - 1);
 
         for ( integer j = 1; j < m_ny; ++j )
         {
-          real_type const dy = Y[j] - Y[j - 1];
+          real_type const dy = mY.coeff(j) - mY.coeff(j - 1);
 
           // Indici base per la patch corrente
           integer const r0 = i - 1;
