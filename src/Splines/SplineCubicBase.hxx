@@ -113,7 +113,7 @@ namespace Splines
       if ( std::abs( recS - 1.0 ) < 1e-12 ) return;
 
       // 4. Applica il fattore di scala usando Eigen (SIMD)
-      Eigen::Map<Eigen::Array<real_type, Eigen::Dynamic, 1>> map_vals( m_X, m_npts );
+      Eigen::Map<Vec> map_vals{ m_X, m_npts };
       map_vals -= m_X[0];
       map_vals *= recS;
       map_vals += xmin;

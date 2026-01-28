@@ -51,9 +51,10 @@ namespace Splines
     integer m_nx = 0;
     integer m_ny = 0;
 
-    real_type * m_X = nullptr;
-    real_type * m_Y = nullptr;
-    real_type * m_Z = nullptr;
+    real_type * m_X     = nullptr;
+    real_type * m_Y     = nullptr;
+    real_type * m_Z_ptr = nullptr;
+    Eigen::Map<MatC> mZ{ nullptr, 0, 0 };
 
     real_type m_Z_min = 0;
     real_type m_Z_max = 0;
@@ -61,15 +62,23 @@ namespace Splines
     Utils::SearchInterval<real_type, integer> m_search_x;
     Utils::SearchInterval<real_type, integer> m_search_y;
 
-    static integer ipos_C( integer const i, integer const j, integer const ldZ ) { return i * ldZ + j; }
+    real_type & z_node_ref( integer const i, integer const j ) { return mZ.coeffRef(i,j); }
 
-    static integer ipos_F( integer const i, integer const j, integer const ldZ ) { return i + ldZ * j; }
-
-    integer ipos_C( integer const i, integer const j ) const { return this->ipos_C( i, j, m_ny ); }
-
-    integer ipos_F( integer const i, integer const j ) const { return this->ipos_F( i, j, m_nx ); }
-
-    real_type & z_node_ref( integer const i, integer const j ) { return m_Z[this->ipos_C( i, j )]; }
+    template <typename MAT>
+    void
+    load_Z( MAT const & Z, bool transposed ) {
+      if ( transposed ) {
+        for ( integer ix = 0; ix < m_nx; ++ix )
+          for ( integer iy = 0; iy < m_ny; ++iy )
+            z_node_ref( ix, iy ) = Z( iy, ix );
+      } else {
+        for ( integer ix = 0; ix < m_nx; ++ix )
+          for ( integer iy = 0; iy < m_ny; ++iy )
+            z_node_ref( ix, iy ) = Z( ix, iy );
+      }
+      m_Z_max = Z.maxCoeff();
+      m_Z_min = Z.minCoeff();
+    }
 
     void load_Z( real_type const z[], integer const ldZ, bool fortran_storage, bool transposed )
     {
@@ -80,52 +89,37 @@ namespace Splines
       //  +--------------+
       //      nx = nc
       //
-      integer const nr = transposed ? m_nx : m_ny;
-      integer const nc = transposed ? m_ny : m_nx;
-      if ( fortran_storage )
-      {
-        UTILS_ASSERT(
-          ldZ >= nr,
-          "SplineSurf[{}]::load_Z [fortran storage]\n"
-          "ldZ = {} must be >= of nr, nr x nc = {} x {}\n",
-          m_name,
-          ldZ,
-          nr,
-          nc );
-      }
-      else
-      {
-        UTILS_ASSERT(
-          ldZ >= nc,
-          "SplineSurf[{}]::load_Z [C storage]\n"
-          "ldZ = {} must be >= of nc, nr x nc = {} x {}\n",
-          m_name,
-          ldZ,
-          nr,
-          nc );
-      }
       integer const tf{ ( transposed ? 1 : 0 ) + ( fortran_storage ? 2 : 0 ) };
       switch ( tf )
       {
         case 0:  // NO transpose NO fortran
-          for ( integer ix{ 0 }; ix < m_nx; ++ix )
-            for ( integer iy{ 0 }; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = z[ipos_C( iy, ix, ldZ )];
-          break;
+        {
+          Eigen::Map<const MatC> ZZ( z, m_nx, ldZ );
+          load_Z( ZZ, false );
+        }
+        break;
+
         case 1:  // YES transpose NO fortran
-          for ( integer ix{ 0 }; ix < m_nx; ++ix )
-            for ( integer iy{ 0 }; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = z[ipos_C( ix, iy, ldZ )];
-          break;
+        {
+          Eigen::Map<const MatC> ZZ( z, m_ny, ldZ );
+          load_Z( ZZ, true );
+        }
+        break;
+
         case 2:  // NO transpose YES fortran
-          for ( integer ix{ 0 }; ix < m_nx; ++ix )
-            for ( integer iy{ 0 }; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = z[ipos_F( iy, ix, ldZ )];
-          break;
+        {
+          Eigen::Map<const Mat> ZZ( z, ldZ, m_ny );
+          load_Z( ZZ, false );
+        }
+        break;
+
         case 3:  // YES transpose YES fortran
-          for ( integer ix{ 0 }; ix < m_nx; ++ix )
-            for ( integer iy{ 0 }; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = z[ipos_F( ix, iy, ldZ )];
-          break;
+        {
+          Eigen::Map<const Mat> ZZ( z, ldZ, m_nx );
+          load_Z( ZZ, true );
+        }
+        break;
       }
-      m_Z_max = *std::max_element( m_Z, m_Z + m_nx * m_ny );
-      m_Z_min = *std::min_element( m_Z, m_Z + m_nx * m_ny );
     }
 
     virtual void make_spline() = 0;
@@ -136,8 +130,8 @@ namespace Splines
       {
         for ( integer j = 0; j < m_ny; ++j )
         {
-          S->build( m_X, 1, z + ipos_C( 0, j ), m_ny, m_nx );
-          for ( integer i = 0; i < m_nx; ++i ) dx[ipos_C( i, j )] = S->yp_node( i );
+          S->build( m_X, 1, z + j, m_ny, m_nx );
+          for ( integer i = 0; i < m_nx; ++i ) dx[i * m_ny + j] = S->yp_node( i );
         }
       };
       CubicSpline  cs;
@@ -159,8 +153,8 @@ namespace Splines
       {
         for ( integer i = 0; i < m_nx; ++i )
         {
-          S->build( m_Y, 1, z + ipos_C( i, 0 ), 1, m_ny );
-          for ( integer j = 0; j < m_ny; ++j ) dy[ipos_C( i, j )] = S->yp_node( j );
+          S->build( m_Y, 1, z + i * m_ny, 1, m_ny );
+          for ( integer j = 0; j < m_ny; ++j ) dy[i * m_ny + j] = S->yp_node( j );
         }
       };
       CubicSpline  cs;
@@ -188,16 +182,16 @@ namespace Splines
         };
         for ( integer j = 0; j < m_ny; ++j )
         {
-          S->build( m_X, 1, dy + ipos_C( 0, j ), m_ny, m_nx );
-          for ( integer i = 0; i < m_nx; ++i ) dxy[ipos_C( i, j )] = S->yp_node( i );
+          S->build( m_X, 1, dy + j, m_ny, m_nx );
+          for ( integer i = 0; i < m_nx; ++i ) dxy[i * m_ny + j] = S->yp_node( i );
         }
 
         for ( integer i = 0; i < m_nx; ++i )
         {
-          S->build( m_Y, 1, dx + ipos_C( i, 0 ), 1, m_ny );
+          S->build( m_Y, 1, dx + i * m_ny, 1, m_ny );
           for ( integer j = 0; j < m_ny; ++j )
           {
-            integer const ij{ ipos_C( i, j ) };
+            integer const ij = i * m_ny + j;
             dxy[ij] = minmod( dxy[ij], S->yp_node( j ) );
           }
         }
@@ -315,7 +309,8 @@ namespace Splines
 
       m_X = nullptr;
       m_Y = nullptr;
-      m_Z = nullptr;
+      m_Z_ptr = nullptr;
+      new (&mZ) Eigen::Map<MatC>{ nullptr, 0, 0 };
 
       m_Z_min = 0;
       m_Z_max = 0;
@@ -354,7 +349,7 @@ namespace Splines
     //!
     //! Return the i-th node of the spline (y component).
     //!
-    real_type z_node( integer const i, integer const j ) const { return m_Z[this->ipos_C( i, j )]; }
+    real_type z_node( integer const i, integer const j ) const { return mZ.coeff(i,j); }
 
     //!
     //! Return x-minumum spline value.
@@ -426,10 +421,32 @@ namespace Splines
       m_mem.reallocate( ( nx + 1 ) * ( ny + 1 ) );
       m_X = m_mem( nx );
       m_Y = m_mem( ny );
-      m_Z = m_mem( nx * ny );
+
+      m_Z_ptr = m_mem( nx * ny );
+      new (&mZ) Eigen::Map<MatC>( m_Z_ptr, nx, ny );
+
       for ( integer i = 0; i < nx; ++i ) m_X[i] = x[i * incx];
       for ( integer j = 0; j < ny; ++j ) m_Y[j] = y[j * incy];
       load_Z( z, ldZ, fortran_storage, transposed );
+      make_spline();
+    }
+
+    //!
+    //! Build surface spline
+    //!
+    //! \param x               vector of x-coordinates, nx = x.size()
+    //! \param y               vector of y-coordinates, ny = y.size()
+    //! \param Z               matrix of z-values. Elements are stored
+    //!                        by row Z(i,j) = z[i*ny+j] as C-matrix
+    //! \param transposed      if true matrix Z is stored transposed
+    //!
+    void build(
+      Eigen::Ref<const Vec> x,
+      Eigen::Ref<const Vec> y,
+      Eigen::Ref<const Mat> Z,
+      bool const transposed )
+    {
+      load_Z( Z, transposed );
       make_spline();
     }
 
@@ -477,7 +494,10 @@ namespace Splines
       m_mem.reallocate( ( nx + 1 ) * ( ny + 1 ) );
       m_X = m_mem( nx );
       m_Y = m_mem( ny );
-      m_Z = m_mem( nx * ny );
+
+      m_Z_ptr = m_mem( nx * ny );
+      new (&mZ) Eigen::Map<MatC>( m_Z_ptr, nx, ny );
+
       for ( integer i = 0; i < nx; ++i ) m_X[i] = static_cast<real_type>( i );
       for ( integer j = 0; j < ny; ++j ) m_Y[j] = static_cast<real_type>( j );
       load_Z( z, ldZ, fortran_storage, transposed );
@@ -535,7 +555,9 @@ namespace Splines
       m_mem.reallocate( ( m_nx + 1 ) * ( m_ny + 1 ) );
       m_X = m_mem( m_nx );
       m_Y = m_mem( m_ny );
-      m_Z = m_mem( m_nx * m_ny );
+
+      m_Z_ptr = m_mem( m_nx * m_ny );
+      new (&mZ) Eigen::Map<MatC>( m_Z_ptr, m_nx, m_ny );
 
       for ( integer i = 0; i < m_nx; ++i ) m_X[i] = gc_x.get_number_at( i );
       for ( integer j = 0; j < m_ny; ++j ) m_Y[j] = gc_y.get_number_at( j );

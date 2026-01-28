@@ -40,16 +40,27 @@ namespace Splines
   protected:
     Malloc_real m_mem_biquintic{ "BiQuinticSplineBase" };
 
-    real_type * m_DX = nullptr;
-    real_type * m_DY = nullptr;
+    real_type * m_DX_ptr  = nullptr;
+    real_type * m_DY_ptr  = nullptr;
 
-    real_type * m_DXX = nullptr;
-    real_type * m_DYY = nullptr;
-    real_type * m_DXY = nullptr;
+    real_type * m_DXX_ptr = nullptr;
+    real_type * m_DYY_ptr = nullptr;
+    real_type * m_DXY_ptr = nullptr;
 
-    real_type * m_DXYY  = nullptr;
-    real_type * m_DXXY  = nullptr;
-    real_type * m_DXXYY = nullptr;
+    real_type * m_DXYY_ptr  = nullptr;
+    real_type * m_DXXY_ptr  = nullptr;
+    real_type * m_DXXYY_ptr = nullptr;
+
+    Eigen::Map<MatC> mDX{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDY{ nullptr, 0, 0 };
+
+    Eigen::Map<MatC> mDXX{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDYY{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDXY{ nullptr, 0, 0 };
+
+    Eigen::Map<MatC> mDXYY{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDXXY{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDXXYY{ nullptr, 0, 0 };
 
     Spline_sub_type m_sub_type;
 
@@ -58,93 +69,33 @@ namespace Splines
 
     using SplineSurf::m_X;
     using SplineSurf::m_Y;
-    using SplineSurf::m_Z;
+    using SplineSurf::mZ;
 
-    real_type & Dx_node_ref( integer const i, integer const j ) { return m_DX[ipos_C( i, j )]; }
-    real_type & Dy_node_ref( integer const i, integer const j ) { return m_DY[ipos_C( i, j )]; }
+    real_type & Dx_node_ref( integer const i, integer const j ) { return mDX.coeffRef( i, j ); }
+    real_type & Dy_node_ref( integer const i, integer const j ) { return mDY.coeffRef( i, j ); }
 
-    real_type & Dxx_node_ref( integer const i, integer const j ) { return m_DXX[ipos_C( i, j )]; }
-    real_type & Dyy_node_ref( integer const i, integer const j ) { return m_DYY[ipos_C( i, j )]; }
-    real_type & Dxy_node_ref( integer const i, integer const j ) { return m_DXY[ipos_C( i, j )]; }
+    real_type & Dxx_node_ref( integer const i, integer const j ) { return mDXX.coeffRef( i, j ); }
+    real_type & Dyy_node_ref( integer const i, integer const j ) { return mDYY.coeffRef( i, j ); }
+    real_type & Dxy_node_ref( integer const i, integer const j ) { return mDXY.coeffRef( i, j ); }
 
-    real_type & Dxyy_node_ref( integer const i, integer const j ) { return m_DXYY[ipos_C( i, j )]; }
-    real_type & Dxxy_node_ref( integer const i, integer const j ) { return m_DXXY[ipos_C( i, j )]; }
-    real_type & Dxxyy_node_ref( integer const i, integer const j ) { return m_DXXYY[ipos_C( i, j )]; }
+    real_type & Dxyy_node_ref( integer const i, integer const j ) { return mDXYY.coeffRef( i, j ); }
+    real_type & Dxxy_node_ref( integer const i, integer const j ) { return mDXXY.coeffRef( i, j ); }
 
-    void load( integer const i, integer const j, real_type bili5[6][6] ) const
-    {
-      integer const i00{ ipos_C( i, j ) };
-      integer const i01{ ipos_C( i, j + 1 ) };
-      integer const i10{ ipos_C( i + 1, j ) };
-      integer const i11{ ipos_C( i + 1, j + 1 ) };
+    real_type & Dxxyy_node_ref( integer const i, integer const j ) { return mDXXYY.coeffRef( i, j ); }
 
-      //
-      //  1    3
-      //
-      //  0    2
-      //
-      // H0, H1, dH0, dH1, ddH0, ddH1
-
-      // + + + + + +
-      // + + + + + +
-      // + + + + . .
-      // + + + + . .
-      // + + . . . .
-      // + + . . . .
-
-      // P
-      bili5[0][0] = m_Z[i00];
-      bili5[0][1] = m_Z[i01];
-      bili5[1][0] = m_Z[i10];
-      bili5[1][1] = m_Z[i11];
-
-      // DX
-      bili5[2][0] = m_DX[i00];
-      bili5[2][1] = m_DX[i01];
-      bili5[3][0] = m_DX[i10];
-      bili5[3][1] = m_DX[i11];
-
-      // DXX
-      bili5[4][0] = m_DXX[i00];
-      bili5[4][1] = m_DXX[i01];
-      bili5[5][0] = m_DXX[i10];
-      bili5[5][1] = m_DXX[i11];
-
-      // DY
-      bili5[0][2] = m_DY[i00];
-      bili5[0][3] = m_DY[i01];
-      bili5[1][2] = m_DY[i10];
-      bili5[1][3] = m_DY[i11];
-
-      // DYY
-      bili5[0][4] = m_DYY[i00];
-      bili5[0][5] = m_DYY[i01];
-      bili5[1][4] = m_DYY[i10];
-      bili5[1][5] = m_DYY[i11];
-
-      // DXY
-      bili5[2][2] = m_DXY[i00];
-      bili5[2][3] = m_DXY[i01];
-      bili5[3][2] = m_DXY[i10];
-      bili5[3][3] = m_DXY[i11];
-
-      // DXXY
-      bili5[4][2] = m_DXXY[i00];
-      bili5[4][3] = m_DXXY[i01];
-      bili5[5][2] = m_DXXY[i10];
-      bili5[5][3] = m_DXXY[i11];
-
-      // DXYY
-      bili5[2][4] = m_DXYY[i00];
-      bili5[2][5] = m_DXYY[i01];
-      bili5[3][4] = m_DXYY[i10];
-      bili5[3][5] = m_DXYY[i11];
-
-      // DXXYY
-      bili5[4][4] = m_DXXYY[i00];
-      bili5[4][5] = m_DXXYY[i01];
-      bili5[5][4] = m_DXXYY[i10];
-      bili5[5][5] = m_DXXYY[i11];
+    void load(integer const i, integer const j, real_type bili5[6][6]) const {
+      Eigen::Map<Eigen::Matrix<real_type, 6, 6, Eigen::RowMajor>> bili5_eigen(&bili5[0][0]);
+      // Usa Eigen per estrarre i blocchi direttamente
+      // Nota: richiede che mZ, mDX, ecc. siano matrici Eigen dense
+      bili5_eigen.block<2,2>(0,0) = mZ.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(2,0) = mDX.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(4,0) = mDXX.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(0,2) = mDY.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(0,4) = mDYY.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(2,2) = mDXY.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(4,2) = mDXXY.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(2,4) = mDXYY.block(i, j, 2, 2);
+      bili5_eigen.block<2,2>(4,4) = mDXXYY.block(i, j, 2, 2);
     }
 
   public:
@@ -166,42 +117,42 @@ namespace Splines
     //!
     //! Estimated `x` derivatives at node `(i,j)`
     //!
-    real_type Dx_node( integer const i, integer const j ) const { return m_DX[ipos_C( i, j )]; }
+    real_type Dx_node( integer const i, integer const j ) const { return mDX.coeff( i, j ); }
 
     //!
     //! Estimated `y` derivatives at node `(i,j)`
     //!
-    real_type Dy_node( integer const i, integer const j ) const { return m_DY[ipos_C( i, j )]; }
+    real_type Dy_node( integer const i, integer const j ) const { return mDY.coeff( i, j ); }
 
     //!
     //! Estimated second `x` second derivatives at node `(i,j)`
     //!
-    real_type Dxx_node( integer const i, integer const j ) const { return m_DXX[ipos_C( i, j )]; }
+    real_type Dxx_node( integer const i, integer const j ) const { return mDXX.coeff( i, j ); }
 
     //!
     //! Estimated second`y` derivatives at node `(i,j)`
     //!
-    real_type Dyy_node( integer const i, integer const j ) const { return m_DYY[ipos_C( i, j )]; }
+    real_type Dyy_node( integer const i, integer const j ) const { return mDYY.coeff( i, j ); }
 
     //!
     //! Estimated mixed `xy` derivatives at node `(i,j)`
     //!
-    real_type Dxy_node( integer const i, integer const j ) const { return m_DXY[ipos_C( i, j )]; }
+    real_type Dxy_node( integer const i, integer const j ) const { return mDXY.coeff( i, j ); }
 
     //!
     //! Estimated `xxy` second derivatives at node `(i,j)`
     //!
-    real_type Dxxy_node( integer const i, integer const j ) const { return m_DXXY[ipos_C( i, j )]; }
+    real_type Dxxy_node( integer const i, integer const j ) const { return mDXXY.coeff( i, j ); }
 
     //!
     //! Estimated `xyy` derivatives at node `(i,j)`
     //!
-    real_type Dxyy_node( integer const i, integer const j ) const { return m_DXYY[ipos_C( i, j )]; }
+    real_type Dxyy_node( integer const i, integer const j ) const { return mDXYY.coeff( i, j ); }
 
     //!
     //! Estimated mixed `xxyy` derivatives at node `(i,j)`
     //!
-    real_type Dxxyy_node( integer const i, integer const j ) const { return m_DXXYY[ipos_C( i, j )]; }
+    real_type Dxxyy_node( integer const i, integer const j ) const { return mDXXYY.coeff( i, j ); }
 
     ///@}
 

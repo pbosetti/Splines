@@ -49,26 +49,35 @@ namespace Splines
     {
       integer const dim{ m_nx * m_ny };
       m_mem_biquintic.reallocate( 8 * dim );
-      m_DX    = m_mem_biquintic( dim );
-      m_DY    = m_mem_biquintic( dim );
-      m_DXY   = m_mem_biquintic( dim );
-      m_DXX   = m_mem_biquintic( dim );
-      m_DYY   = m_mem_biquintic( dim );
-      m_DXYY  = m_mem_biquintic( dim );
-      m_DXXY  = m_mem_biquintic( dim );
-      m_DXXYY = m_mem_biquintic( dim );
+      m_DX_ptr    = m_mem_biquintic( dim );
+      m_DY_ptr    = m_mem_biquintic( dim );
+      m_DXY_ptr   = m_mem_biquintic( dim );
+      m_DXX_ptr   = m_mem_biquintic( dim );
+      m_DYY_ptr   = m_mem_biquintic( dim );
+      m_DXYY_ptr  = m_mem_biquintic( dim );
+      m_DXXY_ptr  = m_mem_biquintic( dim );
+      m_DXXYY_ptr = m_mem_biquintic( dim );
 
-      make_derivative_x( m_sub_type, m_Z, m_DX );
-      make_derivative_y( m_sub_type, m_Z, m_DY );
-      make_derivative_xy( m_sub_type, m_DX, m_DY, m_DXY );
+      new (&mDX) Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
+      new (&mDY) Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
+      new (&mDXY) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
+      new (&mDXX) Eigen::Map<MatC>( m_DXX_ptr, m_nx, m_ny );
+      new (&mDYY) Eigen::Map<MatC>( m_DYY_ptr, m_nx, m_ny );
+      new (&mDXYY) Eigen::Map<MatC>( m_DXYY_ptr, m_nx, m_ny );
+      new (&mDXXY) Eigen::Map<MatC>( m_DXXY_ptr, m_nx, m_ny );
+      new (&mDXXYY) Eigen::Map<MatC>( m_DXXYY_ptr, m_nx, m_ny );
 
-      make_derivative_x( m_sub_type, m_DX, m_DXX );
-      make_derivative_y( m_sub_type, m_DY, m_DYY );
+      make_derivative_x( m_sub_type, m_Z_ptr, m_DX_ptr );
+      make_derivative_y( m_sub_type, m_Z_ptr, m_DY_ptr );
+      make_derivative_xy( m_sub_type, m_DX_ptr, m_DY_ptr, m_DXY_ptr );
 
-      make_derivative_y( m_sub_type, m_DXX, m_DXXY );
-      make_derivative_x( m_sub_type, m_DYY, m_DXYY );
+      make_derivative_x( m_sub_type, m_DX_ptr, m_DXX_ptr );
+      make_derivative_y( m_sub_type, m_DY_ptr, m_DYY_ptr );
 
-      make_derivative_xy( m_sub_type, m_DXXY, m_DXYY, m_DXXYY );
+      make_derivative_y( m_sub_type, m_DXX_ptr, m_DXXY_ptr );
+      make_derivative_x( m_sub_type, m_DYY_ptr, m_DXYY_ptr );
+
+      make_derivative_xy( m_sub_type, m_DXXY_ptr, m_DXYY_ptr, m_DXXYY_ptr );
 
       m_search_x.must_reset();
       m_search_y.must_reset();
@@ -95,14 +104,10 @@ namespace Splines
       fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
       for ( integer i = 1; i < m_nx; ++i )
       {
-        real_type dx{ m_X[i] - m_X[i - 1] };
+        real_type dx = m_X[i] - m_X[i - 1];
         for ( integer j = 1; j < m_ny; ++j )
         {
-          integer const   i00{ ipos_C( i - 1, j - 1 ) };
-          integer const   i10{ ipos_C( i, j - 1 ) };
-          integer const   i01{ ipos_C( i - 1, j ) };
-          integer const   i11{ ipos_C( i, j ) };
-          real_type const dy{ m_Y[j] - m_Y[j - 1] };
+          real_type const dy = m_Y[j] - m_Y[j - 1];
           fmt::print(
             s,
             "patch ({},{})\n"
@@ -119,22 +124,22 @@ namespace Splines
             j,
             dx,
             dy,
-            m_Z[i00],
-            m_Z[i10],
-            m_Z[i01],
-            m_Z[i11],
-            m_DX[i00],
-            m_DX[i10],
-            m_DX[i01],
-            m_DX[i11],
-            m_DY[i00],
-            m_DY[i10],
-            m_DY[i01],
-            m_DY[i11],
-            m_DXY[i00],
-            m_DXY[i10],
-            m_DXY[i01],
-            m_DXY[i11] );
+            mZ.coeff( i - 1, j - 1 ),
+            mZ.coeff( i, j - 1 ),
+            mZ.coeff( i, j + 1 ),
+            mZ.coeff( i + 1, j + 1 ),
+            mDX.coeff( i - 1, j - 1 ),
+            mDX.coeff( i, j - 1 ),
+            mDX.coeff( i, j + 1 ),
+            mDX.coeff( i + 1, j + 1 ),
+            mDY.coeff( i - 1, j - 1 ),
+            mDY.coeff( i, j - 1 ),
+            mDY.coeff( i, j + 1 ),
+            mDY.coeff( i + 1, j + 1 ),
+            mDXY.coeff( i - 1, j - 1 ),
+            mDXY.coeff( i, j - 1 ),
+            mDXY.coeff( i, j + 1 ),
+            mDXY.coeff( i + 1, j + 1 ) );
         }
       }
     }

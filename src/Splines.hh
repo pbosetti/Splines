@@ -70,6 +70,10 @@ namespace Splines
   using Malloc_real  = Utils::Malloc<real_type>;
   using ostream_type = basic_ostream<char>;
   using istream_type = basic_istream<char>;
+  
+  using Vec  = Eigen::Array<real_type, Eigen::Dynamic, 1>;
+  using Mat  = Eigen::Array<real_type, Eigen::Dynamic, Eigen::Dynamic>;
+  using MatC = Eigen::Array<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
   using GC_namespace::GC_type;
   using GC_namespace::map_type;
@@ -1214,7 +1218,7 @@ namespace Splines
       // EIGEN IMPLEMENTATION
       // Usiamo Eigen::Array invece di Matrix perché l'operazione è element-wise (scalare)
       // Map crea una vista sui dati esistenti senza copiare memoria.
-      Eigen::Map<Eigen::Array<real_type, Eigen::Dynamic, 1>> map_X( m_X, m_npts );
+      Eigen::Map<Vec> map_X{ m_X, m_npts };
 
       // Operazione in-place: x[i] = x[i] * S + Tx
       // Eigen utilizzerà istruzioni vettoriali (es. vfmadd su AVX2)

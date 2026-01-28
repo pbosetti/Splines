@@ -84,9 +84,6 @@ namespace Splines
     CubicSpline_BC const bc0,
     CubicSpline_BC const bcn )
   {
-    // Alias per tipi Eigen
-    using Vector    = Eigen::Matrix<real_type, Eigen::Dynamic, 1>;
-    using MapVector = Eigen::Map<const Vector>;
 
     UTILS_ASSERT( npts >= 2, "CubicSpline_build, npts={} must be >= 2\n", npts );
 
@@ -94,18 +91,18 @@ namespace Splines
     integer const m = npts;      ///< Numero di punti
 
     // Mappiamo gli array C-style come vettori Eigen (zero-copy)
-    MapVector X_vec( X, npts );
-    MapVector Y_vec( Y, npts );
+    Eigen::Map<const Vec> X_vec( X, npts );
+    Eigen::Map<const Vec> Y_vec( Y, npts );
 
     // --- 1. Allocazione vettori per il sistema tridiagonale ---
-    Vector sub( n );    ///< Diagonale inferiore (coefficienti a_i)
-    Vector diag( m );   ///< Diagonale principale (coefficienti b_i)
-    Vector super( n );  ///< Diagonale superiore (coefficienti c_i)
-    Vector rhs( m );    ///< Termine noto (derivate seconde Z)
+    Vec sub( n );    ///< Diagonale inferiore (coefficienti a_i)
+    Vec diag( m );   ///< Diagonale principale (coefficienti b_i)
+    Vec super( n );  ///< Diagonale superiore (coefficienti c_i)
+    Vec rhs( m );    ///< Termine noto (derivate seconde Z)
 
     // Pre-calcolo delle differenze (vectorizzato con Eigen)
-    Vector DX = X_vec.tail( n ) - X_vec.head( n );  ///< h_i = X[i+1] - X[i]
-    Vector DY = Y_vec.tail( n ) - Y_vec.head( n );  ///< ΔY_i = Y[i+1] - Y[i]
+    Vec DX = X_vec.tail( n ) - X_vec.head( n );  ///< h_i = X[i+1] - X[i]
+    Vec DY = Y_vec.tail( n ) - Y_vec.head( n );  ///< ΔY_i = Y[i+1] - Y[i]
 
     // --- 2. Costruzione del corpo centrale del sistema (i = 1 ... n-1) ---
     for ( integer i = 1; i < n; ++i )
@@ -259,7 +256,7 @@ namespace Splines
     solver.factorize( sub, diag, super );
 
     // Prima risoluzione (senza correzione per elementi extra-diagonali)
-    Vector Z( m );  ///< Vettore delle derivate seconde
+    Vec Z( m );  ///< Vettore delle derivate seconde
     solver.solve( sub, diag, rhs, Z );
 
     // --- 6. Correzione per condizioni NOT_A_KNOT ---
@@ -290,7 +287,7 @@ namespace Splines
      */
 
     // Calcolo per i = 0 ... n-1 (vectorizzato)
-    Vector slopes = DY.array() / DX.array();  // (Y[i+1] - Y[i]) / h_i
+    Vec slopes = DY.array() / DX.array();  // (Y[i+1] - Y[i]) / h_i
 
     for ( integer i = 0; i < n; ++i ) { Yp[i] = slopes( i ) - DX( i ) * ( 2.0 * Z( i ) + Z( i + 1 ) ) / 6.0; }
 

@@ -460,18 +460,12 @@ namespace Splines
     real_type * system_data = mem_system.malloc( 3 * npts - 2 );
 
     // Direct mapping to allocated arrays (zero overhead)
-    Utils::TridiagonalSolver<real_type>::VecS a = Eigen::Map<Eigen::Matrix<real_type, Eigen::Dynamic, 1>>(
-      system_data,
-      npts - 1 );
-    Utils::TridiagonalSolver<real_type>::VecS b = Eigen::Map<Eigen::Matrix<real_type, Eigen::Dynamic, 1>>(
-      system_data + npts - 1,
-      npts );
-    Utils::TridiagonalSolver<real_type>::VecS c = Eigen::Map<Eigen::Matrix<real_type, Eigen::Dynamic, 1>>(
-      system_data + 2 * npts - 1,
-      npts - 1 );
+    Eigen::Map<Vec> a{ system_data, npts - 1 };
+    Eigen::Map<Vec> b{ system_data + npts - 1, npts };
+    Eigen::Map<Vec> c{ system_data + 2 * npts - 1, npts - 1 };
 
     // d maps directly to Ypp (zero-copy!)
-    Eigen::Map<Eigen::Matrix<real_type, Eigen::Dynamic, 1>> d( Ypp, npts );
+    Eigen::Map<Vec> d{ Ypp, npts };
 
     // ========================================================================
     // LEFT BOUNDARY (i=0)

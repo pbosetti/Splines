@@ -42,21 +42,28 @@ namespace Splines
     {
       integer const nn{ m_nx * m_ny };
       m_mem_bicubic.reallocate( 3 * nn );
-      m_DX  = m_mem_bicubic( nn );
-      m_DY  = m_mem_bicubic( nn );
-      m_DXY = m_mem_bicubic( nn );
+      m_DX_ptr  = m_mem_bicubic( nn );
+      m_DY_ptr  = m_mem_bicubic( nn );
+      m_DXY_ptr = m_mem_bicubic( nn );
+      
+      new (&mDX)  Eigen::Map<MatC>( m_DX_ptr, m_nx, m_ny );
+      new (&mDY)  Eigen::Map<MatC>( m_DY_ptr, m_nx, m_ny );
+      new (&mDXY) Eigen::Map<MatC>( m_DXY_ptr, m_nx, m_ny );
 
-      make_derivative_x( m_sub_type, m_Z, m_DX );
-      make_derivative_y( m_sub_type, m_Z, m_DY );
-      make_derivative_xy( m_sub_type, m_DX, m_DY, m_DXY );
+      make_derivative_x( m_sub_type, m_Z_ptr, m_DX_ptr );
+      make_derivative_y( m_sub_type, m_Z_ptr, m_DY_ptr );
+      make_derivative_xy( m_sub_type, m_DX_ptr, m_DY_ptr, m_DXY_ptr );
 
       m_search_x.must_reset();
       m_search_y.must_reset();
     }
 
-    using BiCubicSplineBase::m_DX;
-    using BiCubicSplineBase::m_DXY;
-    using BiCubicSplineBase::m_DY;
+    using BiCubicSplineBase::mDX;
+    using BiCubicSplineBase::mDXY;
+    using BiCubicSplineBase::mDY;
+    using BiCubicSplineBase::m_DX_ptr;
+    using BiCubicSplineBase::m_DXY_ptr;
+    using BiCubicSplineBase::m_DY_ptr;
     using BiCubicSplineBase::m_mem_bicubic;
 
   public:
@@ -82,19 +89,9 @@ namespace Splines
       // Stampa intestazione
       fmt::print( s, "Nx = {} Ny = {}\n", m_nx, m_ny );
 
-      using MatrixView = Eigen::Map<const Eigen::Matrix<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>;
-      using VectorView = Eigen::Map<const Eigen::VectorX<real_type>>;
-
       // Map dei vettori delle coordinate
-      VectorView X( m_X, m_nx );
-      VectorView Y( m_Y, m_ny );
-
-      // Map delle matrici dei coefficienti
-      // Assumiamo che m_Z e gli altri abbiano dimensione m_nx * m_ny
-      MatrixView Z( m_Z, m_nx, m_ny );
-      MatrixView DX( m_DX, m_nx, m_ny );
-      MatrixView DY( m_DY, m_nx, m_ny );
-      MatrixView DXY( m_DXY, m_nx, m_ny );
+      Eigen::Map<Vec> X( m_X, m_nx );
+      Eigen::Map<Vec> Y( m_Y, m_ny );
 
       for ( integer i = 1; i < m_nx; ++i )
       {
@@ -128,25 +125,25 @@ namespace Splines
             dx,
             dy,
             // Z values
-            Z( r0, c0 ),
-            Z( r1, c0 ),
-            Z( r0, c1 ),
-            Z( r1, c1 ),
+            mZ( r0, c0 ),
+            mZ( r1, c0 ),
+            mZ( r0, c1 ),
+            mZ( r1, c1 ),
             // DX values
-            DX( r0, c0 ),
-            DX( r1, c0 ),
-            DX( r0, c1 ),
-            DX( r1, c1 ),
+            mDX( r0, c0 ),
+            mDX( r1, c0 ),
+            mDX( r0, c1 ),
+            mDX( r1, c1 ),
             // DY values
-            DY( r0, c0 ),
-            DY( r1, c0 ),
-            DY( r0, c1 ),
-            DY( r1, c1 ),
+            mDY( r0, c0 ),
+            mDY( r1, c0 ),
+            mDY( r0, c1 ),
+            mDY( r1, c1 ),
             // DXY values
-            DXY( r0, c0 ),
-            DXY( r1, c0 ),
-            DXY( r0, c1 ),
-            DXY( r1, c1 ) );
+            mDXY( r0, c0 ),
+            mDXY( r1, c0 ),
+            mDXY( r0, c1 ),
+            mDXY( r1, c1 ) );
         }
       }
     }

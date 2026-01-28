@@ -46,9 +46,13 @@ namespace Splines
   protected:
     Malloc_real m_mem_bicubic;
 
-    real_type * m_DX  = nullptr;
-    real_type * m_DY  = nullptr;
-    real_type * m_DXY = nullptr;
+    real_type * m_DX_ptr  = nullptr;
+    real_type * m_DY_ptr  = nullptr;
+    real_type * m_DXY_ptr = nullptr;
+
+    Eigen::Map<MatC> mDX{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDY{ nullptr, 0, 0 };
+    Eigen::Map<MatC> mDXY{ nullptr, 0, 0 };
 
     Spline_sub_type m_sub_type;
 
@@ -57,46 +61,35 @@ namespace Splines
 
     using SplineSurf::m_X;
     using SplineSurf::m_Y;
-    using SplineSurf::m_Z;
+    using SplineSurf::m_Z_ptr;
+    using SplineSurf::mZ;
 
     void load( integer const i, integer const j, real_type bili3[4][4] ) const
     {
-      // 1. Definiamo i tipi per le Mappe.
-      // Usiamo RowMajor per corrispondere al layout C++ standard degli array e di 'bili3'.
-      using MatrixView = Eigen::Map<const Eigen::Matrix<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>;
-      using ResultView = Eigen::Map<Eigen::Matrix<real_type, 4, 4, Eigen::RowMajor>>;
-
-      // 2. Mappiamo la matrice di destinazione (4x4)
+      // Mappiamo la matrice di destinazione (4x4)
       // &bili3[0][0] punta all'inizio dell'array raw.
-      ResultView res( &bili3[0][0] );
+      Eigen::Map<Eigen::Array<real_type,4,4,Eigen::RowMajor>> res( &bili3[0][0] );
 
-      // 3. Mappiamo le matrici sorgente (Grandi matrici globali)
-      // Assumiamo che m_nx e m_ny siano le dimensioni della griglia.
-      MatrixView Z( m_Z, m_nx, m_ny );
-      MatrixView DY( m_DY, m_nx, m_ny );
-      MatrixView DX( m_DX, m_nx, m_ny );
-      MatrixView DXY( m_DXY, m_nx, m_ny );
-
-      // 4. Copia a blocchi
+      // Copia a blocchi
       // Invece di copiare scalarmente, copiamo 4 blocchi 2x2.
       // Eigen ottimizzerà queste operazioni usando istruzioni SIMD.
 
       // Quadrante in alto a sinistra: Z
-      res.topLeftCorner<2, 2>() = Z.block<2, 2>( i, j );
+      res.topLeftCorner<2, 2>() = mZ.block<2, 2>( i, j );
 
       // Quadrante in alto a destra: DY
-      res.topRightCorner<2, 2>() = DY.block<2, 2>( i, j );
+      res.topRightCorner<2, 2>() = mDY.block<2, 2>( i, j );
 
       // Quadrante in basso a sinistra: DX
-      res.bottomLeftCorner<2, 2>() = DX.block<2, 2>( i, j );
+      res.bottomLeftCorner<2, 2>() = mDX.block<2, 2>( i, j );
 
       // Quadrante in basso a destra: DXY
-      res.bottomRightCorner<2, 2>() = DXY.block<2, 2>( i, j );
+      res.bottomRightCorner<2, 2>() = mDXY.block<2, 2>( i, j );
     }
 
-    real_type & Dx_node_ref( integer const i, integer const j ) { return m_DX[this->ipos_C( i, j )]; }
-    real_type & Dy_node_ref( integer const i, integer const j ) { return m_DY[this->ipos_C( i, j )]; }
-    real_type & Dxy_node_ref( integer const i, integer const j ) { return m_DXY[this->ipos_C( i, j )]; }
+    real_type & Dx_node_ref( integer const i, integer const j ) { return mDX.coeffRef( i, j ); }
+    real_type & Dy_node_ref( integer const i, integer const j ) { return mDY.coeffRef( i, j ); }
+    real_type & Dxy_node_ref( integer const i, integer const j ) { return mDXY.coeffRef( i, j ); }
 
   public:
     using SplineSurf::eval;
@@ -117,17 +110,17 @@ namespace Splines
     //!
     //! Estimated `x` derivatives at node `(i,j)`
     //!
-    real_type Dx_node( integer const i, integer const j ) const { return m_DX[this->ipos_C( i, j )]; }
+    real_type Dx_node( integer const i, integer const j ) const { return mDX.coeff( i, j ); }
 
     //!
     //! Estimated `y` derivatives at node `(i,j)`
     //!
-    real_type Dy_node( integer const i, integer const j ) const { return m_DY[this->ipos_C( i, j )]; }
+    real_type Dy_node( integer const i, integer const j ) const { return mDY.coeff( i, j ); }
 
     //!
     //! Estimated mixed `xy` derivatives at node `(i,j)`
     //!
-    real_type Dxy_node( integer const i, integer const j ) const { return m_DXY[this->ipos_C( i, j )]; }
+    real_type Dxy_node( integer const i, integer const j ) const { return mDXY.coeff( i, j ); }
 
     ///@}
 

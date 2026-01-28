@@ -34,12 +34,12 @@ namespace Splines
   //! bilinear spline base class
   class BilinearSpline : public SplineSurf
   {
-    using SplineSurf::ipos_C;  // Accesso esplicito per chiarezza
     using SplineSurf::m_nx;
     using SplineSurf::m_ny;
     using SplineSurf::m_X;
     using SplineSurf::m_Y;
-    using SplineSurf::m_Z;
+    using SplineSurf::m_Z_ptr;
+    using SplineSurf::mZ;
 
     void make_spline() override
     {
@@ -52,10 +52,10 @@ namespace Splines
     inline void get_Z_patch( integer i, integer j, real_type & Z00, real_type & Z10, real_type & Z01, real_type & Z11 )
       const
     {
-      Z00 = m_Z[ipos_C( i, j )];
-      Z10 = m_Z[ipos_C( i + 1, j )];
-      Z01 = m_Z[ipos_C( i, j + 1 )];
-      Z11 = m_Z[ipos_C( i + 1, j + 1 )];
+      Z00 = mZ.coeff( i, j );
+      Z10 = mZ.coeff( i + 1, j );
+      Z01 = mZ.coeff( i, j + 1 );
+      Z11 = mZ.coeff( i + 1, j + 1 );
     }
 
   public:
@@ -278,10 +278,6 @@ namespace Splines
       {
         for ( integer j = 1; j < m_ny; ++j )
         {
-          integer const i00{ ipos_C( i - 1, j - 1 ) };
-          integer const i10{ ipos_C( i, j - 1 ) };
-          integer const i01{ ipos_C( i - 1, j ) };
-          integer const i11{ ipos_C( i, j ) };
           fmt::print(
             s,
             "patch ({},{})\n"
@@ -292,10 +288,11 @@ namespace Splines
             j,
             m_X[i] - m_X[i - 1],
             m_Y[j] - m_Y[j - 1],
-            m_Z[i00],
-            m_Z[i10],
-            m_Z[i01],
-            m_Z[i11] );
+            mZ.coeff( i - 1, j - 1 ),
+            mZ.coeff( i, j - 1 ),
+            mZ.coeff( i - 1, j ),
+            mZ.coeff( i, j )
+          );
         }
       }
     }
