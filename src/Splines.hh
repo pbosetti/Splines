@@ -75,6 +75,9 @@ namespace Splines
   using Mat  = Eigen::Array<real_type, Eigen::Dynamic, Eigen::Dynamic>;
   using MatC = Eigen::Array<real_type, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
+  using Vec2   = Eigen::Matrix<real_type, 2, 1>;
+  using Vec4   = Eigen::Matrix<real_type, 4, 1>;
+  using Vec6   = Eigen::Matrix<real_type, 6, 1>;
   using Mat2x2 = Eigen::Matrix<real_type, 2, 2>;
   using Mat4x4 = Eigen::Matrix<real_type, 4, 4>;
   using Mat6x6 = Eigen::Matrix<real_type, 6, 6>;

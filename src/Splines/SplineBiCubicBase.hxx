@@ -57,6 +57,7 @@ namespace Splines
     using SplineSurf::mY;
     using SplineSurf::mZ;
 
+#if 0
     void load( integer const i, integer const j, real_type bili3[4][4] ) const
     {
       // Mappiamo la matrice di destinazione (4x4)
@@ -78,6 +79,26 @@ namespace Splines
 
       // Quadrante in basso a destra: DXY
       res.bottomRightCorner<2, 2>() = mDXY.block<2, 2>( i, j );
+    }
+#endif
+
+    void load( integer const i, integer const j, Mat4x4 & bili3 ) const
+    {
+      // Copia a blocchi
+      // Invece di copiare scalarmente, copiamo 4 blocchi 2x2.
+      // Eigen ottimizzerà queste operazioni usando istruzioni SIMD.
+
+      // Quadrante in alto a sinistra: Z
+      bili3.topLeftCorner<2, 2>() = mZ.block<2, 2>( i, j );
+
+      // Quadrante in alto a destra: DY
+      bili3.topRightCorner<2, 2>() = mDY.block<2, 2>( i, j );
+
+      // Quadrante in basso a sinistra: DX
+      bili3.bottomLeftCorner<2, 2>() = mDX.block<2, 2>( i, j );
+
+      // Quadrante in basso a destra: DXY
+      bili3.bottomRightCorner<2, 2>() = mDXY.block<2, 2>( i, j );
     }
 
     real_type & Dx_node_ref( integer const i, integer const j ) { return mDX.coeffRef( i, j ); }
@@ -128,16 +149,17 @@ namespace Splines
     //!
     real_type eval( real_type const x, real_type const y ) const override
     {
-      real_type bili3[4][4], u[4], v[4];
+      Mat4x4 bili3;
+      Vec4   u, v;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3( dx, DX, u );
-      Hermite3( dy, DY, v );
+      Hermite3( dx, DX, u.data() );
+      Hermite3( dy, DY, v.data() );
 
       load( i, j, bili3 );
 
-      return bilinear3( u, bili3, v );
+      return u.dot( bili3 * v );
     }
 
     //!
@@ -149,21 +171,24 @@ namespace Splines
     //!
     void D( real_type const x, real_type const y, real_type d[3] ) const override
     {
-      real_type bili3[4][4], u[4], u_D[4], v[4], v_D[4];
+      Mat4x4 bili3;
+      Vec4   u, u_D, v, v_D;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3( dx, DX, u );
-      Hermite3_D( dx, DX, u_D );
+      Hermite3( dx, DX, u.data() );
+      Hermite3_D( dx, DX, u_D.data() );
 
-      Hermite3( dy, DY, v );
-      Hermite3_D( dy, DY, v_D );
+      Hermite3( dy, DY, v.data() );
+      Hermite3_D( dy, DY, v_D.data() );
 
       load( i, j, bili3 );
+      
+      auto Bv = bili3 * v;
 
-      d[0] = bilinear3( u, bili3, v );
-      d[1] = bilinear3( u_D, bili3, v );
-      d[2] = bilinear3( u, bili3, v_D );
+      d[0] = u.dot( Bv );
+      d[1] = u_D.dot( Bv );
+      d[2] = u.dot( bili3 * v_D );
     }
 
     //!
@@ -171,7 +196,8 @@ namespace Splines
     //!
     real_type Dx( real_type const x, real_type const y ) const override
     {
-      real_type bili3[4][4], u_D[4], v[4];
+      Mat4x4 bili3;
+      Vec4   u_D, v;
 
       std::pair<integer, real_type> X( 0, x ), Y( 0, y );
       m_search_x.find( X );
@@ -179,12 +205,12 @@ namespace Splines
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3_D( dx, DX, u_D );
-      Hermite3( dy, DY, v );
+      Hermite3_D( dx, DX, u_D.data() );
+      Hermite3( dy, DY, v.data() );
 
       load( i, j, bili3 );
 
-      return bilinear3( u_D, bili3, v );
+      return u_D.dot( bili3 * v );
     }
 
     //!
@@ -192,16 +218,17 @@ namespace Splines
     //!
     real_type Dy( real_type const x, real_type const y ) const override
     {
-      real_type bili3[4][4], u[4], v_D[4];
+      Mat4x4 bili3;
+      Vec4   u, v_D;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3( dx, DX, u );
-      Hermite3_D( dy, DY, v_D );
+      Hermite3( dx, DX, u.data() );
+      Hermite3_D( dy, DY, v_D.data() );
 
       load( i, j, bili3 );
 
-      return bilinear3( u, bili3, v_D );
+      return u.dot( bili3 * v_D );
     }
 
     //!
@@ -216,26 +243,30 @@ namespace Splines
     //!
     void DD( real_type const x, real_type const y, real_type dd[6] ) const override
     {
-      real_type bili3[4][4], u[4], u_D[4], u_DD[4], v[4], v_D[4], v_DD[4];
+      Mat4x4 bili3;
+      Vec4   u, u_D, u_DD, v, v_D, v_DD;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3( dx, DX, u );
-      Hermite3_D( dx, DX, u_D );
-      Hermite3_DD( dx, DX, u_DD );
+      Hermite3( dx, DX, u.data() );
+      Hermite3_D( dx, DX, u_D.data() );
+      Hermite3_DD( dx, DX, u_DD.data() );
 
-      Hermite3( dy, DY, v );
-      Hermite3_D( dy, DY, v_D );
-      Hermite3_DD( dy, DY, v_DD );
+      Hermite3( dy, DY, v.data() );
+      Hermite3_D( dy, DY, v_D.data() );
+      Hermite3_DD( dy, DY, v_DD.data() );
 
       load( i, j, bili3 );
+      
+      auto Bv   = bili3 * v;
+      auto Bv_D = bili3 * v_D;
 
-      dd[0] = bilinear3( u, bili3, v );
-      dd[1] = bilinear3( u_D, bili3, v );
-      dd[2] = bilinear3( u, bili3, v_D );
-      dd[3] = bilinear3( u_DD, bili3, v );
-      dd[4] = bilinear3( u_D, bili3, v_D );
-      dd[5] = bilinear3( u, bili3, v_DD );
+      dd[0] = u.dot( Bv );
+      dd[1] = u_D.dot( Bv );
+      dd[2] = u.dot( Bv_D );
+      dd[3] = u_DD.dot( Bv );
+      dd[4] = u_D.dot( Bv_D );
+      dd[5] = u.dot( bili3 * v_DD );
     }
 
     //!
@@ -243,16 +274,17 @@ namespace Splines
     //!
     real_type Dxx( real_type const x, real_type const y ) const override
     {
-      real_type bili3[4][4], u_DD[4], v[4];
+      Mat4x4 bili3;
+      Vec4   u_DD, v;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3_DD( dx, DX, u_DD );
-      Hermite3( dy, DY, v );
+      Hermite3_DD( dx, DX, u_DD.data() );
+      Hermite3( dy, DY, v.data() );
 
       load( i, j, bili3 );
 
-      return bilinear3( u_DD, bili3, v );
+      return u_DD.dot( bili3 * v );
     }
 
     //!
@@ -260,16 +292,17 @@ namespace Splines
     //!
     real_type Dxy( real_type const x, real_type const y ) const override
     {
-      real_type bili3[4][4], u_D[4], v_D[4];
+      Mat4x4 bili3;
+      Vec4   u_D, v_D;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3_D( dx, DX, u_D );
-      Hermite3_D( dy, DY, v_D );
+      Hermite3_D( dx, DX, u_D.data() );
+      Hermite3_D( dy, DY, v_D.data() );
 
       load( i, j, bili3 );
 
-      return bilinear3( u_D, bili3, v_D );
+      return u_D.dot( bili3 * v_D );
     }
 
     //!
@@ -277,16 +310,17 @@ namespace Splines
     //!
     real_type Dyy( real_type const x, real_type const y ) const override
     {
-      real_type bili3[4][4], u[4], v_DD[4];
+      Mat4x4 bili3;
+      Vec4   u, v_DD;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
 
-      Hermite3( dx, DX, u );
-      Hermite3_DD( dy, DY, v_DD );
+      Hermite3( dx, DX, u.data() );
+      Hermite3_DD( dy, DY, v_DD.data() );
 
       load( i, j, bili3 );
 
-      return bilinear3( u, bili3, v_DD );
+      return u.dot( bili3 * v_DD );
     }
     ///@}
   };
