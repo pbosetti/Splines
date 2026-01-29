@@ -44,6 +44,17 @@ type = {
     'biquintic_bessel',
     'biquintic_pchip'
     };
+type_title = {
+    'bilinear',
+    'bicubic',
+    'bicubic Akima',
+    'bicubic Bessel',
+    'bicubic PCHIP',
+    'biquintic',
+    'biquintic Akima',
+    'biquintic Bessel',
+    'biquintic PCHIP'
+    };
 set(gca,'Fontsize',16);
 
 disableDefaultInteractivity(gca)

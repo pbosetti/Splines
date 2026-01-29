@@ -48,9 +48,23 @@ namespace Splines
       mDY.resize( m_nx, m_ny );
       mDXY.resize( m_nx, m_ny );
 
-      make_derivative_x( m_sub_type, mZ.data(), mDX.data() );
-      make_derivative_y( m_sub_type, mZ.data(), mDY.data() );
-      make_derivative_xy( m_sub_type, mDX.data(), mDY.data(), mDXY.data() );
+      CubicSpline  cs;
+      AkimaSpline  ak;
+      BesselSpline be;
+      PchipSpline  pc;
+
+      CubicSplineBase * S;
+      switch ( m_sub_type )
+      {
+        case Spline_sub_type::CUBIC:  S = &cs; break;
+        case Spline_sub_type::AKIMA:  S = &ak; break;
+        case Spline_sub_type::BESSEL: S = &be; break;
+        case Spline_sub_type::PCHIP:  S = &pc; break;
+      }
+
+      make_derivative_x( S, mZ, mDX );
+      make_derivative_y( S, mZ, mDY);
+      make_derivative_xy( S, mDX, mDY, mDXY );
 
       m_search_x.must_reset();
       m_search_y.must_reset();

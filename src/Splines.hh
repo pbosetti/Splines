@@ -1142,8 +1142,7 @@ namespace Splines
           m_npts,
           x );
       }
-      if ( m_npts_reserved == 0 ) { reserve( 2 ); }
-      else if ( m_npts >= m_npts_reserved )
+      if ( m_npts >= m_npts_reserved )
       {
         // Versione "Fall-back" se devi per forza usare il buffer temporaneo
         integer const saved_npts = m_npts;
