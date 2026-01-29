@@ -198,22 +198,6 @@ namespace Splines
       return res;
     }
 
-    // Template unificato per tutti i tipi
-    template <typename T> auto eval( T const & x ) const
-    {
-      if constexpr ( std::is_arithmetic<T>::value )
-      {
-        // Se T è un tipo numerico (int, float, double, etc.), promuovi a real_type
-        return eval( static_cast<real_type>( x ) );
-      }
-      else
-      {
-        // Altrimenti deduce automaticamente il tipo duale appropriato
-        return eval( autodiff::detail::to_dual( x ) );
-      }
-    }
-
-    template <typename T> auto operator()( T const & x ) const -> decltype( eval( x ) ) { return eval( x ); }
 #endif  // AUTODIFF_SUPPORT
 
     void reserve( integer const npts ) override

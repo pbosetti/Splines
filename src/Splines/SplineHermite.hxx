@@ -58,12 +58,6 @@ namespace Splines
 
     void build() override { m_search.must_reset(); }
 
-    // block method!
-    void build( real_type const[], integer, real_type const[], integer, integer ) override
-    {
-      UTILS_ERROR( "HermiteSpline[{}]::build(x,incx,y,incy,n) cannot be used\n", m_name );
-    }
-
     //!
     //!
     //! Setup a spline using a `GenericContainer`

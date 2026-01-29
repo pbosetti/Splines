@@ -76,25 +76,7 @@ namespace Splines
     //! Build the spline with the data stored
     //!
     void build() override { m_search.must_reset(); }
-
-    //!
-    //! Build the spline with the data passed as arguments
-    //!
-    //! \param x    \f$ x \f$ coordinates of the points
-    //! \param incx access elements as `x[0]`, `x[incx]`, `x[2*incx]`,...
-    //! \param y    \f$ y \f$ coordinates of the points
-    //! \param incy access elements as `y[0]`, `y[incx]`, `y[2*incx]`,...
-    //! \param n    the number of the points
-    //!
-    void build( real_type const x[], integer incx, real_type const y[], integer incy, integer const n ) override
-    {
-      reserve( n );
-      for ( integer i = 0; i < n; ++i ) m_X[i] = x[i * incx];
-      for ( integer i = 0; i + 1 < n; ++i ) m_Y[i] = y[i * incy];
-      m_npts = n;
-      build();
-    }
-
+    
     ///@}
 
     //!
@@ -164,23 +146,6 @@ namespace Splines
       res.grad.grad = 0;
       return res;
     }
-
-    // Template unificato per tutti i tipi
-    template <typename T> auto eval( T const & x ) const
-    {
-      if constexpr ( std::is_arithmetic<T>::value )
-      {
-        // Se T è un tipo numerico (int, float, double, etc.), promuovi a real_type
-        return eval( static_cast<real_type>( x ) );
-      }
-      else
-      {
-        // Altrimenti deduce automaticamente il tipo duale appropriato
-        return eval( autodiff::detail::to_dual( x ) );
-      }
-    }
-
-    template <typename T> auto operator()( T const & x ) const -> decltype( eval( x ) ) { return eval( x ); }
 #endif
 
     void write_to_stream( ostream_type & s ) const override

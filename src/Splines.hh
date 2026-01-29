@@ -994,13 +994,15 @@ namespace Splines
     //! \param incy access elements as `y[0]`, `y[incx]`, `y[2*incx]`,...
     //! \param n    total number of points
     //!
-    virtual void build( real_type const x[], integer incx, real_type const y[], integer incy, integer const n )
-    {
-      reserve( n );
-      for ( integer i = 0; i < n; ++i ) m_X[i] = x[i * incx];
-      for ( integer i = 0; i < n; ++i ) m_Y[i] = y[i * incy];
+    template <typename VectorX, typename VectorY>
+    void build( VectorX const & x, integer const incx, VectorY const & y, integer const incy, integer n ) {
+      reserve(n);
+      for (integer i = 0; i < n; ++i) {
+        m_X[i] = x[i*incx];
+        m_Y[i] = y[i*incy];
+      }
       m_npts = n;
-      build();
+      this->build();
     }
 
     //!
@@ -1010,18 +1012,34 @@ namespace Splines
     //! \param y vector of y-coordinates
     //! \param n total number of points
     //!
-    inline void build( real_type const x[], real_type const y[], integer const n ) { this->build( x, 1, y, 1, n ); }
+    template <typename VectorX, typename VectorY>
+    void build( VectorX const & x, VectorY const & y, integer n ) {
+      reserve(n);
+      for (integer i = 0; i < n; ++i) {
+        m_X[i] = x[i];
+        m_Y[i] = y[i];
+      }
+      m_npts = n;
+      this->build();
+    }
 
     //!
     //! Build a spline.
     //!
     //! \param x vector of x-coordinates
     //! \param y vector of y-coordinates
+    //! \param n total number of points
     //!
-    void build( vector<real_type> const & x, vector<real_type> const & y )
-    {
-      integer N = std::min<integer>( x.size(), y.size() );
-      this->build( x.data(), 1, y.data(), 1, N );
+    template <typename VectorX, typename VectorY>
+    void build( VectorX const & x, VectorY const & y ) {
+      integer n = std::min<integer>( x.size(), y.size() );
+      reserve(n);
+      for (integer i = 0; i < n; ++i) {
+        m_X[i] = x[i];
+        m_Y[i] = y[i];
+      }
+      m_npts = n;
+      this->build();
     }
 
     //!
@@ -1079,6 +1097,7 @@ namespace Splines
         }() );
       build( x, y );
     }
+
     //!
     //! Setup a spline using a `GenericContainer` readed from file
     //!
