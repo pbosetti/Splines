@@ -96,36 +96,36 @@ namespace Splines
 
   //! Associate a number for each type of splines implemented
   using SplineType1D = enum class SplineType1D : integer {
-    CONSTANT       = 0,
-    LINEAR         = 1,
-    CUBIC          = 2,
-    AKIMA          = 3,
-    BESSEL         = 4,
-    PCHIP          = 5,
-    QUINTIC_CUBIC  = 6,
-    QUINTIC_AKIMA  = 7,
-    QUINTIC_BESSEL = 8,
-    QUINTIC_PCHIP  = 9,
-    HERMITE        = 10,
-    SPLINE_SET     = 11,
-    SPLINE_VEC     = 12
+    CONSTANT        = 0,
+    LINEAR          = 1,
+    CUBIC           = 2,
+    AKIMA           = 3,
+    VANLEER         = 4,
+    PCHIP           = 5,
+    QUINTIC_CUBIC   = 6,
+    QUINTIC_AKIMA   = 7,
+    QUINTIC_VANLEER = 8,
+    QUINTIC_PCHIP   = 9,
+    HERMITE         = 10,
+    SPLINE_SET      = 11,
+    SPLINE_VEC      = 12
   };
 
-  using Spline_sub_type = enum class Spline_sub_type : integer { CUBIC = 0, PCHIP = 1, AKIMA = 2, BESSEL = 3 };
+  using Spline_sub_type = enum class Spline_sub_type : integer { CUBIC = 0, PCHIP = 1, AKIMA = 2, VANLEER = 3 };
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   //! Associate a number for each type of splines implemented
   using SplineType2D = enum class SplineType2D : integer {
-    BILINEAR         = 0,
-    BICUBIC_CUBIC    = 1,
-    BICUBIC_AKIMA    = 2,
-    BICUBIC_BESSEL   = 3,
-    BICUBIC_PCHIP    = 4,
-    BIQUINTIC_CUBIC  = 5,
-    BIQUINTIC_AKIMA  = 6,
-    BIQUINTIC_BESSEL = 7,
-    BIQUINTIC_PCHIP  = 8,
+    BILINEAR          = 0,
+    BICUBIC_CUBIC     = 1,
+    BICUBIC_AKIMA     = 2,
+    BICUBIC_VANLEER   = 3,
+    BICUBIC_PCHIP     = 4,
+    BIQUINTIC_CUBIC   = 5,
+    BIQUINTIC_AKIMA   = 6,
+    BIQUINTIC_VANLEER = 7,
+    BIQUINTIC_PCHIP   = 8,
   };
 
   inline SplineType1D string_to_splineType1D( string_view nin )
@@ -135,14 +135,14 @@ namespace Splines
     if ( n == "constant" ) return SplineType1D::CONSTANT;
     if ( n == "linear" ) return SplineType1D::LINEAR;
 
-    if ( n == "cubic" ) return SplineType1D::CUBIC;
-    if ( n == "akima" ) return SplineType1D::AKIMA;
-    if ( n == "bessel" ) return SplineType1D::BESSEL;
-    if ( n == "pchip" ) return SplineType1D::PCHIP;
+    if ( n == "cubic"   ) return SplineType1D::CUBIC;
+    if ( n == "akima"   ) return SplineType1D::AKIMA;
+    if ( n == "vanleer" ) return SplineType1D::VANLEER;
+    if ( n == "pchip"   ) return SplineType1D::PCHIP;
 
     if ( n == "quintic" ) return SplineType1D::QUINTIC_CUBIC;
     if ( n == "quintic_akima" ) return SplineType1D::QUINTIC_AKIMA;
-    if ( n == "quintic_bessel" ) return SplineType1D::QUINTIC_BESSEL;
+    if ( n == "quintic_vanleer" ) return SplineType1D::QUINTIC_VANLEER;
     if ( n == "quintic_pchip" ) return SplineType1D::QUINTIC_PCHIP;
 
     if ( n == "hermite" ) return SplineType1D::HERMITE;
@@ -155,10 +155,10 @@ namespace Splines
   {
     switch ( t )
     {
-      case Spline_sub_type::CUBIC: return "CUBIC";
-      case Spline_sub_type::PCHIP: return "PCHIP";
-      case Spline_sub_type::AKIMA: return "AKIMA";
-      case Spline_sub_type::BESSEL: return "BESSEL";
+      case Spline_sub_type::CUBIC:   return "CUBIC";
+      case Spline_sub_type::PCHIP:   return "PCHIP";
+      case Spline_sub_type::AKIMA:   return "AKIMA";
+      case Spline_sub_type::VANLEER: return "VANLEER";
     }
     return "NOTYPE";
   }
@@ -171,12 +171,12 @@ namespace Splines
 
     if ( n == "bicubic" ) return SplineType2D::BICUBIC_CUBIC;
     if ( n == "bicubic_akima" ) return SplineType2D::BICUBIC_AKIMA;
-    if ( n == "bicubic_bessel" ) return SplineType2D::BICUBIC_BESSEL;
+    if ( n == "bicubic_vanleer" ) return SplineType2D::BICUBIC_VANLEER;
     if ( n == "bicubic_pchip" ) return SplineType2D::BICUBIC_PCHIP;
 
     if ( n == "biquintic" ) return SplineType2D::BIQUINTIC_CUBIC;
     if ( n == "biquintic_akima" ) return SplineType2D::BIQUINTIC_AKIMA;
-    if ( n == "biquintic_bessel" ) return SplineType2D::BIQUINTIC_BESSEL;
+    if ( n == "biquintic_vanleer" ) return SplineType2D::BIQUINTIC_VANLEER;
     if ( n == "biquintic_pchip" ) return SplineType2D::BIQUINTIC_PCHIP;
 
     throw std::runtime_error( fmt::format( "string_to_splineType2D({}) unknown type\n", n ) );
@@ -190,11 +190,11 @@ namespace Splines
       case SplineType1D::LINEAR: return "SPLINE_LINEAR";
       case SplineType1D::CUBIC: return "SPLINE_CUBIC";
       case SplineType1D::AKIMA: return "SPLINE_AKIMA";
-      case SplineType1D::BESSEL: return "SPLINE_BESSEL";
+      case SplineType1D::VANLEER: return "SPLINE_VANLEER";
       case SplineType1D::PCHIP: return "SPLINE_PCHIP";
       case SplineType1D::QUINTIC_CUBIC: return "SPLINE_QUINTIC";
       case SplineType1D::QUINTIC_AKIMA: return "SPLINE_QUINTIC_AKIMA";
-      case SplineType1D::QUINTIC_BESSEL: return "SPLINE_QUINTIC_BESSEL";
+      case SplineType1D::QUINTIC_VANLEER: return "SPLINE_QUINTIC_VANLEER";
       case SplineType1D::QUINTIC_PCHIP: return "SPLINE_QUINTIC_PCHIP";
       case SplineType1D::HERMITE: return "SPLINE_HERMITE";
       case SplineType1D::SPLINE_SET: return "SPLINE_SPLINE_SET";
@@ -210,11 +210,11 @@ namespace Splines
       case SplineType2D::BILINEAR: return "SPLINE2D_BILINEAR";
       case SplineType2D::BICUBIC_CUBIC: return "SPLINE2D_BICUBIC_CUBIC";
       case SplineType2D::BICUBIC_AKIMA: return "SPLINE2D_BICUBIC_AKIMA";
-      case SplineType2D::BICUBIC_BESSEL: return "SPLINE2D_BICUBIC_BESSEL";
+      case SplineType2D::BICUBIC_VANLEER: return "SPLINE2D_BICUBIC_VANLEER";
       case SplineType2D::BICUBIC_PCHIP: return "SPLINE2D_BICUBIC_PCHIP";
       case SplineType2D::BIQUINTIC_CUBIC: return "SPLINE2D_BIQUINTIC_CUBIC";
       case SplineType2D::BIQUINTIC_AKIMA: return "SPLINE2D_BIQUINTIC_AKIMA";
-      case SplineType2D::BIQUINTIC_BESSEL: return "SPLINE2D_BIQUINTIC_BESSEL";
+      case SplineType2D::BIQUINTIC_VANLEER: return "SPLINE2D_BIQUINTIC_VANLEER";
       case SplineType2D::BIQUINTIC_PCHIP: return "SPLINE2D_BIQUINTIC_PCHIP";
     }
     return "NO_TYPE";
@@ -1550,7 +1550,7 @@ namespace Splines
 
 #include "Splines/SplineHermite.hxx"
 #include "Splines/SplineAkima.hxx"
-#include "Splines/SplineBessel.hxx"
+#include "Splines/SplineVanLeer.hxx"
 #include "Splines/SplineConstant.hxx"
 #include "Splines/SplineLinear.hxx"
 #include "Splines/SplinePchip.hxx"
@@ -1579,7 +1579,7 @@ namespace SplinesLoad
 {
 
   using Splines::AkimaSpline;
-  using Splines::BesselSpline;
+  using Splines::VanLeerSpline;
   using Splines::ConstantSpline;
   using Splines::CubicSpline;
   using Splines::CubicSplineBase;

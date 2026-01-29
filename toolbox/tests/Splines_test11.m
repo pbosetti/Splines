@@ -47,22 +47,22 @@ type = {
     'bilinear',
     'bicubic',
     'bicubic_akima',
-    'bicubic_bessel',
+    'bicubic_vanleer',
     'bicubic_pchip',
     'biquintic',
     'biquintic_akima',
-    'biquintic_bessel',
+    'biquintic_vanleer',
     'biquintic_pchip'
     };
 type_str = {
     'bilinear',
     'bicubic',
     'bicubic Akima',
-    'bicubic Bessel',
+    'bicubic van Leer',
     'bicubic PCHIP',
     'biquintic',
     'biquintic Akima',
-    'biquintic Bessel',
+    'biquintic van Leer',
     'biquintic PCHIP'
     };
 set(gca,'Fontsize',16);

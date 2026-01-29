@@ -266,7 +266,7 @@ int main()
   const real_type knot_tolerance = 1e-10;  // Tolerance for identifying knots
 
   // Quintic subtype names
-  vector<string> quintic_subtype_names = { "QUINTIC_CUBIC", "QUINTIC_AKIMA", "QUINTIC_BESSEL", "QUINTIC_PCHIP" };
+  vector<string> quintic_subtype_names = { "QUINTIC_CUBIC", "QUINTIC_AKIMA", "QUINTIC_VANLEER", "QUINTIC_PCHIP" };
 
   for ( integer k = 0; k < 7; ++k )
   {
@@ -339,20 +339,20 @@ int main()
     // Define all splines including quintic subtypes
     vector<char const *> all_headers = { "SPLINE_CONSTANT", "SPLINE_LINEAR",
 
-                                         "SPLINE_CUBIC",    "SPLINE_AKIMA",  "SPLINE_BESSEL",  "SPLINE_PCHIP",
+                                         "SPLINE_CUBIC",    "SPLINE_AKIMA",  "SPLINE_VANLEER",  "SPLINE_PCHIP",
 
-                                         "QUINTIC_CUBIC",   "QUINTIC_AKIMA", "QUINTIC_BESSEL", "QUINTIC_PCHIP" };
+                                         "QUINTIC_CUBIC",   "QUINTIC_AKIMA", "QUINTIC_VANLEER", "QUINTIC_PCHIP" };
 
     // For simplicity in this test, we'll use the same type for all quintic subtypes
     // In a real implementation, you would need different types or configurations
     vector<SplineType1D> all_stypes = {
       SplineType1D::CONSTANT,       SplineType1D::LINEAR,
 
-      SplineType1D::CUBIC,          SplineType1D::AKIMA,  SplineType1D::BESSEL, SplineType1D::PCHIP,
+      SplineType1D::CUBIC,          SplineType1D::AKIMA,  SplineType1D::VANLEER, SplineType1D::PCHIP,
 
       SplineType1D::QUINTIC_CUBIC,   // QUINTIC_CUBIC subtype
       SplineType1D::QUINTIC_AKIMA,   // QUINTIC_AKIMA subtype
-      SplineType1D::QUINTIC_BESSEL,  // QUINTIC_BESSEL subtype
+      SplineType1D::QUINTIC_VANLEER, // QUINTIC_VANLEER subtype
       SplineType1D::QUINTIC_PCHIP    // QUINTIC_PCHIP subtype
     };
 
@@ -663,7 +663,7 @@ int main()
     "║     - Smaller/larger step h for finite differences                                  ║\n"
     "║     - Analytical derivative checks for simple cases                                 ║\n"
     "║     - C1 continuity verification at knots for splines that should have it           ║\n"
-    "║  5. Quintic spline subtypes (CUBIC, AKIMA, BESSEL, PCHIP) are tested separately     ║\n"
+    "║  5. Quintic spline subtypes (CUBIC, AKIMA, VANLEER, PCHIP) are tested separately    ║\n"
     "╚═════════════════════════════════════════════════════════════════════════════════════╝\n\n" );
 
   return 0;

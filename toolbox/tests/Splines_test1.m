@@ -65,11 +65,11 @@ for k=1:4
   li = Spline1D('linear',X,Y);
   cu = Spline1D('cubic',X,Y);
   ak = Spline1D('akima',X,Y);
-  be = Spline1D('bessel',X,Y);
+  be = Spline1D('vanleer',X,Y);
   pc = Spline1D('pchip',X,Y);
   qc = Spline1D('quintic',X,Y);
   qa = Spline1D('quintic_akima',X,Y);
-  qb = Spline1D('quintic_bessel',X,Y);
+  qb = Spline1D('quintic_vanleer',X,Y);
   qp = Spline1D('quintic_pchip',X,Y);
 
   XX = X(1):(X(end)-X(1))/1000:X(end);
@@ -91,7 +91,7 @@ for k=1:4
         XX, Y4, ...
         XX, Y5, 'LineWidth', 2 );
 
-  legend('data','linear','cubic','akima','bessel','pchip');
+  legend('data','linear','cubic','akima','vanleer','pchip');
   legend('boxoff');
   legend('Location',LOC{k});
 
@@ -104,7 +104,7 @@ for k=1:4
         XX, Y8, ...
         XX, Y9, 'LineWidth', 2 );
 
-  legend('data','quintic','quintic akima','quintic bessel','quintic pchip');
+  legend('data','quintic','quintic akima','quintic van Leer','quintic pchip');
   legend('boxoff');
   legend('Location',LOC{k});
 

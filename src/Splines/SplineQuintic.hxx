@@ -132,9 +132,9 @@ namespace Splines
             else
               goto unknown_type;
             break;
-          case 'b':  // bessel
-            if ( st == "bessel" )
-              m_sub_type = Spline_sub_type::BESSEL;
+          case 'v':  // van Leer
+            if ( st == "vanleer" )
+              m_sub_type = Spline_sub_type::VANLEER;
             else
               goto unknown_type;
             break;

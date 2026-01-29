@@ -776,11 +776,11 @@ int main()
 
   BiQuinticSpline bq_cubic( Spline_sub_type::CUBIC );
   BiQuinticSpline bq_akima( Spline_sub_type::AKIMA );
-  BiQuinticSpline bq_bessel( Spline_sub_type::BESSEL );
+  BiQuinticSpline bq_vanleer( Spline_sub_type::VANLEER );
   BiQuinticSpline bq_pchip( Spline_sub_type::PCHIP );
   BiCubicSpline   bc_cubic( Spline_sub_type::CUBIC );
   BiCubicSpline   bc_akima( Spline_sub_type::AKIMA );
-  BiCubicSpline   bc_bessel( Spline_sub_type::BESSEL );
+  BiCubicSpline   bc_vanleer( Spline_sub_type::VANLEER );
   BiCubicSpline   bc_pchip( Spline_sub_type::PCHIP );
   BilinearSpline  bl;
 
@@ -792,8 +792,8 @@ int main()
   bq_akima.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
   fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[akima] built\n" );
 
-  bq_bessel.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
-  fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[bessel] built\n" );
+  bq_vanleer.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[vanleer] built\n" );
 
   bq_pchip.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
   fmt::print( fg( fmt::color::green ), "   ✓ BiQuinticSpline[pchip] built\n" );
@@ -804,8 +804,8 @@ int main()
   bc_akima.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
   fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[akima] built\n" );
 
-  bc_bessel.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
-  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[bessel] built\n" );
+  bc_vanleer.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
+  fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[vanleer] built\n" );
 
   bc_pchip.build( X, 1, Y, 1, Z, LD, NX, NY, f, t );
   fmt::print( fg( fmt::color::green ), "   ✓ BiCubicSpline[pchip] built\n" );
@@ -818,11 +818,11 @@ int main()
   vector<Spline2DInfo> spline_results;
   spline_results.push_back( analyze_2D_spline( bc_cubic, "BiCubic" ) );
   spline_results.push_back( analyze_2D_spline( bc_akima, "BiCubic[Akima]" ) );
-  spline_results.push_back( analyze_2D_spline( bc_bessel, "BiCubic[Bessel]" ) );
+  spline_results.push_back( analyze_2D_spline( bc_vanleer, "BiCubic[VanLeer]" ) );
   spline_results.push_back( analyze_2D_spline( bc_pchip, "BiCubic[Pchip]" ) );
   spline_results.push_back( analyze_2D_spline( bq_cubic, "BiQuintic" ) );
   spline_results.push_back( analyze_2D_spline( bq_akima, "BiQuintic[Akima]" ) );
-  spline_results.push_back( analyze_2D_spline( bq_bessel, "BiQuintic[Bessel]" ) );
+  spline_results.push_back( analyze_2D_spline( bq_vanleer, "BiQuintic[VanLeer]" ) );
   spline_results.push_back( analyze_2D_spline( bq_pchip, "BiQuintic[Pchip]" ) );
   spline_results.push_back( analyze_2D_spline( bl, "Bilinear" ) );
 
@@ -839,8 +839,8 @@ int main()
     "BiCubic[Akima]",
     check_derivatives_by_region( bc_akima, "BiCubicSpline[Akima]", X, NX, Y, NY, NPT ) );
   errors_by_region.emplace_back(
-    "BiCubic[Bessel]",
-    check_derivatives_by_region( bc_bessel, "BiCubicSpline[Bessel]", X, NX, Y, NY, NPT ) );
+    "BiCubic[VanLeer]",
+    check_derivatives_by_region( bc_vanleer, "BiCubicSpline[VanLeer]", X, NX, Y, NY, NPT ) );
   errors_by_region.emplace_back(
     "BiCubic[Pchip]",
     check_derivatives_by_region( bc_pchip, "BiCubicSpline[Pchip]", X, NX, Y, NY, NPT ) );
@@ -852,8 +852,8 @@ int main()
     "BiQuintic[Akima]",
     check_derivatives_by_region( bq_akima, "BiQuinticSpline[Akima]", X, NX, Y, NY, NPT ) );
   errors_by_region.emplace_back(
-    "BiQuintic[Bessel]",
-    check_derivatives_by_region( bq_bessel, "BiQuinticSpline[Bessel]", X, NX, Y, NY, NPT ) );
+    "BiQuintic[VanLeer]",
+    check_derivatives_by_region( bq_vanleer, "BiQuinticSpline[VanLeer]", X, NX, Y, NY, NPT ) );
   errors_by_region.emplace_back(
     "BiQuintic[Pchip]",
     check_derivatives_by_region( bq_pchip, "BiQuinticSpline[Pchip]", X, NX, Y, NY, NPT ) );
@@ -930,12 +930,12 @@ int main()
 
   generate_grid_data( bc_cubic, "bicubic", "BiCubicSpline" );
   generate_grid_data( bc_akima, "bicubic[Akima]", "BiCubicSpline[Akima]" );
-  generate_grid_data( bc_bessel, "bicubic[Bessel]", "BiCubicSpline[Bessel]" );
+  generate_grid_data( bc_vanleer, "bicubic[VanLeer]", "BiCubicSpline[VanLeer]" );
   generate_grid_data( bc_pchip, "bicubic[Pchip]", "BiCubicSpline[Pchip]" );
 
   generate_grid_data( bq_cubic, "biquintic", "BiQuinticSpline" );
   generate_grid_data( bq_akima, "biquintic[Akima]", "BiQuinticSpline[Akima]" );
-  generate_grid_data( bq_bessel, "biquintic[Bessel]", "BiQuinticSpline[Bessel]" );
+  generate_grid_data( bq_vanleer, "biquintic[VanLeer]", "BiQuinticSpline[VanLeer]" );
   generate_grid_data( bq_pchip, "biquintic[Pchip]", "BiQuinticSpline[Pchip]" );
 
   generate_grid_data( bl, "bilinear", "BilinearSpline" );

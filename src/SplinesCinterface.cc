@@ -66,14 +66,14 @@ extern "C"
     switch ( Splines::string_to_splineType1D( type ) )
     {
       case SplineType1D::AKIMA: head = new AkimaSpline; break;
-      case SplineType1D::BESSEL: head = new BesselSpline; break;
+      case SplineType1D::VANLEER: head = new VanLeerSpline; break;
       case SplineType1D::PCHIP: head = new PchipSpline; break;
       case SplineType1D::CUBIC: head = new CubicSpline; break;
       case SplineType1D::LINEAR: head = new LinearSpline; break;
       case SplineType1D::CONSTANT: head = new ConstantSpline; break;
       case SplineType1D::QUINTIC_CUBIC: head = new QuinticSpline( Splines::Spline_sub_type::CUBIC ); break;
       case SplineType1D::QUINTIC_AKIMA: head = new QuinticSpline( Splines::Spline_sub_type::AKIMA ); break;
-      case SplineType1D::QUINTIC_BESSEL: head = new QuinticSpline( Splines::Spline_sub_type::BESSEL ); break;
+      case SplineType1D::QUINTIC_VANLEER: head = new QuinticSpline( Splines::Spline_sub_type::VANLEER ); break;
       case SplineType1D::QUINTIC_PCHIP: head = new QuinticSpline( Splines::Spline_sub_type::PCHIP ); break;
       default:
         head = nullptr;

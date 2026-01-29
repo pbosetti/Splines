@@ -73,7 +73,7 @@ namespace Splines
    *       share the same x-values.
    *
    * \see Spline, ConstantSpline, LinearSpline, CubicSpline, AkimaSpline,
-   *      BesselSpline, PchipSpline, HermiteSpline, QuinticSpline
+   *      VanLeerSpline, PchipSpline, HermiteSpline, QuinticSpline
    */
   class SplineSet
   {

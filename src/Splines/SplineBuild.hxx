@@ -100,7 +100,7 @@ namespace Splines
 
 
   /**
-   * @brief Bessel cubic derivative reconstruction (true order 3).
+   * @brief Van Leer cubic derivative reconstruction (true order 3).
    *
    * First derivatives computed as derivatives of the local cubic
    * interpolating polynomial using 4-point stencils.
@@ -123,9 +123,9 @@ namespace Splines
    * @param[out] Yp    Array to store computed first derivatives
    * @param[in]  npts  Number of data points (must be >= 2)
    */
-  inline void Bessel_build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts )
+  inline void VanLeer_build( real_type const X[], real_type const Y[], real_type Yp[], integer const npts )
   {
-    UTILS_ASSERT( npts >= 2, "Bessel_build: npts={} >= 2 required\n", npts );
+    UTILS_ASSERT( npts >= 2, "VanLeer_build: npts={} >= 2 required\n", npts );
 
     if ( npts == 2 )
     {  // only 2 points, linear interpolation
@@ -133,9 +133,8 @@ namespace Splines
       return;
     }
 
-    auto minmod = []( real_type a, real_type b, real_type c ) -> real_type {
-      if ( a > 0 && b > 0 && c > 0 ) return std::min( {a,b,c} );
-      if ( a < 0 && b < 0 && c < 0 ) return std::max( {a,b,c} );
+    auto vanLeer = []( real_type a, real_type b, real_type c ) -> real_type {
+      if ( (a > 0 && b > 0 && c > 0) || (a < 0 && b < 0 && c < 0) ) return 3/(1/a+1/b+1/c);
       return 0;
     };
 
@@ -147,7 +146,7 @@ namespace Splines
       real_type L = Utils::first_derivative_3p( X[i], Y[i], X[i-1], Y[i-1], X[i-2], Y[i-2] );
       real_type C = Utils::first_derivative_3p( X[i], Y[i], X[i-1], Y[i-1], X[i+1], Y[i+1] );
       real_type R = Utils::first_derivative_3p( X[i], Y[i], X[i+1], Y[i+1], X[i+2], Y[i+2] );
-      Yp[i] = minmod( L, C, R );
+      Yp[i] = vanLeer( L, C, R );
     }
 
     // ---- right boundary ----
@@ -332,7 +331,7 @@ namespace Splines
    * from first derivative estimates and solving a tridiagonal system.
    *
    * Algorithm:
-   * 1. Estimate first derivatives using specified method (Cubic, PCHIP, Akima, Bessel)
+   * 1. Estimate first derivatives using specified method (Cubic, PCHIP, Akima, VanLeer)
    * 2. Set up tridiagonal system for second derivatives from quintic continuity conditions
    * 3. Solve system to obtain C2-continuous second derivatives
    *
@@ -377,7 +376,7 @@ namespace Splines
         Akima_build( X, Y, Yp, work.data(), npts );
       }
       break;
-      case Spline_sub_type::BESSEL: Bessel_build( X, Y, Yp, npts ); break;
+      case Spline_sub_type::VANLEER: VanLeer_build( X, Y, Yp, npts ); break;
       default: UTILS_ERROR( "Unknown QuinticSpline_sub_type value\n" );
     }
 
@@ -772,7 +771,7 @@ namespace Splines
         Akima_build( X, Y, Yp, work.data(), npts );
       }
       break;
-      case Spline_sub_type::BESSEL: Bessel_build( X, Y, Yp, npts ); break;
+      case Spline_sub_type::VANLEER: VanLeer_build( X, Y, Yp, npts ); break;
       default: UTILS_ERROR( "Unknown QuinticSpline_sub_type value\n" );
     }
     // WENO5_build2( X, Y, Ypp, npts );

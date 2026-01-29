@@ -50,11 +50,11 @@ namespace Splines
         case SplineType1D::LINEAR: return std::make_unique<LinearSpline>( _name );
         case SplineType1D::CUBIC: return std::make_unique<CubicSpline>( _name );
         case SplineType1D::AKIMA: return std::make_unique<AkimaSpline>( _name );
-        case SplineType1D::BESSEL: return std::make_unique<BesselSpline>( _name );
+        case SplineType1D::VANLEER: return std::make_unique<VanLeerSpline>( _name );
         case SplineType1D::PCHIP: return std::make_unique<PchipSpline>( _name );
         case SplineType1D::QUINTIC_CUBIC: return std::make_unique<QuinticSpline>( Spline_sub_type::CUBIC, _name );
         case SplineType1D::QUINTIC_AKIMA: return std::make_unique<QuinticSpline>( Spline_sub_type::AKIMA, _name );
-        case SplineType1D::QUINTIC_BESSEL: return std::make_unique<QuinticSpline>( Spline_sub_type::BESSEL, _name );
+        case SplineType1D::QUINTIC_VANLEER: return std::make_unique<QuinticSpline>( Spline_sub_type::VANLEER, _name );
         case SplineType1D::QUINTIC_PCHIP: return std::make_unique<QuinticSpline>( Spline_sub_type::PCHIP, _name );
         case SplineType1D::HERMITE: break;
         case SplineType1D::SPLINE_SET: break;
@@ -226,23 +226,23 @@ namespace Splines
         tp = SplineType1D::CUBIC;
       else if ( spl_type == "akima" )
         tp = SplineType1D::AKIMA;
-      else if ( spl_type == "bessel" )
-        tp = SplineType1D::BESSEL;
+      else if ( spl_type == "vanleer" )
+        tp = SplineType1D::VANLEER;
       else if ( spl_type == "pchip" )
         tp = SplineType1D::PCHIP;
       else if ( spl_type == "quintic" )
         tp = SplineType1D::QUINTIC_CUBIC;
       else if ( spl_type == "quintic_akima" )
         tp = SplineType1D::QUINTIC_AKIMA;
-      else if ( spl_type == "quintic_bessel" )
-        tp = SplineType1D::QUINTIC_BESSEL;
+      else if ( spl_type == "quintic_vanleer" )
+        tp = SplineType1D::QUINTIC_VANLEER;
       else if ( spl_type == "quintic_pchip" )
         tp = SplineType1D::QUINTIC_PCHIP;
       else
       {
         UTILS_ERROR(
           "Spline1D::setup[{}] unknown type {}, not in "
-          "[constant,linear,cubic,akima,bessel,pchip,quintic]\n",
+          "[constant,linear,cubic,akima,vanleer,pchip,quintic]\n",
           m_name,
           spl_type );
       }

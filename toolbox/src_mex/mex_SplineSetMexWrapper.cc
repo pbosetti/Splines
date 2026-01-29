@@ -112,16 +112,16 @@ namespace Splines
         st = SplineType1D::CUBIC;
       else if ( tname == "akima" )
         st = SplineType1D::AKIMA;
-      else if ( tname == "bessel" )
-        st = SplineType1D::BESSEL;
+      else if ( tname == "vanleer" )
+        st = SplineType1D::VANLEER;
       else if ( tname == "pchip" )
         st = SplineType1D::PCHIP;
       else if ( tname == "quintic" )
         st = SplineType1D::QUINTIC_CUBIC;
       else if ( tname == "quintic_akima" )
         st = SplineType1D::QUINTIC_AKIMA;
-      else if ( tname == "quintic_bessel" )
-        st = SplineType1D::QUINTIC_BESSEL;
+      else if ( tname == "quintic_vanleer" )
+        st = SplineType1D::QUINTIC_VANLEER;
       else if ( tname == "quintic_pchip" )
         st = SplineType1D::QUINTIC_PCHIP;
       else
@@ -130,7 +130,7 @@ namespace Splines
           false,
           CMD
           ": cell array of strings must contains the strings:\n"
-          "'linear', 'cubic', 'akima', 'bessel', 'pchip', 'quintic'" );
+          "'linear', 'cubic', 'akima', 'vanleer', 'pchip', 'quintic'" );
       }
       for ( mwSize i{ 0 }; i < nspl; ++i ) types.push_back( st );
     }
@@ -156,16 +156,16 @@ namespace Splines
           st = SplineType1D::CUBIC;
         else if ( tname == "akima" )
           st = SplineType1D::AKIMA;
-        else if ( tname == "bessel" )
-          st = SplineType1D::BESSEL;
+        else if ( tname == "vanleer" )
+          st = SplineType1D::VANLEER;
         else if ( tname == "pchip" )
           st = SplineType1D::PCHIP;
         else if ( tname == "quintic" )
           st = SplineType1D::QUINTIC_CUBIC;
         else if ( tname == "quintic_akima" )
           st = SplineType1D::QUINTIC_AKIMA;
-        else if ( tname == "quintic_bessel" )
-          st = SplineType1D::QUINTIC_BESSEL;
+        else if ( tname == "quintic_vanleer" )
+          st = SplineType1D::QUINTIC_VANLEER;
         else if ( tname == "quintic_pchip" )
           st = SplineType1D::QUINTIC_PCHIP;
         else
@@ -174,7 +174,7 @@ namespace Splines
             false,
             CMD
             ": cell array of strings must contains the strings:\n"
-            "'linear', 'cubic', 'akima', 'bessel', 'pchip', 'quintic'" );
+            "'linear', 'cubic', 'akima', 'vanleer', 'pchip', 'quintic'" );
         }
         types.push_back( st );
       }

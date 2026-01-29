@@ -76,8 +76,8 @@ namespace Splines
       ptr = new Splines::CubicSpline();
     else if ( tname == "akima" )
       ptr = new Splines::AkimaSpline();
-    else if ( tname == "bessel" )
-      ptr = new Splines::BesselSpline();
+    else if ( tname == "vanleer" )
+      ptr = new Splines::VanLeerSpline();
     else if ( tname == "pchip" )
       ptr = new Splines::PchipSpline();
     else if ( tname == "hermite" )
@@ -86,8 +86,8 @@ namespace Splines
       ptr = new Splines::QuinticSpline( Spline_sub_type::CUBIC );
     else if ( tname == "quintic_akima" )
       ptr = new Splines::QuinticSpline( Spline_sub_type::AKIMA );
-    else if ( tname == "quintic_bessel" )
-      ptr = new Splines::QuinticSpline( Spline_sub_type::BESSEL );
+    else if ( tname == "quintic_vanleer" )
+      ptr = new Splines::QuinticSpline( Spline_sub_type::VANLEER );
     else if ( tname == "quintic_pchip" )
       ptr = new Splines::QuinticSpline( Spline_sub_type::PCHIP );
     else
@@ -96,7 +96,7 @@ namespace Splines
         false,
         CMD
         ": second argument must be one of the strings:\n"
-        "'linear', 'cubic', 'akima', 'bessel', 'hermite', 'pchip', 'quintic', 'quintic_pchip', 'quintic_akima', 'quintic_bessel'" );
+        "'linear', 'cubic', 'akima', 'vanleer', 'hermite', 'pchip', 'quintic', 'quintic_pchip', 'quintic_akima', 'quintic_vanleer'" );
     }
 
     arg_out_0 = Utils::mex_convert_ptr_to_mx<Spline>( ptr );

@@ -566,25 +566,25 @@ int main()
     ConstantSpline co;
     AkimaSpline    ak;
     CubicSpline    cs;
-    BesselSpline   be;
+    VanLeerSpline  vl;
     PchipSpline    pc;
 
     // Quintic spline subtypes
     QuinticSpline qs_cubic( Spline_sub_type::CUBIC, "Quintic (CUBIC)" );
     QuinticSpline qs_pchip( Spline_sub_type::PCHIP, "Quintic (PCHIP)" );
     QuinticSpline qs_akima( Spline_sub_type::AKIMA, "Quintic (AKIMA)" );
-    QuinticSpline qs_bessel( Spline_sub_type::BESSEL, "Quintic (BESSEL)" );
+    QuinticSpline qs_vanleer( Spline_sub_type::VANLEER, "Quintic (VANLEER)" );
 
     vector<pair<Splines::Spline *, string>> splines = { { &li, "Linear" },
                                                         { &co, "Constant" },
                                                         { &ak, "Akima" },
                                                         { &cs, "Cubic" },
-                                                        { &be, "Bessel" },
+                                                        { &vl, "VanLeer" },
                                                         { &pc, "Pchip" },
                                                         { &qs_cubic, "Quintic (CUBIC)" },
                                                         { &qs_pchip, "Quintic (PCHIP)" },
                                                         { &qs_akima, "Quintic (AKIMA)" },
-                                                        { &qs_bessel, "Quintic (BESSEL)" } };
+                                                        { &qs_vanleer, "Quintic (VANLEER)" } };
 
     // Build all splines
     for ( auto & [spline_ptr, name] : splines )
@@ -660,9 +660,9 @@ int main()
   // Theoretical continuity classes
   map<string, string> theoretical_continuity = { { "Constant", "C⁻¹" },       { "Linear", "C⁰" },
                                                  { "Akima", "C¹" },           { "Cubic", "C²" },
-                                                 { "Bessel", "C²" },          { "Pchip", "C¹" },
+                                                 { "VanLeer", "C¹" },         { "Pchip", "C¹" },
                                                  { "Quintic (CUBIC)", "C³" }, { "Quintic (PCHIP)", "C¹" },
-                                                 { "Quintic (AKIMA)", "C¹" }, { "Quintic (BESSEL)", "C²" } };
+                                                 { "Quintic (AKIMA)", "C¹" }, { "Quintic (VANLEER)", "C²" } };
 
   integer sz = static_cast<integer>( all_results.size() );
   for ( const auto & [spline_name, results] : all_results )
@@ -759,7 +759,7 @@ int main()
   print_header( "QUINTIC SPLINE SUBTYPE COMPARISON" );
 
   // List of quintic subtypes
-  vector<string> quintic_subtypes = { "Quintic (CUBIC)", "Quintic (PCHIP)", "Quintic (AKIMA)", "Quintic (BESSEL)" };
+  vector<string> quintic_subtypes = { "Quintic (CUBIC)", "Quintic (PCHIP)", "Quintic (AKIMA)", "Quintic (VANLEER)" };
 
   fmt::print(
     TABLE_COLOR,
@@ -828,11 +828,11 @@ int main()
     fg( fmt::color::white ),
     "1. Linear splines: Should be C⁰ (continuous). Discontinuities in first derivative expected.\n"
     "2. Constant splines: Should be C⁻¹ (discontinuous). Discontinuities in function values expected.\n"
-    "3. Cubic/Bessel splines: Should be C² (twice differentiable). Should have continuous D¹ and D².\n"
+    "3. Cubic/VanLeer splines: Should be C¹ (once differentiable). Should have continuous D¹.\n"
     "4. Akima/Pchip splines: Should be C¹ (once differentiable). Should have continuous D¹.\n"
     "5. Quintic splines: Should be C³ (thrice differentiable) for CUBIC subtype.\n"
-    "                  Should be C¹ for PCHIP and AKIMA subtypes (inherit base spline continuity).\n"
-    "                  Should be C² for BESSEL subtype.\n\n" );
+    "                  Should be C¹ for PCHIP VANLEER and AKIMA subtypes (inherit base spline continuity).\n"
+    "\n\n" );
 
   fmt::print( fg( fmt::color::yellow ) | fmt::emphasis::bold, "⚠ NOTES:\n\n" );
 

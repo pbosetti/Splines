@@ -1037,26 +1037,26 @@ int main()
   // ============================================================================
 
   // Tipi di spline 1D
-  vector<SplineType1D> spline_types_1D = { SplineType1D::CONSTANT,       SplineType1D::LINEAR,
-                                           SplineType1D::CUBIC,          SplineType1D::AKIMA,
-                                           SplineType1D::BESSEL,         SplineType1D::PCHIP,
-                                           SplineType1D::QUINTIC_CUBIC,  SplineType1D::QUINTIC_AKIMA,
-                                           SplineType1D::QUINTIC_BESSEL, SplineType1D::QUINTIC_PCHIP };
+  vector<SplineType1D> spline_types_1D = { SplineType1D::CONSTANT,        SplineType1D::LINEAR,
+                                           SplineType1D::CUBIC,           SplineType1D::AKIMA,
+                                           SplineType1D::VANLEER,         SplineType1D::PCHIP,
+                                           SplineType1D::QUINTIC_CUBIC,   SplineType1D::QUINTIC_AKIMA,
+                                           SplineType1D::QUINTIC_VANLEER, SplineType1D::QUINTIC_PCHIP };
 
-  vector<string> spline_type_names_1D = { "CONSTANT",       "LINEAR",       "CUBIC",         "AKIMA",
-                                          "BESSEL",         "PCHIP",        "QUINTIC_CUBIC", "QUINTIC_AKIMA",
-                                          "QUINTIC_BESSEL", "QUINTIC_PCHIP" };
+  vector<string> spline_type_names_1D = { "CONSTANT",        "LINEAR",       "CUBIC",         "AKIMA",
+                                          "VANLEER",         "PCHIP",        "QUINTIC_CUBIC", "QUINTIC_AKIMA",
+                                          "QUINTIC_VANLEER", "QUINTIC_PCHIP" };
 
   // Tipi di spline 2D
   vector<SplineType2D> spline_types_2D = { SplineType2D::BILINEAR,        SplineType2D::BICUBIC_CUBIC,
-                                           SplineType2D::BICUBIC_AKIMA,   SplineType2D::BICUBIC_BESSEL,
+                                           SplineType2D::BICUBIC_AKIMA,   SplineType2D::BICUBIC_VANLEER,
                                            SplineType2D::BICUBIC_PCHIP,   SplineType2D::BIQUINTIC_CUBIC,
-                                           SplineType2D::BIQUINTIC_AKIMA, SplineType2D::BIQUINTIC_BESSEL,
+                                           SplineType2D::BIQUINTIC_AKIMA, SplineType2D::BIQUINTIC_VANLEER,
                                            SplineType2D::BIQUINTIC_PCHIP };
 
-  vector<string> spline_type_names_2D = { "BILINEAR",        "BICUBIC_CUBIC",    "BICUBIC_AKIMA",
-                                          "BICUBIC_BESSEL",  "BICUBIC_PCHIP",    "BIQUINTIC_CUBIC",
-                                          "BIQUINTIC_AKIMA", "BIQUINTIC_BESSEL", "BIQUINTIC_PCHIP" };
+  vector<string> spline_type_names_2D = { "BILINEAR",        "BICUBIC_CUBIC",     "BICUBIC_AKIMA",
+                                          "BICUBIC_VANLEER", "BICUBIC_PCHIP",     "BIQUINTIC_CUBIC",
+                                          "BIQUINTIC_AKIMA", "BIQUINTIC_VANLEER", "BIQUINTIC_PCHIP" };
 
   int total_passed_1D = 0;
   int total_tested_1D = 0;

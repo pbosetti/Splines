@@ -22,7 +22,7 @@ S.build( X, Y );
 
 - `type` is a string with the type of spline you are building.
          Possibile values are:
-         linear, cubic, akima, bessel, pchip, quintic.
+         linear, cubic, akima, vanleer, pchip, quintic.
 - X, Y   two vectors with the x and y coordinates of the point
          to be interpolated, X must be increasing.
 

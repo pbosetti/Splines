@@ -188,7 +188,7 @@ void test_spline_set()
   // Spline types
   spline_type.emplace_back( "cubic" );
   spline_type.emplace_back( "akima" );
-  spline_type.emplace_back( "bessel" );
+  spline_type.emplace_back( "vanleer" );
   spline_type.emplace_back( "hermite" );
 
   // X values
@@ -261,24 +261,24 @@ int main()
 
   CubicSpline    cs;
   AkimaSpline    ak;
-  BesselSpline   bs;
+  VanLeerSpline  vl;
   PchipSpline    pc;
   LinearSpline   ls;
   ConstantSpline csts;
   QuinticSpline  qs_cubic( Splines::Spline_sub_type::CUBIC );
   QuinticSpline  qs_akima( Splines::Spline_sub_type::AKIMA );
-  QuinticSpline  qs_bessel( Splines::Spline_sub_type::BESSEL );
+  QuinticSpline  qs_vanleer( Splines::Spline_sub_type::VANLEER );
   QuinticSpline  qs_pchip( Splines::Spline_sub_type::PCHIP );
 
   test_spline_construction( "Constant", csts );
   test_spline_construction( "Linear", ls );
   test_spline_construction( "Cubic", cs );
   test_spline_construction( "Akima", ak );
-  test_spline_construction( "Bessel", bs );
+  test_spline_construction( "VanLeer", vl );
   test_spline_construction( "Pchip", pc );
   test_spline_construction( "Quintic", qs_cubic );
   test_spline_construction( "Quintic_akima", qs_akima );
-  test_spline_construction( "Quintic_bessel", qs_bessel );
+  test_spline_construction( "Quintic_vanleer", qs_vanleer );
   test_spline_construction( "Quintic_pchip", qs_pchip );
 
   // Test 2: AutoDiff spline evaluation
@@ -292,11 +292,11 @@ int main()
   test_autodiff_spline( "Linear", &ls );
   test_autodiff_spline( "Cubic", &cs );
   test_autodiff_spline( "Akima", &ak );
-  test_autodiff_spline( "Bessel", &bs );
+  test_autodiff_spline( "VanLeer", &vl );
   test_autodiff_spline( "Pchip", &pc );
   test_autodiff_spline( "Quintic", &qs_cubic );
   test_autodiff_spline( "Quintic_akima", &qs_akima );
-  test_autodiff_spline( "Quintic_bessel", &qs_bessel );
+  test_autodiff_spline( "Quintic_vanleer", &qs_vanleer );
   test_autodiff_spline( "Quintic_pchip", &qs_pchip );
 
   // Test 3: SplineSet

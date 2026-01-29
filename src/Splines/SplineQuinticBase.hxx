@@ -297,10 +297,10 @@ namespace Splines
     {
       switch ( m_sub_type )
       {
-        case Spline_sub_type::CUBIC: return SplineType1D::QUINTIC_CUBIC;
-        case Spline_sub_type::AKIMA: return SplineType1D::QUINTIC_AKIMA;
-        case Spline_sub_type::BESSEL: return SplineType1D::QUINTIC_BESSEL;
-        case Spline_sub_type::PCHIP: return SplineType1D::QUINTIC_PCHIP;
+        case Spline_sub_type::CUBIC:   return SplineType1D::QUINTIC_CUBIC;
+        case Spline_sub_type::AKIMA:   return SplineType1D::QUINTIC_AKIMA;
+        case Spline_sub_type::VANLEER: return SplineType1D::QUINTIC_VANLEER;
+        case Spline_sub_type::PCHIP:   return SplineType1D::QUINTIC_PCHIP;
       }
     }
 

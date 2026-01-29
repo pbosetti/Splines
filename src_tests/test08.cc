@@ -236,11 +236,11 @@ void test_json_string_constructors()
   splines.emplace_back( "Bilinear", make_unique<BilinearSpline>() );
   splines.emplace_back( "BiCubic", make_unique<BiCubicSpline>( Spline_sub_type::CUBIC ) );
   splines.emplace_back( "BiCubic[Akima]", make_unique<BiCubicSpline>( Spline_sub_type::AKIMA ) );
-  splines.emplace_back( "BiCubic[Bessel]", make_unique<BiCubicSpline>( Spline_sub_type::BESSEL ) );
+  splines.emplace_back( "BiCubic[VanLeer]", make_unique<BiCubicSpline>( Spline_sub_type::VANLEER ) );
   splines.emplace_back( "BiCubic[Pchip]", make_unique<BiCubicSpline>( Spline_sub_type::PCHIP ) );
   splines.emplace_back( "BiQuintic", make_unique<BiQuinticSpline>( Spline_sub_type::CUBIC ) );
   splines.emplace_back( "BiQuintic[Akima]", make_unique<BiQuinticSpline>( Spline_sub_type::AKIMA ) );
-  splines.emplace_back( "BiQuintic[Bessel]", make_unique<BiQuinticSpline>( Spline_sub_type::BESSEL ) );
+  splines.emplace_back( "BiQuintic[VanLeer]", make_unique<BiQuinticSpline>( Spline_sub_type::VANLEER ) );
   splines.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Original grid data from JSON for verification
@@ -514,11 +514,11 @@ void test_derivatives_with_autodiff()
   tests.emplace_back( "Bilinear", make_unique<BilinearSpline>() );
   tests.emplace_back( "BiCubic", make_unique<BiCubicSpline>( Spline_sub_type::CUBIC ) );
   tests.emplace_back( "BiCubic[Akima]", make_unique<BiCubicSpline>( Spline_sub_type::AKIMA ) );
-  tests.emplace_back( "BiCubic[Bessel]", make_unique<BiCubicSpline>( Spline_sub_type::BESSEL ) );
+  tests.emplace_back( "BiCubic[VanLeer]", make_unique<BiCubicSpline>( Spline_sub_type::VANLEER ) );
   tests.emplace_back( "BiCubic[Pchip]", make_unique<BiCubicSpline>( Spline_sub_type::PCHIP ) );
   tests.emplace_back( "BiQuintic", make_unique<BiQuinticSpline>( Spline_sub_type::CUBIC ) );
   tests.emplace_back( "BiQuintic[Akima]", make_unique<BiQuinticSpline>( Spline_sub_type::AKIMA ) );
-  tests.emplace_back( "BiQuintic[Bessel]", make_unique<BiQuinticSpline>( Spline_sub_type::BESSEL ) );
+  tests.emplace_back( "BiQuintic[VanLeer]", make_unique<BiQuinticSpline>( Spline_sub_type::VANLEER ) );
   tests.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Build all splines

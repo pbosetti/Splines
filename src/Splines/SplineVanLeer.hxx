@@ -19,52 +19,52 @@
 
 #pragma once
 
-#ifndef SPLINE_BESSEL_HXX
-#define SPLINE_BESSEL_HXX
+#ifndef SPLINE_VANLEER_HXX
+#define SPLINE_VANLEER_HXX
 
 /*\
- |   ____                     _ ____        _ _
- |  | __ )  ___  ___ ___  ___| / ___| _ __ | (_)_ __   ___
- |  |  _ \ / _ \/ __/ __|/ _ \ \___ \| '_ \| | | '_ \ / _ \
- |  | |_) |  __/\__ \__ \  __/ |___) | |_) | | | | | |  __/
- |  |____/ \___||___/___/\___|_|____/| .__/|_|_|_| |_|\___|
- |                                   |_|
+ |  __     __          _                   ____        _ _
+ |  \ \   / /_ _ _ __ | |    ___  ___ _ __/ ___| _ __ | (_)_ __   ___
+ |   \ \ / / _` | '_ \| |   / _ \/ _ \ '__\___ \| '_ \| | | '_ \ / _ \
+ |    \ V / (_| | | | | |__|  __/  __/ |   ___) | |_) | | | | | |  __/
+ |     \_/ \__,_|_| |_|_____\___|\___|_|  |____/| .__/|_|_|_| |_|\___|
+ |                                              |_|
 \*/
 
 namespace Splines
 {
 
   //!
-  //! Bessel spline class
+  //! Van Leer spline class
   //!
-  class BesselSpline : public CubicSplineBase
+  class VanLeerSpline : public CubicSplineBase
   {
   public:
     using CubicSplineBase::build;
     using CubicSplineBase::reserve;
 
     //!
-    //! Build an empty spline of `BesselSpline` type
+    //! Build an empty spline of `VanLeerSpline` type
     //!
     //! \param name the name of the spline
     //!
-    explicit BesselSpline( string_view name = "BesselSpline" ) : CubicSplineBase( name ) {}
+    explicit VanLeerSpline( string_view name = "VanLeerSpline" ) : CubicSplineBase( name ) {}
 
     //!
     //! spline destructor
     //!
-    ~BesselSpline() override {}
+    ~VanLeerSpline() override {}
 
     //!
     //! Return spline type (as number)
     //!
-    SplineType1D type() const override { return SplineType1D::BESSEL; }
+    SplineType1D type() const override { return SplineType1D::VANLEER; }
 
     // --------------------------- VIRTUALS -----------------------------------
 
     void build() override
     {
-      string msg{ fmt::format( "BesselSpline[{}]::build():", m_name ) };
+      string msg{ fmt::format( "VanLeerSpline[{}]::build():", m_name ) };
       UTILS_ASSERT( m_npts > 1, "{} npts={} not enought points\n", msg, m_npts );
       Utils::check_NaN( m_X, msg + " X", m_npts, __LINE__, __FILE__ );
       Utils::check_NaN( m_Y, msg + " Y", m_npts, __LINE__, __FILE__ );
@@ -74,7 +74,7 @@ namespace Splines
       {
         // cerca intervallo monotono strettamente crescente
         for ( ++iend; iend < m_npts && m_X[iend - 1] < m_X[iend]; ++iend ) {}
-        Bessel_build( m_X + ibegin, m_Y + ibegin, m_Yp + ibegin, iend - ibegin );
+        VanLeer_build( m_X + ibegin, m_Y + ibegin, m_Yp + ibegin, iend - ibegin );
         ibegin = iend;
       } while ( iend < m_npts );
 
@@ -89,7 +89,7 @@ namespace Splines
       // gc["ydata"]
       //
       */
-      string const where{ fmt::format( "BesselSpline[{}]::setup( gc ):", m_name ) };
+      string const where{ fmt::format( "VanLeerSpline[{}]::setup( gc ):", m_name ) };
 
       std::set<std::string> keywords;
       for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }

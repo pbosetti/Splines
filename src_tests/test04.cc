@@ -293,14 +293,14 @@ int main()
 
     // Define 10 splines including all quintic subtypes
     constexpr integer nspl      = 10;
-    char const *      headers[] = { "CONSTANT", "LINEAR",        "CUBIC",         "AKIMA",          "BESSEL",
-                                    "PCHIP",    "QUINTIC_CUBIC", "QUINTIC_AKIMA", "QUINTIC_BESSEL", "QUINTIC_PCHIP" };
+    char const *      headers[] = { "CONSTANT", "LINEAR",        "CUBIC",         "AKIMA",           "VANLEER",
+                                    "PCHIP",    "QUINTIC_CUBIC", "QUINTIC_AKIMA", "QUINTIC_VANLEER", "QUINTIC_PCHIP" };
 
-    SplineType1D const stype[] = { SplineType1D::CONSTANT,       SplineType1D::LINEAR,
-                                   SplineType1D::CUBIC,          SplineType1D::AKIMA,
-                                   SplineType1D::BESSEL,         SplineType1D::PCHIP,
-                                   SplineType1D::QUINTIC_CUBIC,  SplineType1D::QUINTIC_AKIMA,
-                                   SplineType1D::QUINTIC_BESSEL, SplineType1D::QUINTIC_PCHIP };
+    SplineType1D const stype[] = { SplineType1D::CONSTANT,        SplineType1D::LINEAR,
+                                   SplineType1D::CUBIC,           SplineType1D::AKIMA,
+                                   SplineType1D::VANLEER,         SplineType1D::PCHIP,
+                                   SplineType1D::QUINTIC_CUBIC,   SplineType1D::QUINTIC_AKIMA,
+                                   SplineType1D::QUINTIC_VANLEER, SplineType1D::QUINTIC_PCHIP };
 
     // Prepare data for all splines
     vector<real_type const *> Y( nspl );

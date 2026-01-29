@@ -22,7 +22,7 @@
  * - LINEAR: Linear interpolation
  * - CUBIC: Cubic spline (natural)
  * - AKIMA: Akima spline
- * - BESSEL: Bessel spline
+ * - VANLEER: Val Leer limited spline
  * - PCHIP: Piecewise Cubic Hermite Interpolating Polynomial
  * - HERMITE: Hermite spline (requires Yp)
  * - QUINTIC: Quintic spline
@@ -74,7 +74,7 @@ void build(
       // Spline quintiche: necessitano Y, Yp, Ypp (3 * npts)
       case SplineType1D::QUINTIC_CUBIC:
       case SplineType1D::QUINTIC_AKIMA:
-      case SplineType1D::QUINTIC_BESSEL:
+      case SplineType1D::QUINTIC_VANLEER:
       case SplineType1D::QUINTIC_PCHIP:
         mem += npts;  // Spazio per Ypp
         [[fallthrough]];
@@ -82,7 +82,7 @@ void build(
       // Spline cubiche/hermitiane: necessitano Y, Yp (2 * npts)
       case SplineType1D::CUBIC:
       case SplineType1D::AKIMA:
-      case SplineType1D::BESSEL:
+      case SplineType1D::VANLEER:
       case SplineType1D::PCHIP:
       case SplineType1D::HERMITE:
         mem += npts;  // Spazio per Yp
@@ -164,14 +164,14 @@ void build(
     {
       case SplineType1D::QUINTIC_CUBIC:
       case SplineType1D::QUINTIC_AKIMA:
-      case SplineType1D::QUINTIC_BESSEL:
+      case SplineType1D::QUINTIC_VANLEER:
       case SplineType1D::QUINTIC_PCHIP:
         pYpp = m_mem( m_npts );  // Alloca seconda derivata
         [[fallthrough]];
 
       case SplineType1D::CUBIC:
       case SplineType1D::AKIMA:
-      case SplineType1D::BESSEL:
+      case SplineType1D::VANLEER:
       case SplineType1D::PCHIP:
       case SplineType1D::HERMITE:
         pYp = m_mem( m_npts );  // Alloca prima derivata
@@ -267,9 +267,9 @@ void build(
       }
       break;
 
-      case SplineType1D::BESSEL:
+      case SplineType1D::VANLEER:
       {
-        auto S = std::make_unique<BesselSpline>( h );
+        auto S = std::make_unique<VanLeerSpline>( h );
         S->reserve_external( m_npts, m_X, pY, pYp );
         S->m_npts = m_npts;
         S->build();
@@ -323,9 +323,9 @@ void build(
       }
       break;
 
-      case SplineType1D::QUINTIC_BESSEL:
+      case SplineType1D::QUINTIC_VANLEER:
       {
-        auto S = std::make_unique<QuinticSpline>( Spline_sub_type::BESSEL, h );
+        auto S = std::make_unique<QuinticSpline>( Spline_sub_type::VANLEER, h );
         S->reserve_external( m_npts, m_X, pY, pYp, pYpp );
         S->m_npts = m_npts;
         S->build();

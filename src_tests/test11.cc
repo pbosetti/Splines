@@ -449,11 +449,11 @@ namespace SplinesTest
       case SplineType2D::BILINEAR: type_name = "Bilinear"; break;
       case SplineType2D::BICUBIC_CUBIC: type_name = "Bicubic"; break;
       case SplineType2D::BICUBIC_AKIMA: type_name = "Bicubic[Akima]"; break;
-      case SplineType2D::BICUBIC_BESSEL: type_name = "Bicubic[Bessel]"; break;
+      case SplineType2D::BICUBIC_VANLEER: type_name = "Bicubic[VanLeer]"; break;
       case SplineType2D::BICUBIC_PCHIP: type_name = "Bicubic[Pchip]"; break;
       case SplineType2D::BIQUINTIC_CUBIC: type_name = "Biquintic"; break;
       case SplineType2D::BIQUINTIC_AKIMA: type_name = "Biquintic[Akima]"; break;
-      case SplineType2D::BIQUINTIC_BESSEL: type_name = "Biquintic[Bessel]"; break;
+      case SplineType2D::BIQUINTIC_VANLEER: type_name = "Biquintic[VanLeer]"; break;
       case SplineType2D::BIQUINTIC_PCHIP: type_name = "Biquintic[Pchip]"; break;
       default: type_name = "Unknown"; break;
     }
@@ -785,9 +785,9 @@ int main()
 
   // Test all spline types
   vector<SplineType2D> spline_types = { SplineType2D::BILINEAR,        SplineType2D::BICUBIC_CUBIC,
-                                        SplineType2D::BICUBIC_AKIMA,   SplineType2D::BICUBIC_BESSEL,
+                                        SplineType2D::BICUBIC_AKIMA,   SplineType2D::BICUBIC_VANLEER,
                                         SplineType2D::BICUBIC_PCHIP,   SplineType2D::BIQUINTIC_CUBIC,
-                                        SplineType2D::BIQUINTIC_AKIMA, SplineType2D::BIQUINTIC_BESSEL,
+                                        SplineType2D::BIQUINTIC_AKIMA, SplineType2D::BIQUINTIC_VANLEER,
                                         SplineType2D::BIQUINTIC_PCHIP };
 
   for ( auto type : spline_types ) { test_spline_type( type, x_grid, y_grid, z_data, 500 ); }

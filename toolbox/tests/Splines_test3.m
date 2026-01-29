@@ -38,11 +38,11 @@ ZZ  = peaks(XX,YY);
 bl  = Spline2D('bilinear',X,Y,ZZ);
 bc  = Spline2D('bicubic',X,Y,ZZ);
 ba  = Spline2D('bicubic_akima',X,Y,ZZ);
-bb  = Spline2D('bicubic_bessel',X,Y,ZZ);
+bb  = Spline2D('bicubic_vanleer',X,Y,ZZ);
 bp  = Spline2D('bicubic_pchip',X,Y,ZZ);
 bq  = Spline2D('biquintic',X,Y,ZZ);
 bqa = Spline2D('biquintic_akima',X,Y,ZZ);
-bqb = Spline2D('biquintic_bessel',X,Y,ZZ);
+bqb = Spline2D('biquintic_vanleer',X,Y,ZZ);
 bqp = Spline2D('biquintic_pchip',X,Y,ZZ);
 
 surf(XX,YY,ZZ), view(145,-2), set(gca,'Fontsize',16);
@@ -72,7 +72,7 @@ if any(isnan(Z3(:)))
   fprintf('Found NaN on bicubic akima\n');
 end
 if any(isinf(Z4(:)))
-  fprintf('Found Inf on bicubic bessel\n');
+  fprintf('Found Inf on bicubic vanleer\n');
 end
 if any(isnan(Z5(:)))
   fprintf('Found NaN on bicubic pchip\n');
@@ -84,7 +84,7 @@ if any(isnan(Z7(:)))
   fprintf('Found NaN on biquintic akima\n');
 end
 if any(isinf(Z8(:)))
-  fprintf('Found Inf on biquintic bessel\n');
+  fprintf('Found Inf on biquintic vanleer\n');
 end
 if any(isinf(Z9(:)))
   fprintf('Found Inf on biquintic pchip\n');
@@ -104,7 +104,7 @@ title('bicubic akima');
 
 subplot(3,3,4);
 surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
-title('bicubic bessel');
+title('bicubic vanleer');
 
 subplot(3,3,5);
 surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
@@ -120,7 +120,7 @@ title('biquintic akima');
 
 subplot(3,3,8);
 surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);
-title('biquintic bessel');
+title('biquintic vanleer');
 
 subplot(3,3,9);
 surf(XX,YY,Z1,'Linestyle',':'), view(145,40), set(gca,'Fontsize',16);

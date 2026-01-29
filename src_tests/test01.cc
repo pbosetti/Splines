@@ -1232,16 +1232,16 @@ int main()
   ConstantSpline co;
   AkimaSpline    ak;
   CubicSpline    cs;
-  BesselSpline   be;
+  VanLeerSpline  vl;
   PchipSpline    pc;
   QuinticSpline  qs_cubic( Spline_sub_type::CUBIC );
   QuinticSpline  qs_pchip( Spline_sub_type::PCHIP );
   QuinticSpline  qs_akima( Spline_sub_type::AKIMA );
-  QuinticSpline  qs_bessel( Spline_sub_type::BESSEL );
+  QuinticSpline  qs_vanleer( Spline_sub_type::VANLEER );
 
   // Open output files
-  ofstream file_li, file_co, file_ak, file_cs, file_be, file_pc, file_qs_cubic, file_qs_pchip, file_qs_akima,
-    file_qs_bessel;
+  ofstream file_li, file_co, file_ak, file_cs, file_vl, file_pc, file_qs_cubic, file_qs_pchip, file_qs_akima,
+    file_qs_vanleer;
 
   for ( integer k = 0; k < 6; ++k )
   {
@@ -1288,8 +1288,8 @@ int main()
     file_ak.open( fname.data() );
     fname = fmt::format( "out/Cubic{}.txt", k );
     file_cs.open( fname.data() );
-    fname = fmt::format( "out/Bessel{}.txt", k );
-    file_be.open( fname.data() );
+    fname = fmt::format( "out/VanLeer{}.txt", k );
+    file_vl.open( fname.data() );
     fname = fmt::format( "out/Pchip{}.txt", k );
     file_pc.open( fname.data() );
     fname = fmt::format( "out/Quintic_CUBIC{}.txt", k );
@@ -1298,8 +1298,8 @@ int main()
     file_qs_pchip.open( fname.data() );
     fname = fmt::format( "out/Quintic_AKIMA{}.txt", k );
     file_qs_akima.open( fname.data() );
-    fname = fmt::format( "out/Quintic_BESSEL{}.txt", k );
-    file_qs_bessel.open( fname.data() );
+    fname = fmt::format( "out/Quintic_VANLEER{}.txt", k );
+    file_qs_vanleer.open( fname.data() );
 
     real_type xmin{ xx[0] };
     real_type xmax{ xx[nn[k] - 1] };
@@ -1347,12 +1347,12 @@ int main()
     process_spline( co, "Constant", file_co );
     process_spline( ak, "Akima", file_ak );
     process_spline( cs, "Cubic", file_cs );
-    process_spline( be, "Bessel", file_be );
+    process_spline( vl, "VanLeer", file_vl );
     process_spline( pc, "Pchip", file_pc );
     process_spline( qs_cubic, "Quintic (CUBIC)", file_qs_cubic );
     process_spline( qs_pchip, "Quintic (PCHIP)", file_qs_pchip );
     process_spline( qs_akima, "Quintic (AKIMA)", file_qs_akima );
-    process_spline( qs_bessel, "Quintic (BESSEL)", file_qs_bessel );
+    process_spline( qs_vanleer, "Quintic (VANLEER)", file_qs_vanleer );
 
     // Print min/max results table
     print_results_table( results, k );
@@ -1436,7 +1436,7 @@ int main()
       test_convergence( &ak, "Akima", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
-      test_convergence( &be, "Bessel", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &vl, "VanLeer", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
 
     uniform_results.push_back(
       test_convergence( &pc, "Pchip", test_func.name, true, test_func.a, test_func.b, test_func.func ) );
@@ -1469,8 +1469,8 @@ int main()
       test_func.func ) );
 
     uniform_results.push_back( test_convergence(
-      &qs_bessel,
-      "Quintic (BESSEL)",
+      &qs_vanleer,
+      "Quintic (VANLEER)",
       test_func.name,
       true,
       test_func.a,
@@ -1498,7 +1498,7 @@ int main()
       test_convergence( &ak, "Akima", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
-      test_convergence( &be, "Bessel", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
+      test_convergence( &vl, "VanLeer", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
 
     nonuniform_results.push_back(
       test_convergence( &pc, "Pchip", test_func.name, false, test_func.a, test_func.b, test_func.func ) );
@@ -1532,8 +1532,8 @@ int main()
       test_func.func ) );
 
     nonuniform_results.push_back( test_convergence(
-      &qs_bessel,
-      "Quintic (BESSEL)",
+      &qs_vanleer,
+      "Quintic (VANLEER)",
       test_func.name,
       false,
       test_func.a,
@@ -1550,7 +1550,7 @@ int main()
       // Test derivative accuracy for different spline types
       test_derivative_accuracy_for_function( test_func, "Cubic", new Splines::CubicSpline() );
       test_derivative_accuracy_for_function( test_func, "Akima", new Splines::AkimaSpline() );
-      test_derivative_accuracy_for_function( test_func, "Bessel", new Splines::BesselSpline() );
+      test_derivative_accuracy_for_function( test_func, "VanLeer", new Splines::VanLeerSpline() );
       test_derivative_accuracy_for_function( test_func, "Pchip", new Splines::PchipSpline() );
       test_derivative_accuracy_for_function(
         test_func,
@@ -1562,8 +1562,8 @@ int main()
         new Splines::QuinticSpline( Spline_sub_type::AKIMA ) );
       test_derivative_accuracy_for_function(
         test_func,
-        "Quintic[Bessel]",
-        new Splines::QuinticSpline( Spline_sub_type::BESSEL ) );
+        "Quintic[VanLeer]",
+        new Splines::QuinticSpline( Spline_sub_type::VANLEER ) );
       test_derivative_accuracy_for_function(
         test_func,
         "Quintic[Pchi]",
@@ -1585,7 +1585,7 @@ int main()
     "  • Constant splines:   O(h)  for function (piecewise constant)\n"
     "  • Cubic splines:      O(h⁴) for function, O(h³) for derivative\n"
     "  • Akima splines:      O(h²) for function, O(h) for derivative\n"
-    "  • Bessel splines:     Similar to Cubic splines\n"
+    "  • VanLeer splines:    O(h²) for function, O(h) for derivative\n"
     "  • Pchip splines:      O(h⁴) for function (shape-preserving)\n"
     "  • Quintic splines:    O(h⁶) for function, O(h⁵) for derivative\n"
     "\n"

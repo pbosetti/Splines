@@ -56,18 +56,18 @@ namespace Splines
       mDXXY.resize( m_nx, m_ny );
       mDXXYY.resize( m_nx, m_ny );
 
-      CubicSpline  cs;
-      AkimaSpline  ak;
-      BesselSpline be;
-      PchipSpline  pc;
+      CubicSpline   cs;
+      AkimaSpline   ak;
+      VanLeerSpline vl;
+      PchipSpline   pc;
 
       CubicSplineBase * S;
       switch ( m_sub_type )
       {
-        case Spline_sub_type::CUBIC:  S = &cs; break;
-        case Spline_sub_type::AKIMA:  S = &ak; break;
-        case Spline_sub_type::BESSEL: S = &be; break;
-        case Spline_sub_type::PCHIP:  S = &pc; break;
+        case Spline_sub_type::CUBIC:   S = &cs; break;
+        case Spline_sub_type::AKIMA:   S = &ak; break;
+        case Spline_sub_type::VANLEER: S = &vl; break;
+        case Spline_sub_type::PCHIP:   S = &pc; break;
       }
 
       make_derivative_x( S, mZ, mDX );

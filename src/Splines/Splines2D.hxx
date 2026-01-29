@@ -69,12 +69,12 @@ namespace Splines
         case SplineType2D::BILINEAR: m_spline_2D = new BilinearSpline( m_name ); break;
         case SplineType2D::BICUBIC_CUBIC: m_spline_2D = new BiCubicSpline( Spline_sub_type::CUBIC, m_name ); break;
         case SplineType2D::BICUBIC_AKIMA: m_spline_2D = new BiCubicSpline( Spline_sub_type::AKIMA, m_name ); break;
-        case SplineType2D::BICUBIC_BESSEL: m_spline_2D = new BiCubicSpline( Spline_sub_type::BESSEL, m_name ); break;
+        case SplineType2D::BICUBIC_VANLEER: m_spline_2D = new BiCubicSpline( Spline_sub_type::VANLEER, m_name ); break;
         case SplineType2D::BICUBIC_PCHIP: m_spline_2D = new BiCubicSpline( Spline_sub_type::PCHIP, m_name ); break;
         case SplineType2D::BIQUINTIC_CUBIC: m_spline_2D = new BiQuinticSpline( Spline_sub_type::CUBIC, m_name ); break;
         case SplineType2D::BIQUINTIC_AKIMA: m_spline_2D = new BiQuinticSpline( Spline_sub_type::AKIMA, m_name ); break;
-        case SplineType2D::BIQUINTIC_BESSEL:
-          m_spline_2D = new BiQuinticSpline( Spline_sub_type::BESSEL, m_name );
+        case SplineType2D::BIQUINTIC_VANLEER:
+          m_spline_2D = new BiQuinticSpline( Spline_sub_type::VANLEER, m_name );
           break;
         case SplineType2D::BIQUINTIC_PCHIP: m_spline_2D = new BiQuinticSpline( Spline_sub_type::PCHIP, m_name ); break;
       }

@@ -288,11 +288,11 @@ void test_akima_spline()
   print_result_table( { "x", "f(x)", "f'(x)" }, eval_data );
 }
 
-void test_bessel_spline()
+void test_vanleer_spline()
 {
-  print_header( "⚙️ Testing BesselSpline" );
+  print_header( "⚙️ Testing VanLeerSpline" );
 
-  BesselSpline bs( "Bessel" );
+  VanLeerSpline bs( "VanLeer" );
 
   real_type x[] = { 0, 1, 2, 3, 4 };
   real_type y[] = { 0, 1, 0.5, 1.5, 1 };
@@ -357,9 +357,9 @@ void test_quintic_spline()
   vector<Spline_sub_type> types = { Spline_sub_type::CUBIC,
                                     Spline_sub_type::PCHIP,
                                     Spline_sub_type::AKIMA,
-                                    Spline_sub_type::BESSEL };
+                                    Spline_sub_type::VANLEER };
 
-  vector<string>     type_names  = { "CUBIC", "PCHIP", "AKIMA", "BESSEL" };
+  vector<string>     type_names  = { "CUBIC", "PCHIP", "AKIMA", "VANLEER" };
   vector<fmt::color> type_colors = { fmt::color::light_blue,
                                      fmt::color::light_green,
                                      fmt::color::light_pink,
@@ -670,7 +670,7 @@ int main()
                                 { "Linear Spline", test_linear_spline },
                                 { "Cubic Spline", test_cubic_spline },
                                 { "Akima Spline", test_akima_spline },
-                                { "Bessel Spline", test_bessel_spline },
+                                { "VanLeer Spline", test_vanleer_spline },
                                 { "Pchip Spline", test_pchip_spline },
                                 { "Hermite Spline", test_hermite_spline },
                                 { "Quintic Spline", test_quintic_spline },
