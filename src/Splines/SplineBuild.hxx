@@ -133,61 +133,26 @@ namespace Splines
       return;
     }
 
+    auto minmod = []( real_type a, real_type b, real_type c ) -> real_type {
+      if ( a > 0 && b > 0 && c > 0 ) return std::min( {a,b,c} );
+      if ( a < 0 && b < 0 && c < 0 ) return std::max( {a,b,c} );
+      return 0;
+    };
+
     // ---- left boundary ----
-    if ( npts <= 3 )
-    {
-      Yp[0] = Utils::first_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
-      Yp[1] = Utils::first_derivative_3p( X[1], Y[1], X[2], Y[2], X[0], Y[0] );
-    }
-    else
-    {
-      Yp[0] = Utils::first_derivative_4p( X[0], Y[0], X[1], Y[1], X[2], Y[2], X[3], Y[3] );
-      Yp[1] = Utils::first_derivative_4p( X[1], Y[1], X[2], Y[2], X[3], Y[3], X[0], Y[0] );
-    }
+    Yp[0] = Utils::first_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
 
     // ---- interior points ----
-    for ( integer i = 2; i < npts - 2; ++i )
-      Yp[i] = Utils::first_derivative_5p(
-        X[i - 0],
-        Y[i - 0],
-        X[i + 1],
-        Y[i + 1],
-        X[i - 1],
-        Y[i - 1],
-        X[i + 2],
-        Y[i + 2],
-        X[i - 2],
-        Y[i - 2] );
+    for ( integer i = 2; i < npts - 2; ++i ) {
+      real_type L = Utils::first_derivative_3p( X[i], Y[i], X[i-1], Y[i-1], X[i-2], Y[i-2] );
+      real_type C = Utils::first_derivative_3p( X[i], Y[i], X[i-1], Y[i-1], X[i+1], Y[i+1] );
+      real_type R = Utils::first_derivative_3p( X[i], Y[i], X[i+1], Y[i+1], X[i+2], Y[i+2] );
+      Yp[i] = minmod( L, C, R );
+    }
 
     // ---- right boundary ----
-    if ( npts <= 3 )
-    {
-      Yp[npts - 1] =
-        Utils::first_derivative_3p( X[npts - 1], Y[npts - 1], X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3] );
-      Yp[npts - 2] =
-        Utils::first_derivative_3p( X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3], X[npts - 1], Y[npts - 1] );
-    }
-    else
-    {
-      Yp[npts - 1] = Utils::first_derivative_4p(
-        X[npts - 1],
-        Y[npts - 1],
-        X[npts - 2],
-        Y[npts - 2],
-        X[npts - 3],
-        Y[npts - 3],
-        X[npts - 4],
-        Y[npts - 4] );
-      Yp[npts - 2] = Utils::first_derivative_4p(
-        X[npts - 2],
-        Y[npts - 2],
-        X[npts - 3],
-        Y[npts - 3],
-        X[npts - 4],
-        Y[npts - 4],
-        X[npts - 1],
-        Y[npts - 1] );
-    }
+    Yp[npts - 1] = Utils::first_derivative_3p( X[npts - 1], Y[npts - 1], X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3] );
+
   }
 
   /**

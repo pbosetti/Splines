@@ -216,96 +216,6 @@ namespace Splines
       }
     }
 
-#if 0
-
-    void make_derivative_x( Spline_sub_type sub, real_type const z[], real_type dx[] )
-    {
-      auto interpolate = [this]( CubicSplineBase * S, real_type const z[], real_type dx[] )
-      {
-        for ( integer j = 0; j < m_ny; ++j )
-        {
-          S->build( mX.data(), 1, z + j, m_ny, m_nx );
-          for ( integer i = 0; i < m_nx; ++i ) dx[i * m_ny + j] = S->yp_node( i );
-        }
-      };
-      CubicSpline  cs;
-      AkimaSpline  ak;
-      BesselSpline be;
-      PchipSpline  pc;
-      switch ( sub )
-      {
-        case Spline_sub_type::CUBIC: interpolate( &cs, z, dx ); break;
-        case Spline_sub_type::AKIMA: interpolate( &ak, z, dx ); break;
-        case Spline_sub_type::BESSEL: interpolate( &be, z, dx ); break;
-        case Spline_sub_type::PCHIP: interpolate( &pc, z, dx ); break;
-      }
-    }
-
-    void make_derivative_y( Spline_sub_type sub, real_type const z[], real_type dy[] )
-    {
-      auto interpolate = [this]( CubicSplineBase * S, real_type const z[], real_type dy[] )
-      {
-        for ( integer i = 0; i < m_nx; ++i )
-        {
-          S->build( mY.data(), 1, z + i * m_ny, 1, m_ny );
-          for ( integer j = 0; j < m_ny; ++j ) dy[i * m_ny + j] = S->yp_node( j );
-        }
-      };
-      CubicSpline  cs;
-      AkimaSpline  ak;
-      BesselSpline be;
-      PchipSpline  pc;
-      switch ( sub )
-      {
-        case Spline_sub_type::CUBIC: interpolate( &cs, z, dy ); break;
-        case Spline_sub_type::AKIMA: interpolate( &ak, z, dy ); break;
-        case Spline_sub_type::BESSEL: interpolate( &be, z, dy ); break;
-        case Spline_sub_type::PCHIP: interpolate( &pc, z, dy ); break;
-      }
-    }
-
-    void make_derivative_xy( Spline_sub_type sub, real_type const dx[], real_type const dy[], real_type dxy[] )
-    {
-      auto interpolate = [this]( CubicSplineBase * S, real_type const dx[], real_type const dy[], real_type dxy[] )
-      {
-        auto minmod = []( real_type a, real_type b ) -> real_type
-        {
-          if ( a * b <= 0 ) return 0;
-          if ( a > 0 ) return std::min( a, b );
-          return std::max( a, b );
-        };
-        for ( integer j = 0; j < m_ny; ++j )
-        {
-          S->build( mX.data(), 1, dy + j, m_ny, m_nx );
-          for ( integer i = 0; i < m_nx; ++i ) dxy[i * m_ny + j] = S->yp_node( i );
-        }
-
-        for ( integer i = 0; i < m_nx; ++i )
-        {
-          S->build( mY.data(), 1, dx + i * m_ny, 1, m_ny );
-          for ( integer j = 0; j < m_ny; ++j )
-          {
-            integer const ij = i * m_ny + j;
-            dxy[ij]          = minmod( dxy[ij], S->yp_node( j ) );
-          }
-        }
-      };
-      CubicSpline  cs;
-      AkimaSpline  ak;
-      BesselSpline be;
-      PchipSpline  pc;
-      switch ( sub )
-      {
-        case Spline_sub_type::CUBIC: interpolate( &cs, dx, dy, dxy ); break;
-        case Spline_sub_type::AKIMA: interpolate( &ak, dx, dy, dxy ); break;
-        case Spline_sub_type::BESSEL: interpolate( &be, dx, dy, dxy ); break;
-        case Spline_sub_type::PCHIP: interpolate( &pc, dx, dy, dxy ); break;
-      }
-    }
-
-#endif
-
-
     void resize( integer const nx, integer const ny )
     {
       m_nx = nx;
@@ -585,6 +495,32 @@ namespace Splines
     //!
     //! Build surface spline
     //!
+    //! \param x               vector of `x`-coordinates
+    //! \param y               vector of `y`-coordinates
+    //! \param z               matrix of `z`-values. Elements are stored
+    //!                        by row Z(i,j) = z[i*ny+j] as C-matrix
+    //! \param nx              number of points in `x` direction
+    //! \param ny              number of points in `y` direction
+    //! \param fortran_storage if true elements are stored by column
+    //!                        i.e. Z(i,j) = z[i+j*nx] as Fortran-matrix
+    //! \param transposed      if true matrix Z is stored transposed
+    //!
+    void build(
+      real_type const x[],
+      real_type const y[],
+      real_type const z[],
+      integer const   nx,
+      integer const   ny,
+      bool            fortran_storage = false,
+      bool            transposed      = false )
+    {
+      integer ldZ = fortran_storage ? nx : ny;
+      build( x, 1, y, 1, z, ldZ, nx, ny, fortran_storage, transposed );
+    }
+
+    //!
+    //! Build surface spline
+    //!
     //! \param x               vector of x-coordinates, nx = x.size()
     //! \param y               vector of y-coordinates, ny = y.size()
     //! \param Z               matrix of z-values. Elements are stored
@@ -622,19 +558,10 @@ namespace Splines
       bool                      fortran_storage = false,
       bool                      transposed      = false )
     {
-      integer nx = static_cast<integer>( x.size() );
-      integer ny = static_cast<integer>( y.size() );
-      this->build(
-        x.data(),
-        1,
-        y.data(),
-        1,
-        z.data(),
-        fortran_storage == transposed ? ny : nx,
-        nx,
-        ny,
-        fortran_storage,
-        transposed );
+      integer nx  = static_cast<integer>( x.size() );
+      integer ny  = static_cast<integer>( y.size() );
+      integer ldZ = fortran_storage ? nx : ny;
+      build( x.data(), 1, y.data(), 1, z.data(), ldZ, nx, ny, fortran_storage, transposed );
     }
 
     void build(
@@ -672,7 +599,8 @@ namespace Splines
       bool                      fortran_storage = false,
       bool                      transposed      = false )
     {
-      this->build( z.data(), nx, ny, fortran_storage == transposed ? nx : ny, fortran_storage, transposed );
+      integer ldZ = fortran_storage ? nx : ny;
+      this->build( z.data(), ldZ, nx, ny, fortran_storage, transposed );
     }
 
     //!
@@ -736,25 +664,16 @@ namespace Splines
 
         if ( GC_type::MAT_REAL == gc_z.get_type() )
         {
-          if ( fortran_storage ) {
-            Eigen::Map<const Mat> Z( gc_z.get_mat_real().data(), NR, NC );
-            load_Z( Z, transposed );
-          } else {
-            Eigen::Map<const MatC> Z( gc_z.get_mat_real().data(), NR, NC );
-            load_Z( Z, transposed );
-          }
+          auto & mat = gc_z.get_mat_real(); // è in fortran storage!
+          Eigen::Map<const Mat> Z( mat.data(), NR, NC );
+          load_Z( Z, transposed );
         }
         else
         {
           GenericContainer::mat_real_type z_tmp;
-          gc_z.copyto_mat_real( z_tmp );
-          if ( fortran_storage ) {
-            Eigen::Map<Mat> Z( z_tmp.data(), NR, NC );
-            load_Z( Z, transposed );
-          } else {
-            Eigen::Map<MatC> Z( z_tmp.data(), NR, NC );
-            load_Z( Z, transposed );
-          }
+          gc_z.copyto_mat_real( z_tmp ); // è in fortran storage!
+          Eigen::Map<Mat> Z( z_tmp.data(), NR, NC );
+          load_Z( Z, transposed );
         }
       }
       else if (

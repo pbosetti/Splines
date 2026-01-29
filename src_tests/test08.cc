@@ -131,7 +131,7 @@ void test_2d_spline_evaluation()
   print_info( "Creating BiQuinticSpline from array data..." );
 
   auto          spline = make_unique<BiQuinticSpline>( Splines::Spline_sub_type::CUBIC );
-  constexpr int ldZ    = nx;
+  constexpr int ldZ    = ny;
 
   try
   {
@@ -251,13 +251,14 @@ void test_json_string_constructors()
   //                                      { 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0 },
   //                                      { 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0 } };
 
-  Splines::Vec  x_nodes(7);
-  Splines::Vec  y_nodes(8);
-  Splines::MatC z_original(7,8);
+  Splines::Vec x_nodes(7);
+  Splines::Vec y_nodes(8);
+  Splines::Mat z_original_t(8,7);
+  Splines::Mat z_original(7,8);
 
   x_nodes << -0.0523599, -0.01309, -0.0043633, 0.0261799, 0.0392699, 0.1047198, 0.1745329;
   y_nodes << 0.0, 0.1745329, 0.3490659, 0.5235988, 0.6981317, 0.8726646, 1.0471976, 1.2217305;
-  z_original <<
+  z_original_t <<
     0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
     0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
     0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
@@ -266,6 +267,8 @@ void test_json_string_constructors()
     0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
     0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
     0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025;
+    
+  z_original = z_original_t.transpose();
 
   std::cout << "---------------\n\n\n\n";
   std::cout << z_original << '\n';
@@ -368,15 +371,18 @@ void test_json_string_constructors()
 
       int          errors    = 0;
       const double tolerance = 1e-12;
+      integer NX = static_cast<integer>( x_nodes.size() );
+      integer NY = static_cast<integer>( y_nodes.size() );
 
-      for ( size_t i = 0; i < x_nodes.size(); ++i )
+      for ( integer i = 0; i < NX; ++i )
       {
-        for ( size_t j = 0; j < y_nodes.size(); ++j )
+        for ( integer j = 0; j < NY; ++j )
         {
           double computed = spline->eval( x_nodes[i], y_nodes[j] );
           double expected = z_original(i,j);
+          double err      = abs( computed - expected );
 
-          if ( abs( computed - expected ) > tolerance )
+          if ( err > tolerance )
           {
             if ( errors == 0 ) { fmt::print( fg( Color::ERROR ), "\nMismatches found (computed vs expected):\n" ); }
             fmt::print(
@@ -386,7 +392,8 @@ void test_json_string_constructors()
               y_nodes[j],
               computed,
               expected,
-              abs( computed - expected ) );
+              err
+            );
             errors++;
           }
         }
@@ -421,10 +428,10 @@ void test_json_string_constructors()
           fg( Color::TABLE_HEADER ) | fmt::emphasis::bold,
           "├──────────┼──────────┼──────────┼──────────┤\n" );
 
-        for ( size_t i = 0; i < 3; ++i )
+        for ( integer i = 0; i < 3; ++i )
         {
           fmt::print( fg( Color::TABLE_ROW ), "│ {:8.1f} │", x_nodes[i] );
-          for ( size_t j = 0; j < 3; ++j )
+          for ( integer j = 0; j < 3; ++j )
           {
             fmt::print( fg( Color::VALUE ), " {:8.4f} │", spline->eval( x_nodes[i], y_nodes[j] ) );
           }
@@ -440,9 +447,9 @@ void test_json_string_constructors()
 
         // Calcola statistiche sugli errori
         vector<double> differences;
-        for ( size_t i = 0; i < x_nodes.size(); ++i )
+        for ( integer i = 0; i < NX; ++i )
         {
-          for ( size_t j = 0; j < y_nodes.size(); ++j )
+          for ( integer j = 0; j < NY; ++j )
           {
             double computed = spline->eval( x_nodes[i], y_nodes[j] );
             double expected = z_original(i,j);
@@ -517,8 +524,7 @@ void test_derivatives_with_autodiff()
   // Build all splines
   for ( auto & [name, spline] : tests )
   {
-    constexpr int ldZ = nx;
-    spline->build( x_grid, 1, y_grid, 1, z_data, ldZ, nx, ny, false, false );
+    spline->build( x_grid, y_grid, z_data, nx, ny, false, false );
   }
 
   // Print derivatives table
@@ -593,7 +599,7 @@ void test_generic_container_construction()
 
     GC::vec_real_type & V0y = S0["ydata"].set_vec_real( nx );
     // Use first data column as sample data
-    for ( size_t i = 0; i < static_cast<size_t>( nx ); ++i )
+    for ( integer i = 0; i < nx; ++i )
     {
       V0y[i] = z_data[i];  // Take first column data
     }
@@ -603,7 +609,7 @@ void test_generic_container_construction()
 
     GC::vec_real_type & V1y = S1["ydata"].set_vec_real( nx );
     // Use second column data
-    for ( size_t i = 0; i < static_cast<size_t>( nx ); ++i )
+    for ( integer i = 0; i < nx; ++i )
     {
       V1y[i] = z_data[ny + i];  // Take second column data
     }
