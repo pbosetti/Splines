@@ -6,6 +6,6 @@
     [1, 4,  9, 16 ],
     [1, 8, 27, 64 ]
   ],
-  "transposed": true,
+  "transposed": false,
   "fortran_storage": false
 }

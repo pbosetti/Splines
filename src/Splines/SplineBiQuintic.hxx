@@ -56,17 +56,31 @@ namespace Splines
       mDXXY.resize( m_nx, m_ny );
       mDXXYY.resize( m_nx, m_ny );
 
-      make_derivative_x( m_sub_type, mZ.data(), mDX.data() );
-      make_derivative_y( m_sub_type, mZ.data(), mDY.data() );
-      make_derivative_xy( m_sub_type, mDX.data(), mDY.data(), mDXY.data() );
+      CubicSpline  cs;
+      AkimaSpline  ak;
+      BesselSpline be;
+      PchipSpline  pc;
 
-      make_derivative_x( m_sub_type, mDX.data(), mDXX.data() );
-      make_derivative_y( m_sub_type, mDY.data(), mDYY.data() );
+      CubicSplineBase * S;
+      switch ( m_sub_type )
+      {
+        case Spline_sub_type::CUBIC:  S = &cs; break;
+        case Spline_sub_type::AKIMA:  S = &ak; break;
+        case Spline_sub_type::BESSEL: S = &be; break;
+        case Spline_sub_type::PCHIP:  S = &pc; break;
+      }
 
-      make_derivative_y( m_sub_type, mDXX.data(), mDXXY.data() );
-      make_derivative_x( m_sub_type, mDYY.data(), mDXYY.data() );
+      make_derivative_x( S, mZ, mDX );
+      make_derivative_y( S, mZ, mDY );
+      make_derivative_xy( S, mDX, mDY, mDXY );
 
-      make_derivative_xy( m_sub_type, mDXXY.data(), mDXYY.data(), mDXXYY.data() );
+      make_derivative_x( S, mDX, mDXX );
+      make_derivative_y( S, mDY, mDYY );
+
+      make_derivative_y( S, mDXX, mDXXY );
+      make_derivative_x( S, mDYY, mDXYY );
+
+      make_derivative_xy( S, mDXXY, mDXYY, mDXXYY );
 
       m_search_x.must_reset();
       m_search_y.must_reset();

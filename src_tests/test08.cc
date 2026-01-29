@@ -189,7 +189,7 @@ void test_json_string_constructors()
   print_header( "Test 2: JSON String Constructors" );
 
   // Create JSON data for an asymmetric grid (4x7)
-  const string json_data1 = R"({
+  const string json_data = R"({
         "xdata": [0.0, 2.0, 4.0, 6.0],
         "ydata": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         "zdata": [
@@ -198,21 +198,9 @@ void test_json_string_constructors()
             [3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0],
             [4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0]
         ],
-        "transposed": false,
+        "transposed": true,
         "fortran_storage": true
     })";
-  const string json_data = R"({
-      "xdata": [0, 1, 2, 3],
-      "ydata": [4, 5, 6],
-      "zdata": [
-        [1, 2,  3, 4  ],
-        [1, 4,  9, 16 ],
-        [1, 8, 27, 64 ]
-      ],
-      "transposed": true,
-      "fortran_storage": false
-  })";
-
 
   print_info( "Testing spline construction from JSON string (4x7 grid)" );
 

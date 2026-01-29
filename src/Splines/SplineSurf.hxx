@@ -92,13 +92,25 @@ namespace Splines
     {
       if ( transposed )
       {
+        UTILS_ASSERT(
+          Z.rows() >= m_ny && Z.cols() >= m_nx,
+          "SplineSurf::load_Z( Z, transposed={} ) bad dimension found {} x {} expected {} x {}",
+          transposed, Z.rows(), Z.cols(), m_ny, m_nx
+        );
         for ( integer ix = 0; ix < m_nx; ++ix )
-          for ( integer iy = 0; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = Z( iy, ix );
+          for ( integer iy = 0; iy < m_ny; ++iy )
+            z_node_ref( ix, iy ) = Z( iy, ix );
       }
       else
       {
+        UTILS_ASSERT(
+          Z.rows() >= m_nx && Z.cols() >= m_ny,
+          "SplineSurf::load_Z( Z, transposed={} ) bad dimension found {} x {} expected {} x {}",
+          transposed, Z.rows(), Z.cols(), m_nx, m_ny
+        );
         for ( integer ix = 0; ix < m_nx; ++ix )
-          for ( integer iy = 0; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = Z( ix, iy );
+          for ( integer iy = 0; iy < m_ny; ++iy )
+            z_node_ref( ix, iy ) = Z( ix, iy );
       }
       m_Z_max = Z.maxCoeff();
       m_Z_min = Z.minCoeff();
@@ -168,6 +180,43 @@ namespace Splines
     }
 
     virtual void make_spline() = 0;
+
+    template <typename Derived>
+    void make_derivative_x( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & Z, Eigen::ArrayBase<Derived> & DX ) {
+      for ( integer j = 0; j < m_ny; ++j ) {
+        S->build( mX, Z.col(j) );
+        for ( integer i = 0; i < m_nx; ++i ) DX(i,j) = S->yp_node( i );
+      }
+    }
+
+    template <typename Derived>
+    void make_derivative_y( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & Z, Eigen::ArrayBase<Derived> & DY ) {
+      for ( integer i = 0; i < m_nx; ++i ) {
+        S->build( mX, Z.row(i) );
+        for ( integer j = 0; j < m_ny; ++j ) DY(i,j) = S->yp_node( j );
+      }
+    }
+
+    template <typename Derived>
+    void make_derivative_xy( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & DX, Eigen::ArrayBase<Derived> const & DY, Eigen::ArrayBase<Derived> & DXY ) {
+      auto minmod = []( real_type a, real_type b ) -> real_type {
+        if ( a * b <= 0 ) return 0;
+        if ( a > 0 ) return std::min( a, b );
+        return std::max( a, b );
+      };
+ 
+      for ( integer j = 0; j < m_ny; ++j ) {
+        S->build( mX, DY.col(j) );
+        for ( integer i = 0; i < m_nx; ++i ) DXY(i,j) = S->yp_node( i );
+      }
+
+      for ( integer i = 0; i < m_nx; ++i ) {
+        S->build( mY, DX.row(i) );
+        for ( integer j = 0; j < m_ny; ++j ) DXY(i,j) = minmod( DXY(i,j), S->yp_node( j ) );
+      }
+    }
+
+#if 0
 
     void make_derivative_x( Spline_sub_type sub, real_type const z[], real_type dx[] )
     {
@@ -253,6 +302,9 @@ namespace Splines
         case Spline_sub_type::PCHIP: interpolate( &pc, dx, dy, dxy ); break;
       }
     }
+
+#endif
+
 
     void resize( integer const nx, integer const ny )
     {
@@ -486,22 +538,11 @@ namespace Splines
 
       using Stride = Eigen::InnerStride<Eigen::Dynamic>;
 
-      if ( incx == 1 )
-      {
-        // Caso contiguo: copia di memoria pura (memcpy ultra veloce)
-        mX = Eigen::Map<const Vec>( x, nx );
-      }
-      else
-      {
-        // Caso con passo: usa InnerStride
-        mX = Eigen::Map<const Vec, 0, Stride>( x, nx, Stride( incx ) );
-      }
+      if ( incx == 1 ) mX = Eigen::Map<const Vec>( x, nx );
+      else             mX = Eigen::Map<const Vec, 0, Stride>( x, nx, Stride( incx ) );
 
-      if ( incy == 1 ) { mY = Eigen::Map<const Vec>( y, ny ); }
-      else
-      {
-        mY = Eigen::Map<const Vec, 0, Stride>( y, ny, Stride( incy ) );
-      }
+      if ( incy == 1 ) mY = Eigen::Map<const Vec>( y, ny );
+      else             mY = Eigen::Map<const Vec, 0, Stride>( y, ny, Stride( incy ) );
 
       // -----------------------------------------------------------
       // OTTIMIZZAZIONE 2: Mapping intelligente di Z
@@ -581,15 +622,17 @@ namespace Splines
       bool                      fortran_storage = false,
       bool                      transposed      = false )
     {
+      integer nx = static_cast<integer>( x.size() );
+      integer ny = static_cast<integer>( y.size() );
       this->build(
         x.data(),
         1,
         y.data(),
         1,
         z.data(),
-        integer( fortran_storage ? y.size() : x.size() ),
-        integer( x.size() ),
-        integer( y.size() ),
+        fortran_storage == transposed ? ny : nx,
+        nx,
+        ny,
         fortran_storage,
         transposed );
     }
@@ -629,7 +672,7 @@ namespace Splines
       bool                      fortran_storage = false,
       bool                      transposed      = false )
     {
-      this->build( z.data(), nx, ny, fortran_storage ? nx : ny, fortran_storage, transposed );
+      this->build( z.data(), nx, ny, fortran_storage == transposed ? nx : ny, fortran_storage, transposed );
     }
 
     //!
@@ -646,13 +689,13 @@ namespace Splines
       string const where{ fmt::format( "SplineSurf[{}]::setup( gc ):", m_name ) };
 
       std::set<std::string> keywords;
-      for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
+      for ( auto const & pair : gc.get_map( where ) ) keywords.insert( pair.first );
 
-      GenericContainer const & gc_x{ gc( "xdata", where ) };
+      GenericContainer const & gc_x = gc( "xdata", where );
       keywords.erase( "xdata" );
-      GenericContainer const & gc_y{ gc( "ydata", where ) };
+      GenericContainer const & gc_y = gc( "ydata", where );
       keywords.erase( "ydata" );
-      GenericContainer const & gc_z{ gc( "zdata", where ) };
+      GenericContainer const & gc_z = gc( "zdata", where );
       keywords.erase( "zdata" );
 
       integer nx = static_cast<integer>( gc_x.get_num_elements() );
@@ -663,9 +706,9 @@ namespace Splines
       for ( integer i = 0; i < m_nx; ++i ) mX.coeffRef( i ) = gc_x.get_number_at( i );
       for ( integer j = 0; j < m_ny; ++j ) mY.coeffRef( j ) = gc_y.get_number_at( j );
 
-      bool fortran_storage{ gc.get_map_bool( "fortran_storage", where ) };
+      bool fortran_storage = gc.get_map_bool( "fortran_storage", where );
       keywords.erase( "fortran_storage" );
-      bool transposed{ gc.get_map_bool( "transposed", where ) };
+      bool transposed = gc.get_map_bool( "transposed", where );
       keywords.erase( "transposed" );
 
       /*
@@ -676,49 +719,50 @@ namespace Splines
       */
 
       // cosa mi aspetto in lettura
-      integer NR, NC;
-      if ( transposed )
-      {
-        NC = m_ny;
-        NR = m_nx;
-      }
-      else
-      {
-        NC = m_nx;
-        NR = m_ny;
-      }
-      integer const LD{ fortran_storage ? NR : NC };
+      integer const NR = transposed ? m_ny : m_nx;
+      integer const NC = transposed ? m_nx : m_ny;
+      //integer const LD = fortran_storage ? NR : NC;
 
       if (
         GC_type::MAT_REAL == gc_z.get_type() || GC_type::MAT_INTEGER == gc_z.get_type() ||
         GC_type::MAT_LONG == gc_z.get_type() )
       {
+        integer nr = gc_z.num_rows();
+        integer nc = gc_z.num_cols();
         UTILS_ASSERT(
-          static_cast<unsigned>( NR ) == gc_z.num_rows() && static_cast<unsigned>( NC ) == gc_z.num_cols(),
+          NR == nr && NC == nc,
           "{}, field `zdata` is a matrix expected to be of size {} x {}, found: {} x {}\n",
-          where,
-          NR,
-          NC,
-          gc_z.num_rows(),
-          gc_z.num_cols() );
+          where, NR, NC, nr, nc );
 
         if ( GC_type::MAT_REAL == gc_z.get_type() )
         {
-          load_Z( gc_z.get_mat_real().data(), LD, fortran_storage, transposed );
+          if ( fortran_storage ) {
+            Eigen::Map<const Mat> Z( gc_z.get_mat_real().data(), NR, NC );
+            load_Z( Z, transposed );
+          } else {
+            Eigen::Map<const MatC> Z( gc_z.get_mat_real().data(), NR, NC );
+            load_Z( Z, transposed );
+          }
         }
         else
         {
           GenericContainer::mat_real_type z_tmp;
           gc_z.copyto_mat_real( z_tmp );
-          load_Z( z_tmp.data(), LD, fortran_storage, transposed );
+          if ( fortran_storage ) {
+            Eigen::Map<Mat> Z( z_tmp.data(), NR, NC );
+            load_Z( Z, transposed );
+          } else {
+            Eigen::Map<MatC> Z( z_tmp.data(), NR, NC );
+            load_Z( Z, transposed );
+          }
         }
       }
       else if (
         GC_type::VEC_REAL == gc_z.get_type() || GC_type::VEC_INTEGER == gc_z.get_type() ||
         GC_type::VEC_LONG == gc_z.get_type() )
       {
-        integer nz{ static_cast<integer>( gc_z.get_num_elements() ) };
-        integer nxy{ m_nx * m_ny };
+        integer nz  = static_cast<integer>( gc_z.get_num_elements() );
+        integer nxy = m_nx * m_ny;
         UTILS_ASSERT(
           nz == nxy,
           "{}, field `zdata` expected to be of size {} = {}x{}, found: `{}`\n",
