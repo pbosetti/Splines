@@ -54,6 +54,17 @@ type = {
     'biquintic_bessel',
     'biquintic_pchip'
     };
+type_str = {
+    'bilinear',
+    'bicubic',
+    'bicubic Akima',
+    'bicubic Bessel',
+    'bicubic PCHIP',
+    'biquintic',
+    'biquintic Akima',
+    'biquintic Bessel',
+    'biquintic PCHIP'
+    };
 set(gca,'Fontsize',16);
 
 tic;
@@ -61,7 +72,6 @@ tic;
 for k=1:9
 
   fprintf('Plot n.%d\n',k);
-
 
   S = Spline2D(type{k});
   S.build(X2,Y2,V2);
@@ -87,7 +97,7 @@ for k=1:9
   subplot(3,3,k);
 
   surf(XX,YY,ZZ,'Linestyle',':');
-  title(type{k});
+  title(type_str{k});
 
   axis tight
 

@@ -508,6 +508,10 @@ namespace Splines
       // -----------------------------------------------------------
       // Invece di passare pointer grezzi, creiamo una Map che gestisce
       // il "Leading Dimension" (ldZ) tramite OuterStride.
+        
+      integer nr = nx;
+      integer nc = ny;
+      if ( transposed ) std::swap( nr, nc );
 
       if ( fortran_storage )
       {
@@ -516,7 +520,7 @@ namespace Splines
         using StrideType = Eigen::OuterStride<Eigen::Dynamic>;
         using MapType    = Eigen::Map<const Mat, 0, StrideType>;
 
-        MapType mapZ( z, nx, ny, StrideType( ldZ ) );  // Assumo nx righe, ny colonne logiche
+        MapType mapZ( z, nr, nc, StrideType( ldZ ) );  // Assumo nx righe, ny colonne logiche
 
         // Chiama il tuo load_Z generico (che accetta Eigen::Ref)
         load_Z( mapZ, transposed );
@@ -528,7 +532,7 @@ namespace Splines
         using StrideType = Eigen::OuterStride<Eigen::Dynamic>;
         using MapType    = Eigen::Map<const MatC, 0, StrideType>;
 
-        MapType mapZ( z, nx, ny, StrideType( ldZ ) );  // Assumo nx righe, ny colonne logiche
+        MapType mapZ( z, nr, nc, StrideType( ldZ ) );  // Assumo nx righe, ny colonne logiche
 
         // Chiama il tuo load_Z generico (che accetta Eigen::Ref)
         load_Z( mapZ, transposed );
