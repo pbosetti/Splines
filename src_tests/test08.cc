@@ -189,7 +189,7 @@ void test_json_string_constructors()
   print_header( "Test 2: JSON String Constructors" );
 
   // Create JSON data for an asymmetric grid (4x7)
-  const string json_data = R"({
+  const string json_data_old = R"({
         "xdata": [0.0, 2.0, 4.0, 6.0],
         "ydata": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         "zdata": [
@@ -200,6 +200,23 @@ void test_json_string_constructors()
         ],
         "transposed": true,
         "fortran_storage": true
+    })";
+
+  const string json_data = R"({
+  "fortran_storage": false,
+  "transposed": false,
+  "xdata": [-0.0523599, -0.01309, -0.0043633, 0.0261799, 0.0392699, 0.1047198, 0.1745329],
+  "ydata": [0.0, 0.1745329, 0.3490659, 0.5235988, 0.6981317, 0.8726646, 1.0471976, 1.2217305],
+  "zdata": [
+    [0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035],
+    [0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035],
+    [0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035],
+    [0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035],
+    [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025],
+    [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025],
+    [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025],
+    [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025]
+  ]
     })";
 
   print_info( "Testing spline construction from JSON string (4x7 grid)" );
@@ -227,12 +244,32 @@ void test_json_string_constructors()
   splines.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Original grid data from JSON for verification
-  vector<double>         x_nodes    = { 0.0, 2.0, 4.0, 6.0 };
-  vector<double>         y_nodes    = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
-  vector<vector<double>> z_original = { { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 },
-                                        { 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0 },
-                                        { 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0 },
-                                        { 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0 } };
+  //vector<double>         x_nodes    = { 0.0, 2.0, 4.0, 6.0 };
+  //vector<double>         y_nodes    = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+  //vector<vector<double>> z_original = { { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 },
+  //                                      { 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0 },
+  //                                      { 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0 },
+  //                                      { 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0 } };
+
+  Splines::Vec  x_nodes(7);
+  Splines::Vec  y_nodes(8);
+  Splines::MatC z_original(7,8);
+
+  x_nodes << -0.0523599, -0.01309, -0.0043633, 0.0261799, 0.0392699, 0.1047198, 0.1745329;
+  y_nodes << 0.0, 0.1745329, 0.3490659, 0.5235988, 0.6981317, 0.8726646, 1.0471976, 1.2217305;
+  z_original <<
+    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
+    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
+    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
+    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
+    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
+    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
+    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
+    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025;
+
+  std::cout << "---------------\n\n\n\n";
+  std::cout << z_original << '\n';
+  std::cout << "---------------\n\n\n\n";
 
   for ( auto & [name, spline] : splines )
   {
@@ -337,7 +374,7 @@ void test_json_string_constructors()
         for ( size_t j = 0; j < y_nodes.size(); ++j )
         {
           double computed = spline->eval( x_nodes[i], y_nodes[j] );
-          double expected = z_original[i][j];
+          double expected = z_original(i,j);
 
           if ( abs( computed - expected ) > tolerance )
           {
@@ -408,7 +445,7 @@ void test_json_string_constructors()
           for ( size_t j = 0; j < y_nodes.size(); ++j )
           {
             double computed = spline->eval( x_nodes[i], y_nodes[j] );
-            double expected = z_original[i][j];
+            double expected = z_original(i,j);
             differences.push_back( abs( computed - expected ) );
           }
         }

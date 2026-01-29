@@ -52,7 +52,8 @@ for k=1:9
   disableDefaultInteractivity(gca)
 
   S = Spline2D(type{k});
-  S.build('test_surf.json');
+  S.build('OLDAeroMap.json');
+  %S.build('test_surf.json');
   
   x_min = S.x_min();
   x_max = S.x_max();
