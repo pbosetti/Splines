@@ -244,30 +244,25 @@ void test_json_string_constructors()
   splines.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Original grid data from JSON for verification
-  //vector<double>         x_nodes    = { 0.0, 2.0, 4.0, 6.0 };
-  //vector<double>         y_nodes    = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
-  //vector<vector<double>> z_original = { { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 },
+  // vector<double>         x_nodes    = { 0.0, 2.0, 4.0, 6.0 };
+  // vector<double>         y_nodes    = { 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 };
+  // vector<vector<double>> z_original = { { 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0 },
   //                                      { 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0 },
   //                                      { 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0 },
   //                                      { 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0 } };
 
-  Splines::Vec x_nodes(7);
-  Splines::Vec y_nodes(8);
-  Splines::Mat z_original_t(8,7);
-  Splines::Mat z_original(7,8);
+  Splines::Vec x_nodes( 7 );
+  Splines::Vec y_nodes( 8 );
+  Splines::Mat z_original_t( 8, 7 );
+  Splines::Mat z_original( 7, 8 );
 
   x_nodes << -0.0523599, -0.01309, -0.0043633, 0.0261799, 0.0392699, 0.1047198, 0.1745329;
   y_nodes << 0.0, 0.1745329, 0.3490659, 0.5235988, 0.6981317, 0.8726646, 1.0471976, 1.2217305;
-  z_original_t <<
-    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
-    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
-    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
-    0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
-    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
-    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
-    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
-    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025;
-    
+  z_original_t << 0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035, 0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035,
+    0.035, 0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035, 0.0312, 0.0312, 0.0312, 0.0312, 0.035, 0.035, 0.035,
+    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025,
+    0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025;
+
   z_original = z_original_t.transpose();
 
   std::cout << "---------------\n\n\n\n";
@@ -371,15 +366,15 @@ void test_json_string_constructors()
 
       int          errors    = 0;
       const double tolerance = 1e-12;
-      integer NX = static_cast<integer>( x_nodes.size() );
-      integer NY = static_cast<integer>( y_nodes.size() );
+      integer      NX        = static_cast<integer>( x_nodes.size() );
+      integer      NY        = static_cast<integer>( y_nodes.size() );
 
       for ( integer i = 0; i < NX; ++i )
       {
         for ( integer j = 0; j < NY; ++j )
         {
           double computed = spline->eval( x_nodes[i], y_nodes[j] );
-          double expected = z_original(i,j);
+          double expected = z_original( i, j );
           double err      = abs( computed - expected );
 
           if ( err > tolerance )
@@ -392,8 +387,7 @@ void test_json_string_constructors()
               y_nodes[j],
               computed,
               expected,
-              err
-            );
+              err );
             errors++;
           }
         }
@@ -452,7 +446,7 @@ void test_json_string_constructors()
           for ( integer j = 0; j < NY; ++j )
           {
             double computed = spline->eval( x_nodes[i], y_nodes[j] );
-            double expected = z_original(i,j);
+            double expected = z_original( i, j );
             differences.push_back( abs( computed - expected ) );
           }
         }
@@ -522,10 +516,7 @@ void test_derivatives_with_autodiff()
   tests.emplace_back( "BiQuintic[Pchip]", make_unique<BiQuinticSpline>( Spline_sub_type::PCHIP ) );
 
   // Build all splines
-  for ( auto & [name, spline] : tests )
-  {
-    spline->build( x_grid, y_grid, z_data, nx, ny, false, false );
-  }
+  for ( auto & [name, spline] : tests ) { spline->build( x_grid, y_grid, z_data, nx, ny, false, false ); }
 
   // Print derivatives table
   fmt::print(

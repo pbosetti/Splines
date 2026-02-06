@@ -152,10 +152,10 @@ int main()
   char const * headers[] = { "CONSTANT", "LINEAR",  "CUBIC",         "AKIMA",           "VANLEER",
                              "PCHIP",    "QUINTIC", "QUINTIC_AKIMA", "QUINTIC_VANLEER", "QUINTIC_PCHIP" };
 
-  constexpr SplineType1D stype[]{ SplineType1D::CONSTANT,       SplineType1D::LINEAR,
-                                  SplineType1D::CUBIC,          SplineType1D::AKIMA,
+  constexpr SplineType1D stype[]{ SplineType1D::CONSTANT,        SplineType1D::LINEAR,
+                                  SplineType1D::CUBIC,           SplineType1D::AKIMA,
                                   SplineType1D::VANLEER,         SplineType1D::PCHIP,
-                                  SplineType1D::QUINTIC_CUBIC,  SplineType1D::QUINTIC_AKIMA,
+                                  SplineType1D::QUINTIC_CUBIC,   SplineType1D::QUINTIC_AKIMA,
                                   SplineType1D::QUINTIC_VANLEER, SplineType1D::QUINTIC_PCHIP };
 
   Utils::Malloc<real_type> mem( "test5" );

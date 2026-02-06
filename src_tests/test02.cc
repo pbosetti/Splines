@@ -50,10 +50,10 @@ using Splines::integer;
 using Splines::real_type;
 using Splines::Spline_sub_type;
 
-//static real_type x_data1[] = { 0, 1, 2, 3, 4, 5 };
-//static real_type y_data1[] = { 0, 1, 2, 3, 4, 5 };
-//static real_type z_data1[] = { 10, 10, 10, 10, 10, 11, 10, 10, 10.5, 11, 9, 9, 11, 12, 13, 8, 7, 9,
-//                              11, 12, 13, 8,  7,  9,  11, 12, 13,   8,  7, 9, 11, 12, 13, 8, 7, 9 };
+// static real_type x_data1[] = { 0, 1, 2, 3, 4, 5 };
+// static real_type y_data1[] = { 0, 1, 2, 3, 4, 5 };
+// static real_type z_data1[] = { 10, 10, 10, 10, 10, 11, 10, 10, 10.5, 11, 9, 9, 11, 12, 13, 8, 7, 9,
+//                               11, 12, 13, 8,  7,  9,  11, 12, 13,   8,  7, 9, 11, 12, 13, 8, 7, 9 };
 
 // Enum per le diverse regioni di test
 enum TestRegion
@@ -399,11 +399,18 @@ namespace FiniteDifferences
       return std::cbrt( eps ) * scale;
     }
 
+    // inline real_type h_second( real_type x, real_type y )
+    //{
+    //   real_type scale = std::max( { real_type( 1 ), std::abs( x ), std::abs( y ) } );
+    //   return std::sqrt( std::sqrt( eps ) ) * scale;
+    // }
     inline real_type h_second( real_type x, real_type y )
     {
       real_type scale = std::max( { real_type( 1 ), std::abs( x ), std::abs( y ) } );
-      return std::sqrt( std::sqrt( eps ) ) * scale;
+      // Usa eps^(1/3) invece di sqrt(sqrt(eps)) per bilanciare meglio
+      return std::cbrt( eps ) * scale;  // ~6e-6 per double
     }
+
   }  // namespace detail
 
   template <typename SplineType> real_type dx( const SplineType & spline, real_type x, real_type y )
@@ -419,17 +426,22 @@ namespace FiniteDifferences
     return ( -spline( x, y + 2 * h ) + 8 * spline( x, y + h ) - 8 * spline( x, y - h ) + spline( x, y - 2 * h ) ) /
            ( 12 * h );
   }
-
   template <typename SplineType> real_type dxx( const SplineType & spline, real_type x, real_type y )
   {
     real_type h = detail::h_second( x, y );
-    return ( spline( x + h, y ) - 2 * spline( x, y ) + spline( x - h, y ) ) / ( h * h );
+    // Formula a 5 punti, O(h^4)
+    return ( -spline( x + 2 * h, y ) + 16 * spline( x + h, y ) - 30 * spline( x, y ) + 16 * spline( x - h, y ) -
+             spline( x - 2 * h, y ) ) /
+           ( 12 * h * h );
   }
 
   template <typename SplineType> real_type dyy( const SplineType & spline, real_type x, real_type y )
   {
     real_type h = detail::h_second( x, y );
-    return ( spline( x, y + h ) - 2 * spline( x, y ) + spline( x, y - h ) ) / ( h * h );
+    // Formula a 5 punti, O(h^4)
+    return ( -spline( x, y + 2 * h ) + 16 * spline( x, y + h ) - 30 * spline( x, y ) + 16 * spline( x, y - h ) -
+             spline( x, y - 2 * h ) ) /
+           ( 12 * h * h );
   }
 
   template <typename SplineType> real_type dxy( const SplineType & spline, real_type x, real_type y )
@@ -740,23 +752,21 @@ int main()
 
   static real_type X[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
   static real_type Y[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-  static real_type Z[] = { 0,         0,         0,         0,         0,         0,         0,         0,         0,   -0.1000,
-                           0,         0,         0,         0,         0,         0,         0,         0,         0,         0,
-                           0,         0,         0,         0,         0,         0,         0,    0.5000,    0.5000,         0,
-                           0,         0,         0,         0,         0,         0,         0,    0.5000,    0.5000,         0,
-                           0,         0,         0,         0,         0,    0.2000,    0.2500,         0,         0,         0,
-                           0,         0,         0,         0,         0,    0.2500,    0.2000,         0,         0,         0,
-                           0,    0.4286,    0.4286,    0.4286,    0.4286,         0,         0,         0,         0,         0,
-                           0,    0.4286,    0.4286,    0.4286,    0.4286,         0,         0,         0,         0,         0,
-                           0,    0.4286,    0.4286,    0.4286,    0.4286,         0,         0,         0,         0,         0,
-                           0,    0.4286,    0.4286,    0.4286,    0.4286,         0,         0,         0,         0,         0,
-                     -0.1000,         0,         0,         0,         0,         0,         0,         0,         0,         0 };
+  static real_type Z[] = {
+    0,      0,      0,      0,      0,      0, 0, 0,      0,      -0.1000, 0,       0,      0,      0, 0, 0, 0, 0,
+    0,      0,      0,      0,      0,      0, 0, 0,      0,      0.5000,  0.5000,  0,      0,      0, 0, 0, 0, 0,
+    0,      0.5000, 0.5000, 0,      0,      0, 0, 0,      0,      0.2000,  0.2500,  0,      0,      0, 0, 0, 0, 0,
+    0,      0.2500, 0.2000, 0,      0,      0, 0, 0.4286, 0.4286, 0.4286,  0.4286,  0,      0,      0, 0, 0, 0, 0.4286,
+    0.4286, 0.4286, 0.4286, 0,      0,      0, 0, 0,      0,      0.4286,  0.4286,  0.4286, 0.4286, 0, 0, 0, 0, 0,
+    0,      0.4286, 0.4286, 0.4286, 0.4286, 0, 0, 0,      0,      0,       -0.1000, 0,      0,      0, 0, 0, 0, 0,
+    0,      0
+  };
 
   integer NX = 10;
   integer NY = 11;
   integer LD = NX;
-  bool    f  = true; // fortran
-  bool    t  = true; // transpose
+  bool    f  = true;  // fortran
+  bool    t  = true;  // transpose
 
   fmt::print( fg( fmt::color::magenta ) | fmt::emphasis::bold, "\n📊 Dataset Information:\n" );
   fmt::print( fg( fmt::color::gray ), "   Grid size: {}x{} points\n", NX, NY );
@@ -766,13 +776,7 @@ int main()
 
   fmt::print( fg( fmt::color::gray ), "   x knots: {}\n", x_knots_str );
   fmt::print( fg( fmt::color::gray ), "   y knots: {}\n", y_knots_str );
-  fmt::print(
-    fg( fmt::color::gray ),
-    "   Domain: x ∈ [{}, {}], y ∈ [{}, {}]\n",
-    X[0],
-    X[NX-1],
-    Y[0],
-    Y[NY-1] );
+  fmt::print( fg( fmt::color::gray ), "   Domain: x ∈ [{}, {}], y ∈ [{}, {}]\n", X[0], X[NX - 1], Y[0], Y[NY - 1] );
 
   BiQuinticSpline bq_cubic( Spline_sub_type::CUBIC );
   BiQuinticSpline bq_akima( Spline_sub_type::AKIMA );
@@ -831,10 +835,12 @@ int main()
   fmt::print( fg( fmt::color::cyan ) | fmt::emphasis::bold, "\n🔍 Checking derivatives by region...\n" );
 
   vector<pair<string, AllDerivativeErrors>> errors_by_region;
-  
+
   integer NPT = 30;
 
-  errors_by_region.emplace_back( "BiCubic", check_derivatives_by_region( bc_cubic, "BiCubicSpline", X, NX, Y, NY, NPT ) );
+  errors_by_region.emplace_back(
+    "BiCubic",
+    check_derivatives_by_region( bc_cubic, "BiCubicSpline", X, NX, Y, NY, NPT ) );
   errors_by_region.emplace_back(
     "BiCubic[Akima]",
     check_derivatives_by_region( bc_akima, "BiCubicSpline[Akima]", X, NX, Y, NY, NPT ) );

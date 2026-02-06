@@ -172,30 +172,40 @@ namespace Splines
 
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override
     {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
-      real_type xv{ val( x ) };
-      dual1st   res{ eval( xv ) };
-      res.grad = D( xv ) * x.grad;
-      return res;
+      if ( m_curve_can_extend && m_curve_extended_constant )
+      {
+        // estendo solo quando esco effettivamente
+        if ( x < m_X[0] ) return m_Y[0];
+        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      }
+      std::pair<integer, real_type> res( 0, x.val );
+      m_search.find( res );
+      integer           ni  = res.first;
+      integer           ni1 = ni + 1;
+      autodiff::dual1st xx  = x;
+      xx.val                = res.second;
+      autodiff::dual1st s   = ( xx - m_X[ni] ) / ( m_X[ni1] - m_X[ni] );
+      return ( 1 - s ) * m_Y[ni] + s * m_Y[ni1];
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override
     {
-      using autodiff::dual2nd;
-      using autodiff::detail::val;
-
-      real_type xv{ val( x ) };
-      real_type xg{ val( x.grad ) };
-      real_type dfx{ D( xv ) };
-      real_type dxx{ DD( xv ) };
-      dual2nd   res{ eval( xv ) };
-
-      res.grad      = dfx * xg;
-      res.grad.grad = dfx * x.grad.grad + dxx * ( xg * xg );
-      return res;
+      if ( m_curve_can_extend && m_curve_extended_constant )
+      {
+        // estendo solo quando esco effettivamente
+        if ( x < m_X[0] ) return m_Y[0];
+        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      }
+      std::pair<integer, real_type> res( 0, x.val.val );
+      m_search.find( res );
+      integer           ni  = res.first;
+      integer           ni1 = ni + 1;
+      autodiff::dual2nd xx  = x;
+      xx.val.val            = res.second;
+      autodiff::dual2nd s   = ( xx - m_X[ni] ) / ( m_X[ni1] - m_X[ni] );
+      return ( 1 - s ) * m_Y[ni] + s * m_Y[ni1];
     }
 
 #endif  // AUTODIFF_SUPPORT

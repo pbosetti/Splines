@@ -76,7 +76,7 @@ namespace Splines
     //! Build the spline with the data stored
     //!
     void build() override { m_search.must_reset(); }
-    
+
     ///@}
 
     //!
@@ -130,8 +130,8 @@ namespace Splines
     {
       using autodiff::dual1st;
       using autodiff::detail::val;
-      dual1st res{ eval( val( x ) ) };
-      res.grad = 0;
+      dual1st res = eval( val( x ) );
+      res.grad    = 0;
       return res;
     }
 
@@ -141,7 +141,7 @@ namespace Splines
     {
       using autodiff::dual2nd;
       using autodiff::detail::val;
-      dual2nd res{ eval( val( x ) ) };
+      dual2nd res   = eval( val( x ) );
       res.grad      = 0;
       res.grad.grad = 0;
       return res;

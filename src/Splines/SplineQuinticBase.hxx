@@ -297,10 +297,10 @@ namespace Splines
     {
       switch ( m_sub_type )
       {
-        case Spline_sub_type::CUBIC:   return SplineType1D::QUINTIC_CUBIC;
-        case Spline_sub_type::AKIMA:   return SplineType1D::QUINTIC_AKIMA;
+        case Spline_sub_type::CUBIC: return SplineType1D::QUINTIC_CUBIC;
+        case Spline_sub_type::AKIMA: return SplineType1D::QUINTIC_AKIMA;
         case Spline_sub_type::VANLEER: return SplineType1D::QUINTIC_VANLEER;
-        case Spline_sub_type::PCHIP:   return SplineType1D::QUINTIC_PCHIP;
+        case Spline_sub_type::PCHIP: return SplineType1D::QUINTIC_PCHIP;
       }
     }
 
@@ -430,25 +430,43 @@ namespace Splines
 #ifdef AUTODIFF_SUPPORT
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override
     {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
-      real_type dd[2];
-      D( val( x ), dd );
-      dual1st res{ dd[0] };
-      res.grad = dd[1] * x.grad;
-      return res;
+      if ( m_curve_can_extend && m_curve_extended_constant )
+      {
+        // estendo solo quando esco effettivamente
+        if ( x < m_X[0] ) return m_Y[0];
+        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      }
+      std::pair<integer, real_type> res( 0, x.val );
+      m_search.find( res );
+      integer           ni  = res.first;
+      integer           ni1 = ni + 1;
+      autodiff::dual1st xx  = x;
+      xx.val                = res.second;
+      autodiff::dual1st base[6];
+      Hermite5<autodiff::dual1st>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+      return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1] + base[4] * m_Ypp[ni] +
+             base[5] * m_Ypp[ni1];
     }
 
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override
     {
-      using autodiff::dual2nd;
-      using autodiff::detail::val;
-      real_type dd[3], xg{ val( x.grad ) };
-      DD( val( x ), dd );
-      dual2nd res{ dd[0] };
-      res.grad      = dd[1] * xg;
-      res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
-      return res;
+      if ( m_curve_can_extend && m_curve_extended_constant )
+      {
+        // estendo solo quando esco effettivamente
+        if ( x < m_X[0] ) return m_Y[0];
+        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      }
+
+      std::pair<integer, real_type> res( 0, x.val.val );
+      m_search.find( res );
+      integer           ni  = res.first;
+      integer           ni1 = ni + 1;
+      autodiff::dual2nd xx  = x;
+      xx.val.val            = res.second;
+      autodiff::dual2nd base[6];
+      Hermite5<autodiff::dual2nd>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+      return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1] + base[4] * m_Ypp[ni] +
+             base[5] * m_Ypp[ni1];
     }
 #endif
 
@@ -463,12 +481,11 @@ namespace Splines
         if ( x < m_X[0] ) return m_Y[0];
         if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
       }
-      real_type       base[6];
-      real_type const x0{ m_X[ni] };
-      real_type const H{ m_X[ni + 1] - x0 };
-      Hermite5( x - x0, H, base );
-      return base[0] * m_Y[ni] + base[1] * m_Y[ni + 1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni + 1] +
-             base[4] * m_Ypp[ni] + base[5] * m_Ypp[ni + 1];
+      real_type base[6];
+      integer   ni1 = ni + 1;
+      Hermite5( x - m_X[ni], m_X[ni1] - m_X[ni], base );
+      return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1] + base[4] * m_Ypp[ni] +
+             base[5] * m_Ypp[ni1];
     }
 
     real_type id_D( integer const ni, real_type const x ) const override
@@ -478,12 +495,11 @@ namespace Splines
         // estendo solo quando esco effettivamente
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
-      real_type       base_D[6];
-      real_type const x0 = m_X[ni];
-      real_type const H  = m_X[ni + 1] - x0;
-      Hermite5_D( x - x0, H, base_D );
-      return base_D[0] * m_Y[ni] + base_D[1] * m_Y[ni + 1] + base_D[2] * m_Yp[ni] + base_D[3] * m_Yp[ni + 1] +
-             base_D[4] * m_Ypp[ni] + base_D[5] * m_Ypp[ni + 1];
+      real_type base_D[6];
+      integer   ni1 = ni + 1;
+      Hermite5_D( x - m_X[ni], m_X[ni1] - m_X[ni], base_D );
+      return base_D[0] * m_Y[ni] + base_D[1] * m_Y[ni1] + base_D[2] * m_Yp[ni] + base_D[3] * m_Yp[ni1] +
+             base_D[4] * m_Ypp[ni] + base_D[5] * m_Ypp[ni1];
     }
 
     real_type id_DD( integer const ni, real_type const x ) const override
@@ -493,26 +509,24 @@ namespace Splines
         // estendo solo quando esco effettivamente
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
-      real_type       base_DD[6];
-      real_type const x0 = m_X[ni];
-      real_type const H  = m_X[ni + 1] - x0;
-      Hermite5_DD( x - x0, H, base_DD );
-      return base_DD[0] * m_Y[ni] + base_DD[1] * m_Y[ni + 1] + base_DD[2] * m_Yp[ni] + base_DD[3] * m_Yp[ni + 1] +
-             base_DD[4] * m_Ypp[ni] + base_DD[5] * m_Ypp[ni + 1];
+      real_type base_DD[6];
+      integer   ni1 = ni + 1;
+      Hermite5_DD( x - m_X[ni], m_X[ni1] - m_X[ni], base_DD );
+      return base_DD[0] * m_Y[ni] + base_DD[1] * m_Y[ni1] + base_DD[2] * m_Yp[ni] + base_DD[3] * m_Yp[ni1] +
+             base_DD[4] * m_Ypp[ni] + base_DD[5] * m_Ypp[ni1];
     }
 
-    real_type id_DDD( integer const i, real_type const x ) const override
+    real_type id_DDD( integer const ni, real_type const x ) const override
     {
       if ( m_curve_can_extend && m_curve_extended_constant )
       {
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
-      real_type       base_DDD[6];
-      real_type const x0 = m_X[i];
-      real_type const H  = m_X[i + 1] - x0;
-      Hermite5_DDD( x - x0, H, base_DDD );
-      return base_DDD[0] * m_Y[i] + base_DDD[1] * m_Y[i + 1] + base_DDD[2] * m_Yp[i] + base_DDD[3] * m_Yp[i + 1] +
-             base_DDD[4] * m_Ypp[i] + base_DDD[5] * m_Ypp[i + 1];
+      real_type base_DDD[6];
+      integer   ni1 = ni + 1;
+      Hermite5_DDD( x - m_X[ni], m_X[ni1] - m_X[ni], base_DDD );
+      return base_DDD[0] * m_Y[ni] + base_DDD[1] * m_Y[ni1] + base_DDD[2] * m_Yp[ni] + base_DDD[3] * m_Yp[ni1] +
+             base_DDD[4] * m_Ypp[ni] + base_DDD[5] * m_Ypp[ni1];
     }
 
     real_type id_DDDD( integer const ni, real_type const x ) const override
@@ -522,12 +536,11 @@ namespace Splines
         // estendo solo quando esco effettivamente
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
-      real_type       base_DDDD[6];
-      real_type const x0 = m_X[ni];
-      real_type const H  = m_X[ni + 1] - x0;
-      Hermite5_DDDD( x - x0, H, base_DDDD );
-      return base_DDDD[0] * m_Y[ni] + base_DDDD[1] * m_Y[ni + 1] + base_DDDD[2] * m_Yp[ni] +
-             base_DDDD[3] * m_Yp[ni + 1] + base_DDDD[4] * m_Ypp[ni] + base_DDDD[5] * m_Ypp[ni + 1];
+      real_type base_DDDD[6];
+      integer   ni1 = ni + 1;
+      Hermite5_DDDD( x - m_X[ni], m_X[ni1] - m_X[ni], base_DDDD );
+      return base_DDDD[0] * m_Y[ni] + base_DDDD[1] * m_Y[ni1] + base_DDDD[2] * m_Yp[ni] + base_DDDD[3] * m_Yp[ni1] +
+             base_DDDD[4] * m_Ypp[ni] + base_DDDD[5] * m_Ypp[ni1];
     }
 
     real_type id_DDDDD( integer const ni, real_type const x ) const override
@@ -537,12 +550,11 @@ namespace Splines
         // estendo solo quando esco effettivamente
         if ( x < m_X[0] || x > m_X[m_npts - 1] ) return 0;
       }
-      real_type       base_DDDDD[6];
-      real_type const x0 = m_X[ni];
-      real_type const H  = m_X[ni + 1] - x0;
-      Hermite5_DDDDD( x - x0, H, base_DDDDD );
-      return base_DDDDD[0] * m_Y[ni] + base_DDDDD[1] * m_Y[ni + 1] + base_DDDDD[2] * m_Yp[ni] +
-             base_DDDDD[3] * m_Yp[ni + 1] + base_DDDDD[4] * m_Ypp[ni] + base_DDDDD[5] * m_Ypp[ni + 1];
+      real_type base_DDDDD[6];
+      integer   ni1 = ni + 1;
+      Hermite5_DDDDD( x - m_X[ni], m_X[ni1] - m_X[ni], base_DDDDD );
+      return base_DDDDD[0] * m_Y[ni] + base_DDDDD[1] * m_Y[ni1] + base_DDDDD[2] * m_Yp[ni] + base_DDDDD[3] * m_Yp[ni1] +
+             base_DDDDD[4] * m_Ypp[ni] + base_DDDDD[5] * m_Ypp[ni1];
     }
     ///@}
 

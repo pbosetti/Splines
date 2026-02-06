@@ -133,25 +133,35 @@ namespace Splines
       return;
     }
 
-    auto vanLeer = []( real_type a, real_type b, real_type c ) -> real_type {
-      if ( (a > 0 && b > 0 && c > 0) || (a < 0 && b < 0 && c < 0) ) return 3/(1/a+1/b+1/c);
+    auto vanLeer = []( real_type a, real_type b, real_type c ) -> real_type
+    {
+      if ( ( a > 0 && b > 0 && c > 0 ) || ( a < 0 && b < 0 && c < 0 ) ) return 3 / ( 1 / a + 1 / b + 1 / c );
       return 0;
     };
 
     // ---- left boundary ----
-    Yp[0] = Utils::first_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
+    {
+      real_type L  = ( Y[1] - Y[0] ) / ( X[1] - X[0] );
+      real_type LL = Utils::first_derivative_3p( X[0], Y[0], X[1], Y[1], X[2], Y[2] );
+      Yp[0]        = vanLeer( L, L, LL );
+    }
 
     // ---- interior points ----
-    for ( integer i = 2; i < npts - 2; ++i ) {
-      real_type L = Utils::first_derivative_3p( X[i], Y[i], X[i-1], Y[i-1], X[i-2], Y[i-2] );
-      real_type C = Utils::first_derivative_3p( X[i], Y[i], X[i-1], Y[i-1], X[i+1], Y[i+1] );
-      real_type R = Utils::first_derivative_3p( X[i], Y[i], X[i+1], Y[i+1], X[i+2], Y[i+2] );
-      Yp[i] = vanLeer( L, C, R );
+    for ( integer i = 1; i < npts - 1; ++i )
+    {
+      real_type L = ( Y[i] - Y[i - 1] ) / ( X[i] - X[i - 1] );
+      real_type C = Utils::first_derivative_3p( X[i], Y[i], X[i - 1], Y[i - 1], X[i + 1], Y[i + 1] );
+      real_type R = ( Y[i + 1] - Y[i] ) / ( X[i + 1] - X[i] );
+      Yp[i]       = vanLeer( L, C, R );
     }
 
     // ---- right boundary ----
-    Yp[npts - 1] = Utils::first_derivative_3p( X[npts - 1], Y[npts - 1], X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3] );
-
+    {
+      real_type R = ( Y[npts - 1] - Y[npts - 2] ) / ( X[npts - 1] - X[npts - 2] );
+      real_type RR =
+        Utils::first_derivative_3p( X[npts - 1], Y[npts - 1], X[npts - 2], Y[npts - 2], X[npts - 3], Y[npts - 3] );
+      Yp[npts - 1] = vanLeer( RR, R, R );
+    }
   }
 
   /**

@@ -135,10 +135,10 @@ namespace Splines
     if ( n == "constant" ) return SplineType1D::CONSTANT;
     if ( n == "linear" ) return SplineType1D::LINEAR;
 
-    if ( n == "cubic"   ) return SplineType1D::CUBIC;
-    if ( n == "akima"   ) return SplineType1D::AKIMA;
+    if ( n == "cubic" ) return SplineType1D::CUBIC;
+    if ( n == "akima" ) return SplineType1D::AKIMA;
     if ( n == "vanleer" ) return SplineType1D::VANLEER;
-    if ( n == "pchip"   ) return SplineType1D::PCHIP;
+    if ( n == "pchip" ) return SplineType1D::PCHIP;
 
     if ( n == "quintic" ) return SplineType1D::QUINTIC_CUBIC;
     if ( n == "quintic_akima" ) return SplineType1D::QUINTIC_AKIMA;
@@ -155,9 +155,9 @@ namespace Splines
   {
     switch ( t )
     {
-      case Spline_sub_type::CUBIC:   return "CUBIC";
-      case Spline_sub_type::PCHIP:   return "PCHIP";
-      case Spline_sub_type::AKIMA:   return "AKIMA";
+      case Spline_sub_type::CUBIC: return "CUBIC";
+      case Spline_sub_type::PCHIP: return "PCHIP";
+      case Spline_sub_type::AKIMA: return "AKIMA";
       case Spline_sub_type::VANLEER: return "VANLEER";
     }
     return "NOTYPE";
@@ -238,69 +238,90 @@ namespace Splines
 #ifdef AUTODIFF_SUPPORT
   template <typename T> inline void Hermite3( T const & x, real_type const H, T base[4] )
   {
-    T const X = x / H;
-    base[1]   = X * X * ( 3 - 2 * X );
-    base[0]   = 1 - base[1];
-    base[2]   = x * ( X * ( X - 2 ) + 1 );
-    base[3]   = x * X * ( X - 1 );
+    auto X  = x / H;
+    base[1] = X * X * ( 3 - 2 * X );
+    base[0] = 1 - base[1];
+    base[2] = x * ( X * ( X - 2 ) + 1 );
+    base[3] = x * X * ( X - 1 );
   }
 
-  template <typename T> inline void Hermite5( T const & x, real_type H, T base[6] )
+  template <typename T> inline void Hermite5( T const & x, real_type const H, T base[6] )
   {
-    const real_type invH  = real_type( 1 ) / H;
-    const real_type invH2 = invH * invH;
-    const real_type invH4 = invH2 * invH2;
+    // 1. Normalizzazione: t va da 0 a 1
+    // Sostituisce le costose divisioni ripetute (invH, invH4, invH5)
+    auto s = 1 / H;
+    auto t = x * s;
+    auto u = 1 - t;  // u è il complemento (H-x)/H
 
-    const T x2 = x * x;
-    const T x3 = x2 * x;
-    const T x4 = x2 * x2;
-    const T x5 = x4 * x;
+    // 2. Precalcolo delle potenze di t e u
+    // Usiamo t*t invece di pow() per velocità
+    auto t2 = t * t;
+    auto t3 = t2 * t;
 
-    const T xm  = H - x;
-    const T xm2 = xm * xm;
-    const T xm3 = xm2 * xm;
+    auto u2 = u * u;
+    auto u3 = u2 * u;
 
-    base[0] = invH4 * xm3 * ( 3 * x * H + H * H + 6 * x2 );
-    base[1] = invH4 * ( -15 * H * x4 + 6 * x5 + 10 * H * H * x3 );
-    base[2] = invH4 * xm3 * x * ( H + 3 * x );
-    base[3] = invH4 * ( 3 * x - 4 * H ) * xm * x3;
+    // 3. Calcolo delle funzioni di base
+    // Polinomio base: h00 = (1 + 3t + 6t^2) * u^3
+    auto poly_t = 1 + t * ( 3 + 6 * t );
+    auto poly_u = 1 + u * ( 3 + 6 * u );
 
-    const real_type c = real_type( 0.5 ) * invH2 * invH;
+    // base[0]: Valore al nodo sinistro (x=0)
+    base[0] = u3 * poly_t;
 
-    base[4] = c * xm3 * x2;
-    base[5] = c * xm2 * x3;
+    // base[1]: Valore al nodo destro (x=H)
+    // Sfrutta la simmetria: scambia t con u
+    base[1] = t3 * poly_u;
+
+    // base[2]: Derivata prima al nodo sinistro
+    // Scala originale: H * t * (1+3t) * u^3
+    base[2] = H * t * u3 * ( 1 + 3 * t );
+
+    // base[3]: Derivata prima al nodo destro
+    // Scala originale: -H * u * (1+3u) * t^3
+    base[3] = -H * u * t3 * ( 1 + 3 * u );
+
+    // base[4]: Derivata seconda al nodo sinistro
+    // Scala originale: 0.5 * H^2 * t^2 * u^3
+    const real_type H2_half = ( H * H ) / 2;
+    base[4]                 = H2_half * t2 * u3;
+
+    // base[5]: Derivata seconda al nodo destro
+    // Scala originale: 0.5 * H^2 * u^2 * t^3
+    base[5] = H2_half * u2 * t3;
   }
+
 #endif
 
   inline void Hermite3( real_type const x, real_type const H, real_type base[4] )
   {
-    real_type const X = x / H;
-    base[1]           = X * X * ( 3 - 2 * X );
-    base[0]           = 1 - base[1];
-    base[2]           = x * ( X * ( X - 2 ) + 1 );
-    base[3]           = x * X * ( X - 1 );
+    auto X  = x / H;
+    base[1] = X * X * ( 3 - 2 * X );
+    base[0] = 1 - base[1];
+    base[2] = x * ( X * ( X - 2 ) + 1 );
+    base[3] = x * X * ( X - 1 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   inline void Hermite3_D( real_type const x, real_type const H, real_type base_D[4] )
   {
-    real_type const X = x / H;
-    base_D[0]         = 6.0 * X * ( X - 1.0 ) / H;
-    base_D[1]         = -base_D[0];
-    base_D[2]         = ( ( 3 * X - 4 ) * X + 1 );
-    base_D[3]         = X * ( 3 * X - 2 );
+    auto X    = x / H;
+    base_D[0] = 6 * X * ( X - 1 ) / H;
+    base_D[1] = -base_D[0];
+    base_D[2] = ( ( 3 * X - 4 ) * X + 1 );
+    base_D[3] = X * ( 3 * X - 2 );
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   inline void Hermite3_DD( real_type const x, real_type const H, real_type base_DD[4] )
   {
-    real_type const X = x / H;
-    base_DD[0]        = ( 12 * X - 6 ) / ( H * H );
-    base_DD[1]        = -base_DD[0];
-    base_DD[2]        = ( 6 * X - 4 ) / H;
-    base_DD[3]        = ( 6 * X - 2 ) / H;
+    auto X     = x / H;
+    base_DD[0] = ( 12 * X - 6 ) / ( H * H );
+    base_DD[1] = -base_DD[0];
+    base_DD[2] = ( 6 * X - 4 ) / H;
+    base_DD[3] = ( 6 * X - 2 ) / H;
   }
 
   // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -995,11 +1016,13 @@ namespace Splines
     //! \param n    total number of points
     //!
     template <typename VectorX, typename VectorY>
-    void build( VectorX const & x, integer const incx, VectorY const & y, integer const incy, integer n ) {
-      reserve(n);
-      for (integer i = 0; i < n; ++i) {
-        m_X[i] = x[i*incx];
-        m_Y[i] = y[i*incy];
+    void build( VectorX const & x, integer const incx, VectorY const & y, integer const incy, integer n )
+    {
+      reserve( n );
+      for ( integer i = 0; i < n; ++i )
+      {
+        m_X[i] = x[i * incx];
+        m_Y[i] = y[i * incy];
       }
       m_npts = n;
       this->build();
@@ -1012,10 +1035,11 @@ namespace Splines
     //! \param y vector of y-coordinates
     //! \param n total number of points
     //!
-    template <typename VectorX, typename VectorY>
-    void build( VectorX const & x, VectorY const & y, integer n ) {
-      reserve(n);
-      for (integer i = 0; i < n; ++i) {
+    template <typename VectorX, typename VectorY> void build( VectorX const & x, VectorY const & y, integer n )
+    {
+      reserve( n );
+      for ( integer i = 0; i < n; ++i )
+      {
         m_X[i] = x[i];
         m_Y[i] = y[i];
       }
@@ -1030,11 +1054,12 @@ namespace Splines
     //! \param y vector of y-coordinates
     //! \param n total number of points
     //!
-    template <typename VectorX, typename VectorY>
-    void build( VectorX const & x, VectorY const & y ) {
+    template <typename VectorX, typename VectorY> void build( VectorX const & x, VectorY const & y )
+    {
       integer n = std::min<integer>( x.size(), y.size() );
-      reserve(n);
-      for (integer i = 0; i < n; ++i) {
+      reserve( n );
+      for ( integer i = 0; i < n; ++i )
+      {
         m_X[i] = x[i];
         m_Y[i] = y[i];
       }
@@ -1146,8 +1171,8 @@ namespace Splines
       {
         // Versione "Fall-back" se devi per forza usare il buffer temporaneo
         integer const saved_npts = m_npts;
-        Vec Xsaved( m_npts );
-        Vec Ysaved( m_npts );
+        Vec           Xsaved( m_npts );
+        Vec           Ysaved( m_npts );
 
         // memcpy è più veloce di copy_n per array raw
         std::memcpy( Xsaved.data(), m_X, m_npts * sizeof( real_type ) );
@@ -1258,11 +1283,12 @@ namespace Splines
     //! \name Evaluation
     ///@{
 
+    virtual real_type eval( real_type const x ) const = 0;
+
 #ifdef AUTODIFF_SUPPORT
     //!
     //! Evaluate spline value
     //!
-    virtual real_type         eval( real_type const x ) const           = 0;
     virtual autodiff::dual1st eval( autodiff::dual1st const & x ) const = 0;
     virtual autodiff::dual2nd eval( autodiff::dual2nd const & x ) const = 0;
 
@@ -1579,7 +1605,6 @@ namespace SplinesLoad
 {
 
   using Splines::AkimaSpline;
-  using Splines::VanLeerSpline;
   using Splines::ConstantSpline;
   using Splines::CubicSpline;
   using Splines::CubicSplineBase;
@@ -1588,6 +1613,7 @@ namespace SplinesLoad
   using Splines::QuinticSpline;
   using Splines::Spline;
   using Splines::Spline1D;
+  using Splines::VanLeerSpline;
 
   using Splines::BiCubicSpline;
   using Splines::BilinearSpline;

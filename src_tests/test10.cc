@@ -299,8 +299,14 @@ void test_spline1d()
 #ifdef AUTODIFF_SUPPORT
   // Test 12: Autodiff
   TEST_SECTION( "12. Autodiff Support" );
-  autodiff::dual1st xd1 = 2.5;
-  autodiff::dual2nd xd2 = 2.5;
+  autodiff::dual1st xd1;
+  autodiff::dual2nd xd2;
+  xd1.val       = 2.5;
+  xd1.grad      = 1;
+  xd2.val.val   = 2.5;
+  xd2.val.grad  = 1;
+  xd2.grad.val  = 1;
+  xd2.grad.grad = 0;
 
   auto vd1 = spline.eval( xd1 );
   auto vd2 = spline.eval( xd2 );
@@ -426,21 +432,6 @@ void test_spline1dblend()
   TEST_RESULT( "Blend(x=2.0, s=0.5)", vbh );
   TEST_RESULT( "Expected (v0+v1)/2", ( v0 + v1 ) / 2.0 );
   TEST_RESULT( "Error", abs( vbh - ( v0 + v1 ) / 2.0 ) );
-
-#if 0
-#ifdef AUTODIFF_SUPPORT
-  // Test 9: Autodiff
-  TEST_SECTION( "9. Autodiff Support" );
-  autodiff::dual1st xd1 = 2.5;
-  autodiff::dual2nd xd2 = 2.5;
-
-  auto vd1 = blend.eval( xd1, 0.5 );
-  auto vd2 = blend.eval( xd2, 0.5 );
-
-  TEST_RESULT( "  dual1st eval", vd1 );
-  TEST_RESULT( "  dual2nd eval", vd2 );
-#endif
-#endif
 
   // Test 10: Build con GenericContainer
   TEST_SECTION( "10. Build with GenericContainer" );

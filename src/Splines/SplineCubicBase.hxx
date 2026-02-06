@@ -421,27 +421,42 @@ namespace Splines
 #ifdef AUTODIFF_SUPPORT
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override
     {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
-      real_type dd[2];
-      D( val( x ), dd );
-      dual1st res{ dd[0] };
-      res.grad = dd[1] * x.grad;
-      return res;
+      if ( m_curve_can_extend && m_curve_extended_constant )
+      {
+        // estendo solo quando esco effettivamente
+        if ( x < m_X[0] ) return m_Y[0];
+        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      }
+      std::pair<integer, real_type> res( 0, x.val );
+      m_search.find( res );
+      integer           ni  = res.first;
+      integer           ni1 = ni + 1;
+      autodiff::dual1st xx  = x;
+      xx.val                = res.second;
+      autodiff::dual1st base[4];
+      Splines::Hermite3<autodiff::dual1st>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+      return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1];
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override
     {
-      using autodiff::dual2nd;
-      using autodiff::detail::val;
-      real_type dd[3], xg{ val( x.grad ) };
-      DD( val( x ), dd );
-      dual2nd res{ dd[0] };
-      res.grad      = dd[1] * xg;
-      res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
-      return res;
+      if ( m_curve_can_extend && m_curve_extended_constant )
+      {
+        // estendo solo quando esco effettivamente
+        if ( x < m_X[0] ) return m_Y[0];
+        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+      }
+      std::pair<integer, real_type> res( 0, x.val.val );
+      m_search.find( res );
+      integer           ni  = res.first;
+      integer           ni1 = ni + 1;
+      autodiff::dual2nd xx  = x;
+      xx.val.val            = res.second;
+      autodiff::dual2nd base[4];
+      Splines::Hermite3<autodiff::dual2nd>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+      return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1];
     }
 #endif
 

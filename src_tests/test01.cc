@@ -1148,75 +1148,194 @@ void print_results_table( const vector<SplineResult> & results, integer dataset 
 }
 
 // ============================================================================
-// DERIVATIVE ACCURACY TEST FOR SPECIFIC FUNCTION
+// DERIVATIVE CONSISTENCY TEST: SPLINE VS AUTODIFF
 // ============================================================================
 
-void test_derivative_accuracy_for_function(
+void test_derivative_consistency_for_function(
   const TestFunctionInfo & test_func,
   const string &           spline_name,
   Splines::Spline *        spline_ptr,
   integer                  N_fine = 64 )
 {
+  // Genera mesh e valori della funzione
   auto              X_fine = generate_uniform_mesh( test_func.a, test_func.b, N_fine );
   vector<real_type> Y_fine( N_fine );
   for ( integer i = 0; i < N_fine; ++i ) { Y_fine[i] = test_func.func( X_fine[i] ); }
 
+  // Costruisce la spline
   spline_ptr->build( X_fine, Y_fine );
 
   fmt::print(
     fg( fmt::color::white ),
-    "\nDerivative accuracy test ({} spline, {}, N={}):\n",
+    "\nDerivative consistency test ({} spline, {}, N={}):\n",
     spline_name,
     test_func.name,
     N_fine );
+
   fmt::print(
     fg( fmt::color::cyan ),
-    "{:>10} {:>15} {:>15} {:>15} {:>15}\n",
+    "{:>10} {:>15} {:>15} {:>15} {:>15} {:>15} {:>15}\n",
     "x",
-    "f'(exact)",
-    "f'(spline)",
-    "f''(exact)",
-    "f''(spline)" );
+    "D(spline)",
+    "D(autodiff)",
+    "|diff|",
+    "DD(spline)",
+    "DD(autodiff)",
+    "|diff|" );
 
-  // Test points across the domain
-  integer           num_test_points = 5;
+  // Punti di test nel dominio
+  integer           num_test_points = 7;
   vector<real_type> test_points( num_test_points );
   for ( integer i = 0; i < num_test_points; ++i )
   {
     test_points[i] = test_func.a + i * ( test_func.b - test_func.a ) / ( num_test_points - 1 );
   }
 
-  real_type max_D_error = 0.0, max_DD_error = 0.0;
+  // Statistiche delle differenze
+  real_type max_D_diff = 0.0, max_DD_diff = 0.0;
+  real_type avg_D_diff = 0.0, avg_DD_diff = 0.0;
+  integer   num_valid_points = 0;
 
   for ( real_type x : test_points )
   {
-    real_type D_exact   = test_func.deriv( x );
-    real_type DD_exact  = test_func.deriv2( x );
-    real_type D_spline  = spline_ptr->D( x );
-    real_type DD_spline = spline_ptr->DD( x );
+    // Valori dalla spline usando eval_D ed eval_DD
+    real_type D_spline  = spline_ptr->eval_D( x );
+    real_type DD_spline = spline_ptr->eval_DD( x );
 
-    real_type D_error  = abs( D_exact - D_spline );
-    real_type DD_error = abs( DD_exact - DD_spline );
+    // Usa autodiff::dual1st per la derivata prima
+    autodiff::dual1st xd1, yd1;
+    xd1.val              = x;
+    xd1.grad             = 1;
+    yd1                  = spline_ptr->eval( xd1 );
+    real_type D_autodiff = yd1.grad;
 
-    max_D_error  = max( max_D_error, D_error );
-    max_DD_error = max( max_DD_error, DD_error );
+    // Usa autodiff::dual2nd per la derivata seconda
+    autodiff::dual2nd xd2, yd2;
+    xd2.val.val           = x;
+    xd2.val.grad          = 1;
+    xd2.grad.val          = 1;
+    xd2.grad.grad         = 0;
+    yd2                   = spline_ptr->eval( xd2 );
+    real_type DD_autodiff = yd2.grad.grad;
 
-    auto D_style = ( D_error < 1e-6 )   ? fg( fmt::color::green )
-                   : ( D_error < 1e-4 ) ? fg( fmt::color::yellow )
-                                        : fg( fmt::color::red );
+    // Calcola differenze
+    real_type D_diff  = abs( D_spline - D_autodiff );
+    real_type DD_diff = abs( DD_spline - DD_autodiff );
 
-    auto DD_style = ( DD_error < 1e-4 )   ? fg( fmt::color::green )
-                    : ( DD_error < 1e-2 ) ? fg( fmt::color::yellow )
-                                          : fg( fmt::color::red );
+    // Aggiorna statistiche
+    max_D_diff  = max( max_D_diff, D_diff );
+    max_DD_diff = max( max_DD_diff, DD_diff );
+    avg_D_diff += D_diff;
+    avg_DD_diff += DD_diff;
+    num_valid_points++;
 
+    // Stile per le differenze
+    auto D_diff_style = ( D_diff < 1e-12 )  ? fg( fmt::color::green )
+                        : ( D_diff < 1e-9 ) ? fg( fmt::color::yellow )
+                        : ( D_diff < 1e-6 ) ? fg( fmt::color::orange )
+                                            : fg( fmt::color::red );
+
+    auto DD_diff_style = ( DD_diff < 1e-10 )  ? fg( fmt::color::green )
+                         : ( DD_diff < 1e-7 ) ? fg( fmt::color::yellow )
+                         : ( DD_diff < 1e-4 ) ? fg( fmt::color::orange )
+                                              : fg( fmt::color::red );
+
+    // Stampa la riga
     fmt::print( fg( fmt::color::white ), "{:>10.3f} ", x );
-    fmt::print( fg( fmt::color::light_blue ), "{:>15.6f} ", D_exact );
-    fmt::print( D_style, "{:>15.6f} ", D_spline );
-    fmt::print( fg( fmt::color::light_blue ), "{:>15.6f} ", DD_exact );
-    fmt::print( DD_style, "{:>15.6f}\n", DD_spline );
+
+    // Derivata prima
+    fmt::print( fg( fmt::color::light_blue ), "{:>15.6f} ", D_spline );
+    fmt::print( fg( fmt::color::light_green ), "{:>15.6f} ", D_autodiff );
+    fmt::print( D_diff_style, "{:>15.2e} ", D_diff );
+
+    // Derivata seconda
+    fmt::print( fg( fmt::color::light_blue ), "{:>15.6f} ", DD_spline );
+    fmt::print( fg( fmt::color::light_green ), "{:>15.6f} ", DD_autodiff );
+    fmt::print( DD_diff_style, "{:>15.2e}\n", DD_diff );
   }
 
-  fmt::print( fg( fmt::color::white ), "  Max errors: D = {:.2e}, DD = {:.2e}\n", max_D_error, max_DD_error );
+  // Calcola medie
+  if ( num_valid_points > 0 )
+  {
+    avg_D_diff /= num_valid_points;
+    avg_DD_diff /= num_valid_points;
+  }
+
+  // Riepilogo delle differenze
+  fmt::print( fg( fmt::color::white ), "\n  Consistency summary:\n" );
+
+  // Controlla la coerenza delle derivate prime
+  fmt::print( fg( fmt::color::cyan ), "    First derivative (D):\n" );
+  if ( max_D_diff < 1e-12 )
+  {
+    fmt::print( fg( fmt::color::green ), "      PERFECT match! Max diff = {:.2e}\n", max_D_diff );
+  }
+  else if ( max_D_diff < 1e-9 )
+  {
+    fmt::print( fg( fmt::color::green ), "      EXCELLENT consistency. Max diff = {:.2e}\n", max_D_diff );
+  }
+  else if ( max_D_diff < 1e-6 )
+  {
+    fmt::print( fg( fmt::color::yellow ), "      GOOD consistency. Max diff = {:.2e}\n", max_D_diff );
+  }
+  else if ( max_D_diff < 1e-3 )
+  {
+    fmt::print( fg( fmt::color::orange ), "      FAIR consistency. Max diff = {:.2e}\n", max_D_diff );
+  }
+  else
+  {
+    fmt::print( fg( fmt::color::red ), "      POOR consistency. Max diff = {:.2e}\n", max_D_diff );
+  }
+  fmt::print( fg( fmt::color::white ), "      Average diff = {:.2e}\n", avg_D_diff );
+
+  // Controlla la coerenza delle derivate seconde
+  fmt::print( fg( fmt::color::cyan ), "    Second derivative (DD):\n" );
+  if ( max_DD_diff < 1e-10 )
+  {
+    fmt::print( fg( fmt::color::green ), "      PERFECT match! Max diff = {:.2e}\n", max_DD_diff );
+  }
+  else if ( max_DD_diff < 1e-7 )
+  {
+    fmt::print( fg( fmt::color::green ), "      EXCELLENT consistency. Max diff = {:.2e}\n", max_DD_diff );
+  }
+  else if ( max_DD_diff < 1e-4 )
+  {
+    fmt::print( fg( fmt::color::yellow ), "      GOOD consistency. Max diff = {:.2e}\n", max_DD_diff );
+  }
+  else if ( max_DD_diff < 1e-1 )
+  {
+    fmt::print( fg( fmt::color::orange ), "      FAIR consistency. Max diff = {:.2e}\n", max_DD_diff );
+  }
+  else
+  {
+    fmt::print( fg( fmt::color::red ), "      POOR consistency. Max diff = {:.2e}\n", max_DD_diff );
+  }
+  fmt::print( fg( fmt::color::white ), "      Average diff = {:.2e}\n", avg_DD_diff );
+
+  // Confronto finale
+  fmt::print( fg( fmt::color::cyan ), "    Overall assessment:\n" );
+  if ( max_D_diff < 1e-9 && max_DD_diff < 1e-7 )
+  {
+    fmt::print( fg( fmt::color::green ), "      ✓ Spline derivatives are fully consistent with autodiff\n" );
+  }
+  else if ( max_D_diff < 1e-6 && max_DD_diff < 1e-4 )
+  {
+    fmt::print( fg( fmt::color::yellow ), "      ~ Spline derivatives are reasonably consistent with autodiff\n" );
+  }
+  else
+  {
+    fmt::print( fg( fmt::color::red ), "      ✗ Significant differences between spline and autodiff derivatives\n" );
+
+    // Suggerimenti diagnostici
+    if ( max_DD_diff > 10 * max_D_diff )
+    {
+      fmt::print( fg( fmt::color::orange ), "        Note: Second derivatives show larger discrepancies\n" );
+    }
+    if ( spline_ptr->type() == Splines::SplineType1D::LINEAR )
+    {
+      fmt::print( fg( fmt::color::orange ), "        Note: Linear splines have zero second derivative\n" );
+    }
+  }
 }
 
 // ============================================================================
@@ -1548,23 +1667,23 @@ int main()
       fmt::print( fg( fmt::color::magenta ), "\n🔍 DERIVATIVE ACCURACY FOR {}:\n", test_func.name );
 
       // Test derivative accuracy for different spline types
-      test_derivative_accuracy_for_function( test_func, "Cubic", new Splines::CubicSpline() );
-      test_derivative_accuracy_for_function( test_func, "Akima", new Splines::AkimaSpline() );
-      test_derivative_accuracy_for_function( test_func, "VanLeer", new Splines::VanLeerSpline() );
-      test_derivative_accuracy_for_function( test_func, "Pchip", new Splines::PchipSpline() );
-      test_derivative_accuracy_for_function(
+      test_derivative_consistency_for_function( test_func, "Cubic", new Splines::CubicSpline() );
+      test_derivative_consistency_for_function( test_func, "Akima", new Splines::AkimaSpline() );
+      test_derivative_consistency_for_function( test_func, "VanLeer", new Splines::VanLeerSpline() );
+      test_derivative_consistency_for_function( test_func, "Pchip", new Splines::PchipSpline() );
+      test_derivative_consistency_for_function(
         test_func,
         "Quintic",
         new Splines::QuinticSpline( Spline_sub_type::CUBIC ) );
-      test_derivative_accuracy_for_function(
+      test_derivative_consistency_for_function(
         test_func,
         "Quintic[Akima]",
         new Splines::QuinticSpline( Spline_sub_type::AKIMA ) );
-      test_derivative_accuracy_for_function(
+      test_derivative_consistency_for_function(
         test_func,
         "Quintic[VanLeer]",
         new Splines::QuinticSpline( Spline_sub_type::VANLEER ) );
-      test_derivative_accuracy_for_function(
+      test_derivative_consistency_for_function(
         test_func,
         "Quintic[Pchi]",
         new Splines::QuinticSpline( Spline_sub_type::PCHIP ) );

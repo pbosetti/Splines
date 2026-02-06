@@ -59,10 +59,11 @@ void test_autodiff_spline( const string & name, Spline * S )
 
   S->build( test1_xx, test1_yy, test1_npt );
 
-  autodiff::dual2nd t{ 1.1 };
-  t.grad = 1;
-  autodiff::dual2nd ttt{ t * t - t / 2 };
-  autodiff::dual2nd v{ S->eval( ttt ) };
+  autodiff::dual2nd t;
+  t.val                 = 1.1;
+  t.grad                = 1;
+  autodiff::dual2nd ttt = t * t - t / 2;
+  autodiff::dual2nd v   = S->eval( ttt );
 
   // Create a table for results
   fmt::print(

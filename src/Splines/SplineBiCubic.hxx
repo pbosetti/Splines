@@ -56,14 +56,14 @@ namespace Splines
       CubicSplineBase * S;
       switch ( m_sub_type )
       {
-        case Spline_sub_type::CUBIC:   S = &cs; break;
-        case Spline_sub_type::AKIMA:   S = &ak; break;
+        case Spline_sub_type::CUBIC: S = &cs; break;
+        case Spline_sub_type::AKIMA: S = &ak; break;
         case Spline_sub_type::VANLEER: S = &vl; break;
-        case Spline_sub_type::PCHIP:   S = &pc; break;
+        case Spline_sub_type::PCHIP: S = &pc; break;
       }
 
       make_derivative_x( S, mZ, mDX );
-      make_derivative_y( S, mZ, mDY);
+      make_derivative_y( S, mZ, mDY );
       make_derivative_xy( S, mDX, mDY, mDXY );
 
       m_search_x.must_reset();

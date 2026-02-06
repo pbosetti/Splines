@@ -1466,7 +1466,7 @@ int main()
     QuinticSpline qs_cubic( Spline_sub_type::CUBIC, "Quintic (CUBIC)" );
     QuinticSpline qs_pchip( Spline_sub_type::PCHIP, "Quintic (PCHIP)" );
     QuinticSpline qs_akima( Spline_sub_type::AKIMA, "Quintic (AKIMA)" );
-    QuinticSpline qs_vanleer( Spline_sub_type::VANLEER , "Quintic (VANLEER)" );
+    QuinticSpline qs_vanleer( Spline_sub_type::VANLEER, "Quintic (VANLEER)" );
 
     vector<pair<Splines::Spline *, string>> splines = { { &li, "Linear" },
                                                         { &co, "Constant" },

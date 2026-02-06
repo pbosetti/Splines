@@ -95,22 +95,26 @@ namespace Splines
         UTILS_ASSERT(
           Z.rows() >= m_ny && Z.cols() >= m_nx,
           "SplineSurf::load_Z( Z, transposed={} ) bad dimension found {} x {} expected {} x {}",
-          transposed, Z.rows(), Z.cols(), m_ny, m_nx
-        );
+          transposed,
+          Z.rows(),
+          Z.cols(),
+          m_ny,
+          m_nx );
         for ( integer ix = 0; ix < m_nx; ++ix )
-          for ( integer iy = 0; iy < m_ny; ++iy )
-            z_node_ref( ix, iy ) = Z( iy, ix );
+          for ( integer iy = 0; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = Z( iy, ix );
       }
       else
       {
         UTILS_ASSERT(
           Z.rows() >= m_nx && Z.cols() >= m_ny,
           "SplineSurf::load_Z( Z, transposed={} ) bad dimension found {} x {} expected {} x {}",
-          transposed, Z.rows(), Z.cols(), m_nx, m_ny
-        );
+          transposed,
+          Z.rows(),
+          Z.cols(),
+          m_nx,
+          m_ny );
         for ( integer ix = 0; ix < m_nx; ++ix )
-          for ( integer iy = 0; iy < m_ny; ++iy )
-            z_node_ref( ix, iy ) = Z( ix, iy );
+          for ( integer iy = 0; iy < m_ny; ++iy ) z_node_ref( ix, iy ) = Z( ix, iy );
       }
       m_Z_max = Z.maxCoeff();
       m_Z_min = Z.minCoeff();
@@ -134,9 +138,12 @@ namespace Splines
           UTILS_ASSERT(
             ldZ >= m_ny,
             "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
-            ldZ, fortran_storage, transposed, m_nx, m_ny
-          );
-          Eigen::Map<const MatC,0,StrideType> ZZ( z, m_nx, m_ny, StrideType(ldZ) );
+            ldZ,
+            fortran_storage,
+            transposed,
+            m_nx,
+            m_ny );
+          Eigen::Map<const MatC, 0, StrideType> ZZ( z, m_nx, m_ny, StrideType( ldZ ) );
           load_Z( ZZ, false );
         }
         break;
@@ -146,9 +153,12 @@ namespace Splines
           UTILS_ASSERT(
             ldZ >= m_nx,
             "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
-            ldZ, fortran_storage, transposed, m_nx, m_ny
-          );
-          Eigen::Map<const MatC,0,StrideType> ZZ( z, m_ny, m_nx, StrideType(ldZ) );
+            ldZ,
+            fortran_storage,
+            transposed,
+            m_nx,
+            m_ny );
+          Eigen::Map<const MatC, 0, StrideType> ZZ( z, m_ny, m_nx, StrideType( ldZ ) );
           load_Z( ZZ, true );
         }
         break;
@@ -158,9 +168,12 @@ namespace Splines
           UTILS_ASSERT(
             ldZ >= m_nx,
             "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
-            ldZ, fortran_storage, transposed, m_nx, m_ny
-          );
-          Eigen::Map<const Mat,0,StrideType> ZZ( z, m_nx, m_ny, StrideType(ldZ) );
+            ldZ,
+            fortran_storage,
+            transposed,
+            m_nx,
+            m_ny );
+          Eigen::Map<const Mat, 0, StrideType> ZZ( z, m_nx, m_ny, StrideType( ldZ ) );
           load_Z( ZZ, false );
         }
         break;
@@ -170,9 +183,12 @@ namespace Splines
           UTILS_ASSERT(
             ldZ >= m_ny,
             "SplineSurf::load_Z( z, ldZ={}, fortran_storage={}, transposed={}) with nx={} and ny={} bad leading dimension",
-            ldZ, fortran_storage, transposed, m_nx, m_ny
-          );
-          Eigen::Map<const Mat,0,StrideType> ZZ( z, m_ny, m_nx, StrideType(ldZ) );
+            ldZ,
+            fortran_storage,
+            transposed,
+            m_nx,
+            m_ny );
+          Eigen::Map<const Mat, 0, StrideType> ZZ( z, m_ny, m_nx, StrideType( ldZ ) );
           load_Z( ZZ, true );
         }
         break;
@@ -182,37 +198,48 @@ namespace Splines
     virtual void make_spline() = 0;
 
     template <typename Derived>
-    void make_derivative_x( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & Z, Eigen::ArrayBase<Derived> & DX ) {
-      for ( integer j = 0; j < m_ny; ++j ) {
-        S->build( mX, Z.col(j) );
-        for ( integer i = 0; i < m_nx; ++i ) DX(i,j) = S->yp_node( i );
+    void make_derivative_x( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & Z, Eigen::ArrayBase<Derived> & DX )
+    {
+      for ( integer j = 0; j < m_ny; ++j )
+      {
+        S->build( mX, Z.col( j ) );
+        for ( integer i = 0; i < m_nx; ++i ) DX( i, j ) = S->yp_node( i );
       }
     }
 
     template <typename Derived>
-    void make_derivative_y( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & Z, Eigen::ArrayBase<Derived> & DY ) {
-      for ( integer i = 0; i < m_nx; ++i ) {
-        S->build( mX, Z.row(i) );
-        for ( integer j = 0; j < m_ny; ++j ) DY(i,j) = S->yp_node( j );
+    void make_derivative_y( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & Z, Eigen::ArrayBase<Derived> & DY )
+    {
+      for ( integer i = 0; i < m_nx; ++i )
+      {
+        S->build( mX, Z.row( i ) );
+        for ( integer j = 0; j < m_ny; ++j ) DY( i, j ) = S->yp_node( j );
       }
     }
 
-    template <typename Derived>
-    void make_derivative_xy( CubicSplineBase * S, Eigen::ArrayBase<Derived> const & DX, Eigen::ArrayBase<Derived> const & DY, Eigen::ArrayBase<Derived> & DXY ) {
-      auto minmod = []( real_type a, real_type b ) -> real_type {
+    template <typename Derived> void make_derivative_xy(
+      CubicSplineBase *                 S,
+      Eigen::ArrayBase<Derived> const & DX,
+      Eigen::ArrayBase<Derived> const & DY,
+      Eigen::ArrayBase<Derived> &       DXY )
+    {
+      auto minmod = []( real_type a, real_type b ) -> real_type
+      {
         if ( a * b <= 0 ) return 0;
         if ( a > 0 ) return std::min( a, b );
         return std::max( a, b );
       };
- 
-      for ( integer j = 0; j < m_ny; ++j ) {
-        S->build( mX, DY.col(j) );
-        for ( integer i = 0; i < m_nx; ++i ) DXY(i,j) = S->yp_node( i );
+
+      for ( integer j = 0; j < m_ny; ++j )
+      {
+        S->build( mX, DY.col( j ) );
+        for ( integer i = 0; i < m_nx; ++i ) DXY( i, j ) = S->yp_node( i );
       }
 
-      for ( integer i = 0; i < m_nx; ++i ) {
-        S->build( mY, DX.row(i) );
-        for ( integer j = 0; j < m_ny; ++j ) DXY(i,j) = minmod( DXY(i,j), S->yp_node( j ) );
+      for ( integer i = 0; i < m_nx; ++i )
+      {
+        S->build( mY, DX.row( i ) );
+        for ( integer j = 0; j < m_ny; ++j ) DXY( i, j ) = minmod( DXY( i, j ), S->yp_node( j ) );
       }
     }
 
@@ -448,18 +475,22 @@ namespace Splines
 
       using Stride = Eigen::InnerStride<Eigen::Dynamic>;
 
-      if ( incx == 1 ) mX = Eigen::Map<const Vec>( x, nx );
-      else             mX = Eigen::Map<const Vec, 0, Stride>( x, nx, Stride( incx ) );
+      if ( incx == 1 )
+        mX = Eigen::Map<const Vec>( x, nx );
+      else
+        mX = Eigen::Map<const Vec, 0, Stride>( x, nx, Stride( incx ) );
 
-      if ( incy == 1 ) mY = Eigen::Map<const Vec>( y, ny );
-      else             mY = Eigen::Map<const Vec, 0, Stride>( y, ny, Stride( incy ) );
+      if ( incy == 1 )
+        mY = Eigen::Map<const Vec>( y, ny );
+      else
+        mY = Eigen::Map<const Vec, 0, Stride>( y, ny, Stride( incy ) );
 
       // -----------------------------------------------------------
       // OTTIMIZZAZIONE 2: Mapping intelligente di Z
       // -----------------------------------------------------------
       // Invece di passare pointer grezzi, creiamo una Map che gestisce
       // il "Leading Dimension" (ldZ) tramite OuterStride.
-        
+
       integer nr = nx;
       integer nc = ny;
       if ( transposed ) std::swap( nr, nc );
@@ -649,7 +680,7 @@ namespace Splines
       // cosa mi aspetto in lettura
       integer const NR = transposed ? m_ny : m_nx;
       integer const NC = transposed ? m_nx : m_ny;
-      //integer const LD = fortran_storage ? NR : NC;
+      // integer const LD = fortran_storage ? NR : NC;
 
       if (
         GC_type::MAT_REAL == gc_z.get_type() || GC_type::MAT_INTEGER == gc_z.get_type() ||
@@ -660,18 +691,22 @@ namespace Splines
         UTILS_ASSERT(
           NR == nr && NC == nc,
           "{}, field `zdata` is a matrix expected to be of size {} x {}, found: {} x {}\n",
-          where, NR, NC, nr, nc );
+          where,
+          NR,
+          NC,
+          nr,
+          nc );
 
         if ( GC_type::MAT_REAL == gc_z.get_type() )
         {
-          auto & mat = gc_z.get_mat_real(); // è in fortran storage!
+          auto &                mat = gc_z.get_mat_real();  // è in fortran storage!
           Eigen::Map<const Mat> Z( mat.data(), NR, NC );
           load_Z( Z, transposed );
         }
         else
         {
           GenericContainer::mat_real_type z_tmp;
-          gc_z.copyto_mat_real( z_tmp ); // è in fortran storage!
+          gc_z.copyto_mat_real( z_tmp );  // è in fortran storage!
           Eigen::Map<Mat> Z( z_tmp.data(), NR, NC );
           load_Z( Z, transposed );
         }
@@ -829,36 +864,8 @@ namespace Splines
 
 #ifdef AUTODIFF_SUPPORT
     // Metodi base per dual1st e dual2nd
-    virtual autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
-    {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
-
-      real_type dd[3];
-      D( val( x ), val( y ), dd );
-
-      dual1st res = dd[0];
-      res.grad    = dd[1] * x.grad + dd[2] * y.grad;
-      return res;
-    }
-
-    virtual autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
-    {
-      using autodiff::derivative;
-      using autodiff::dual2nd;
-
-      real_type dd[6];
-      real_type dx  = val( x.grad );
-      real_type dy  = val( y.grad );
-      real_type ddx = x.grad.grad;
-      real_type ddy = y.grad.grad;
-      DD( val( x ), val( y ), dd );
-
-      dual2nd res   = dd[0];
-      res.grad      = dd[1] * dx + dd[2] * dy;
-      res.grad.grad = dx * dx * dd[3] + 2 * dx * dy * dd[4] + dy * dy * dd[5] + ddx * dd[1] + ddy * dd[2];
-      return res;
-    }
+    virtual autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const = 0;
+    virtual autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const = 0;
 
     // Template per due parametri (x, y) - per SplineSurf
     // Promuove automaticamente a double, dual1st o dual2nd in base ai tipi di input

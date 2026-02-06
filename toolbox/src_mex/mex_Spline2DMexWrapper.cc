@@ -143,7 +143,12 @@ namespace Splines
       real_type const * z{ Utils::mex_matrix_pointer( arg_in_4, nr, nc, CMD ": error in reading 'z'" ) };
 
       UTILS_MEX_ASSERT( nx == nr, CMD ": lenght of 'x' ({}) must be the number of row of 'z' ({} x {})\n", nx, nr, nc );
-      UTILS_MEX_ASSERT( ny == nc, CMD ": lenght of 'y' ({}) must be the number of column of 'z' ({} x {})\n", ny, nr, nc );
+      UTILS_MEX_ASSERT(
+        ny == nc,
+        CMD ": lenght of 'y' ({}) must be the number of column of 'z' ({} x {})\n",
+        ny,
+        nr,
+        nc );
 
       bool fortran_storage{ true };
       bool transposed{ true };

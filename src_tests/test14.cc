@@ -511,10 +511,12 @@ bool test_spline_1D_type(
         // ================================================================
         {
           // Calcolo con autodiff
-          autodiff::dual2nd x_dual = xx;
-          x_dual.grad              = 1.0;
-          x_dual.grad.grad         = 0.0;
-          autodiff::dual2nd val    = spline.eval( x_dual );
+          autodiff::dual2nd x_dual;
+          x_dual.val.val        = xx;
+          x_dual.val.grad       = 1;
+          x_dual.grad.val       = 1;
+          x_dual.grad.grad      = 0;
+          autodiff::dual2nd val = spline.eval( x_dual );
 
           real_type autodiff_val = val.grad.grad;
           real_type exact_val    = spline.DD( xx );
@@ -736,20 +738,22 @@ bool test_spline_2D_type(
         // ================================================================
         {
           // ∂²f/∂x²
-          autodiff::dual2nd x_dual  = xx;
-          x_dual.grad               = 1.0;
-          x_dual.grad.grad          = 0.0;
-          real_type         y_const = yy;
-          autodiff::dual2nd val_xx  = spline.eval( x_dual, y_const );
+          autodiff::dual2nd x_dual;
+          x_dual.val.val           = xx;
+          x_dual.val.grad          = 1;
+          x_dual.grad.val          = 1;
+          x_dual.grad.grad         = 0;
+          autodiff::dual2nd val_xx = spline.eval( x_dual, yy );
 
           bool passed_dxx = add_test( "Dxx", val_xx.grad.grad, spline.Dxx( xx, yy ), tolerance_2nd );
 
           // ∂²f/∂y²
-          real_type         x_const = xx;
-          autodiff::dual2nd y_dual  = yy;
-          y_dual.grad               = 1.0;
-          y_dual.grad.grad          = 0.0;
-          autodiff::dual2nd val_yy  = spline.eval( x_const, y_dual );
+          autodiff::dual2nd y_dual;
+          y_dual.val.val           = yy;
+          y_dual.val.grad          = 1;
+          y_dual.grad.val          = 1;
+          y_dual.grad.grad         = 0;
+          autodiff::dual2nd val_yy = spline.eval( xx, y_dual );
 
           bool passed_dyy = add_test( "Dyy", val_yy.grad.grad, spline.Dyy( xx, yy ), tolerance_2nd );
         }
@@ -762,13 +766,15 @@ bool test_spline_2D_type(
           real_type h = 1e-8;
 
           // Dx a (xx, yy)
-          autodiff::dual1st x_dual1 = xx;
+          autodiff::dual1st x_dual1;
+          x_dual1.val               = xx;
           x_dual1.grad              = 1.0;
           autodiff::dual1st val_x1  = spline.eval( x_dual1, yy );
           real_type         Dx_at_y = val_x1.grad;
 
           // Dx a (xx, yy+h)
-          autodiff::dual1st x_dual2  = xx;
+          autodiff::dual1st x_dual2;
+          x_dual2.val                = xx;
           x_dual2.grad               = 1.0;
           autodiff::dual1st val_x2   = spline.eval( x_dual2, yy + h );
           real_type         Dx_at_yh = val_x2.grad;

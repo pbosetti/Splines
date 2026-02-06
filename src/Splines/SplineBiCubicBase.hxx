@@ -146,7 +146,7 @@ namespace Splines
     //!
     void D( real_type const x, real_type const y, real_type d[3] ) const override
     {
-      Mat4x4 bili3;
+      Mat4x4 M;
       Vec4   u, u_D, v, v_D;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
@@ -157,53 +157,13 @@ namespace Splines
       Hermite3( dy, DY, v.data() );
       Hermite3_D( dy, DY, v_D.data() );
 
-      load( i, j, bili3 );
-      
-      auto Bv = bili3 * v;
+      load( i, j, M );
 
-      d[0] = u.dot( Bv );
-      d[1] = u_D.dot( Bv );
-      d[2] = u.dot( bili3 * v_D );
-    }
+      auto Mv = M * v;
 
-    //!
-    //! Evaluate spline `x`  derivative at point \f$ (x,y) \f$
-    //!
-    real_type Dx( real_type const x, real_type const y ) const override
-    {
-      Mat4x4 bili3;
-      Vec4   u_D, v;
-
-      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
-      m_search_x.find( X );
-      m_search_y.find( Y );
-
-      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
-
-      Hermite3_D( dx, DX, u_D.data() );
-      Hermite3( dy, DY, v.data() );
-
-      load( i, j, bili3 );
-
-      return u_D.dot( bili3 * v );
-    }
-
-    //!
-    //! Evaluate spline `y`  derivative at point \f$ (x,y) \f$
-    //!
-    real_type Dy( real_type const x, real_type const y ) const override
-    {
-      Mat4x4 bili3;
-      Vec4   u, v_D;
-
-      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
-
-      Hermite3( dx, DX, u.data() );
-      Hermite3_D( dy, DY, v_D.data() );
-
-      load( i, j, bili3 );
-
-      return u.dot( bili3 * v_D );
+      d[0] = u.dot( Mv );
+      d[1] = u_D.dot( Mv );
+      d[2] = u.dot( M * v_D );
     }
 
     //!
@@ -218,7 +178,7 @@ namespace Splines
     //!
     void DD( real_type const x, real_type const y, real_type dd[6] ) const override
     {
-      Mat4x4 bili3;
+      Mat4x4 M;
       Vec4   u, u_D, u_DD, v, v_D, v_DD;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
@@ -231,17 +191,53 @@ namespace Splines
       Hermite3_D( dy, DY, v_D.data() );
       Hermite3_DD( dy, DY, v_DD.data() );
 
-      load( i, j, bili3 );
-      
-      auto Bv   = bili3 * v;
-      auto Bv_D = bili3 * v_D;
+      load( i, j, M );
 
-      dd[0] = u.dot( Bv );
-      dd[1] = u_D.dot( Bv );
-      dd[2] = u.dot( Bv_D );
-      dd[3] = u_DD.dot( Bv );
-      dd[4] = u_D.dot( Bv_D );
-      dd[5] = u.dot( bili3 * v_DD );
+      auto Mv   = M * v;
+      auto Mv_D = M * v_D;
+
+      dd[0] = u.dot( Mv );
+      dd[1] = u_D.dot( Mv );
+      dd[2] = u.dot( Mv_D );
+      dd[3] = u_DD.dot( Mv );
+      dd[4] = u_D.dot( Mv_D );
+      dd[5] = u.dot( M * v_DD );
+    }
+
+    //!
+    //! Evaluate spline `x`  derivative at point \f$ (x,y) \f$
+    //!
+    real_type Dx( real_type const x, real_type const y ) const override
+    {
+      Mat4x4 M;
+      Vec4   u_D, v;
+
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
+
+      Hermite3_D( dx, DX, u_D.data() );
+      Hermite3( dy, DY, v.data() );
+
+      load( i, j, M );
+
+      return u_D.dot( M * v );
+    }
+
+    //!
+    //! Evaluate spline `y`  derivative at point \f$ (x,y) \f$
+    //!
+    real_type Dy( real_type const x, real_type const y ) const override
+    {
+      Mat4x4 M;
+      Vec4   u, v_D;
+
+      auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
+
+      Hermite3( dx, DX, u.data() );
+      Hermite3_D( dy, DY, v_D.data() );
+
+      load( i, j, M );
+
+      return u.dot( M * v_D );
     }
 
     //!
@@ -249,7 +245,7 @@ namespace Splines
     //!
     real_type Dxx( real_type const x, real_type const y ) const override
     {
-      Mat4x4 bili3;
+      Mat4x4 M;
       Vec4   u_DD, v;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
@@ -257,9 +253,9 @@ namespace Splines
       Hermite3_DD( dx, DX, u_DD.data() );
       Hermite3( dy, DY, v.data() );
 
-      load( i, j, bili3 );
+      load( i, j, M );
 
-      return u_DD.dot( bili3 * v );
+      return u_DD.dot( M * v );
     }
 
     //!
@@ -267,7 +263,7 @@ namespace Splines
     //!
     real_type Dxy( real_type const x, real_type const y ) const override
     {
-      Mat4x4 bili3;
+      Mat4x4 M;
       Vec4   u_D, v_D;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
@@ -275,9 +271,9 @@ namespace Splines
       Hermite3_D( dx, DX, u_D.data() );
       Hermite3_D( dy, DY, v_D.data() );
 
-      load( i, j, bili3 );
+      load( i, j, M );
 
-      return u_D.dot( bili3 * v_D );
+      return u_D.dot( M * v_D );
     }
 
     //!
@@ -285,7 +281,7 @@ namespace Splines
     //!
     real_type Dyy( real_type const x, real_type const y ) const override
     {
-      Mat4x4 bili3;
+      Mat4x4 M;
       Vec4   u, v_DD;
 
       auto [i, j, dx, dy, DX, DY] = find_patch( x, y );
@@ -293,10 +289,121 @@ namespace Splines
       Hermite3( dx, DX, u.data() );
       Hermite3_DD( dy, DY, v_DD.data() );
 
-      load( i, j, bili3 );
+      load( i, j, M );
 
-      return u.dot( bili3 * v_DD );
+      return u.dot( M * v_DD );
     }
+  
+  #ifdef AUTODIFF_SUPPORT
+    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const override
+    {
+      Mat4x4            M;
+      autodiff::dual1st u[4], v[4], Mv[4];
+
+      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
+      m_search_x.find( X );
+      m_search_y.find( Y );
+
+      integer const i = X.first;
+      integer const j = Y.first;
+      
+      autodiff::dual1st XX, YY;
+      XX.val  = X.second;
+      XX.grad = x.grad;
+      YY.val  = Y.second;
+      YY.grad = y.grad;
+
+      autodiff::dual1st const dx = XX - mX.coeff( i );
+      autodiff::dual1st const dy = YY - mY.coeff( j );
+      real_type         const DX = mX.coeff( i + 1 ) - mX.coeff( i );
+      real_type         const DY = mY.coeff( j + 1 ) - mY.coeff( j );
+
+      Hermite3<autodiff::dual1st>( dx, DX, u );
+      Hermite3<autodiff::dual1st>( dy, DY, v );
+
+      load( i, j, M );
+      
+      Mv[0] = M.coeff(0,0) * v[0] +
+              M.coeff(0,1) * v[1] +
+              M.coeff(0,2) * v[2] +
+              M.coeff(0,3) * v[3];
+
+      Mv[1] = M.coeff(1,0) * v[0] +
+              M.coeff(1,1) * v[1] +
+              M.coeff(1,2) * v[2] +
+              M.coeff(1,3) * v[3];
+
+      Mv[2] = M.coeff(2,0) * v[0] +
+              M.coeff(2,1) * v[1] +
+              M.coeff(2,2) * v[2] +
+              M.coeff(2,3) * v[3];
+
+      Mv[3] = M.coeff(3,0) * v[0] +
+              M.coeff(3,1) * v[1] +
+              M.coeff(3,2) * v[2] +
+              M.coeff(3,3) * v[3];
+
+      return u[0] * Mv[0] + u[1] * Mv[1] + u[2] * Mv[2] + u[3] * Mv[3];
+    }
+
+    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const override
+    {
+      Mat4x4            M;
+      autodiff::dual2nd u[4], v[4], Mv[4];
+
+      std::pair<integer, real_type> X( 0, x ), Y( 0, y );
+      m_search_x.find( X );
+      m_search_y.find( Y );
+
+      integer const i = X.first;
+      integer const j = Y.first;
+      
+      autodiff::dual2nd XX, YY;
+
+      XX.val.val   = X.second;
+      XX.val.grad  = x.val.grad;
+      XX.grad.val  = x.grad.val;
+      XX.grad.grad = x.grad.grad;
+
+      YY.val.val   = Y.second;
+      YY.val.grad  = y.val.grad;
+      YY.grad.val  = y.grad.val;
+      YY.grad.grad = y.grad.grad;
+
+      autodiff::dual2nd const dx = XX - mX.coeff( i );
+      autodiff::dual2nd const dy = YY - mY.coeff( j );
+      real_type         const DX = mX.coeff( i + 1 ) - mX.coeff( i );
+      real_type         const DY = mY.coeff( j + 1 ) - mY.coeff( j );
+
+      Hermite3<autodiff::dual2nd>( dx, DX, u );
+      Hermite3<autodiff::dual2nd>( dy, DY, v );
+
+      load( i, j, M );
+      
+      Mv[0] = M.coeff(0,0) * v[0] +
+              M.coeff(0,1) * v[1] +
+              M.coeff(0,2) * v[2] +
+              M.coeff(0,3) * v[3];
+
+      Mv[1] = M.coeff(1,0) * v[0] +
+              M.coeff(1,1) * v[1] +
+              M.coeff(1,2) * v[2] +
+              M.coeff(1,3) * v[3];
+
+      Mv[2] = M.coeff(2,0) * v[0] +
+              M.coeff(2,1) * v[1] +
+              M.coeff(2,2) * v[2] +
+              M.coeff(2,3) * v[3];
+
+      Mv[3] = M.coeff(3,0) * v[0] +
+              M.coeff(3,1) * v[1] +
+              M.coeff(3,2) * v[2] +
+              M.coeff(3,3) * v[3];
+
+      return u[0] * Mv[0] + u[1] * Mv[1] + u[2] * Mv[2] + u[3] * Mv[3];
+    }
+#endif
+
     ///@}
   };
 
