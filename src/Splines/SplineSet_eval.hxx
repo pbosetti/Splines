@@ -11,7 +11,7 @@
  */
 real_type operator()( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->eval( x );
 }
 
@@ -23,7 +23,7 @@ real_type operator()( real_type const x, integer const spl ) const
  */
 real_type eval( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->eval( x );
 }
 
@@ -36,7 +36,7 @@ real_type eval( real_type const x, integer const spl ) const
  */
 real_type D( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->D( x );
 }
 
@@ -48,7 +48,7 @@ real_type D( real_type const x, integer const spl ) const
  */
 real_type eval_D( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->D( x );
 }
 
@@ -61,7 +61,7 @@ real_type eval_D( real_type const x, integer const spl ) const
  */
 real_type DD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DD( x );
 }
 
@@ -73,7 +73,7 @@ real_type DD( real_type const x, integer const spl ) const
  */
 real_type eval_DD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DD( x );
 }
 
@@ -86,7 +86,7 @@ real_type eval_DD( real_type const x, integer const spl ) const
  */
 real_type DDD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DDD( x );
 }
 
@@ -98,7 +98,7 @@ real_type DDD( real_type const x, integer const spl ) const
  */
 real_type eval_DDD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DDD( x );
 }
 
@@ -113,7 +113,7 @@ real_type eval_DDD( real_type const x, integer const spl ) const
  */
 real_type DDDD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DDDD( x );
 }
 
@@ -125,7 +125,7 @@ real_type DDDD( real_type const x, integer const spl ) const
  */
 real_type eval_DDDD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DDDD( x );
 }
 
@@ -140,7 +140,7 @@ real_type eval_DDDD( real_type const x, integer const spl ) const
  */
 real_type DDDDD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DDDDD( x );
 }
 
@@ -152,7 +152,7 @@ real_type DDDDD( real_type const x, integer const spl ) const
  */
 real_type eval_DDDDD( real_type const x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->DDDDD( x );
 }
 
@@ -178,7 +178,7 @@ real_type eval_DDDDD( real_type const x, integer const spl ) const
  */
 autodiff::dual1st eval( autodiff::dual1st const & x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->eval( x );
 }
 
@@ -191,7 +191,7 @@ autodiff::dual1st eval( autodiff::dual1st const & x, integer const spl ) const
  */
 autodiff::dual2nd eval( autodiff::dual2nd const & x, integer const spl ) const
 {
-  Spline const * S{ this->get_spline( spl ) };
+  Spline const * S = this->get_spline( spl );
   return S->eval( x );
 }
 

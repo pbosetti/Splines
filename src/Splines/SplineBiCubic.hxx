@@ -76,12 +76,17 @@ namespace Splines
     //!
     //! Build an empty spline of `BiCubicSpline` type
     //!
+    //! \param type spline type
     //! \param name the name of the spline
     //!
-    explicit BiCubicSpline( Spline_sub_type sub_type, string_view name = "BiCubicSpline" )
-      : BiCubicSplineBase( sub_type, name )
-    {
-    }
+    explicit BiCubicSpline( Spline_sub_type sub_type, string_view name = "BiCubicSpline" ) : BiCubicSplineBase( sub_type, name ) { }
+
+    //!
+    //! Build an empty spline of `BiCubicSpline` type
+    //!
+    //! \param name the name of the spline
+    //!
+    explicit BiCubicSpline( string_view name ) : BiCubicSplineBase( Spline_sub_type::PCHIP, name ) { }
 
     //!
     //! Spline destructor.

@@ -11,7 +11,7 @@
 void eval2( integer const spl, real_type const zeta, real_type & x, real_type vals[], integer const incy = 1 ) const
 {
   intersect( spl, zeta, x );
-  size_t ii{ 0 };
+  size_t ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->eval( x );
 }
 
@@ -34,9 +34,9 @@ void eval2( integer const spl, real_type const zeta, real_type & x, real_type va
  */
 void eval2_D( integer const spl, real_type const zeta, real_type & x, real_type vals[], integer const incy = 1 ) const
 {
-  Spline const *  S{ intersect( spl, zeta, x ) };
-  real_type const ds{ S->D( x ) };
-  size_t          ii{ 0 };
+  Spline const *  S  = intersect( spl, zeta, x );
+  real_type const ds = S->D( x );
+  size_t          ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->D( x ) / ds;
 }
 
@@ -56,15 +56,15 @@ void eval2_D( integer const spl, real_type const zeta, real_type & x, real_type 
  */
 void eval2_DD( integer const spl, real_type const zeta, real_type & x, real_type vals[], integer const incy = 1 ) const
 {
-  Spline const *  S{ intersect( spl, zeta, x ) };
-  real_type const dt{ 1 / S->D( x ) };
-  real_type const dt2{ dt * dt };
-  real_type const ddt{ -S->DD( x ) * ( dt * dt2 ) };
-  size_t          ii{ 0 };
+  Spline const *  S   = intersect( spl, zeta, x );
+  real_type const dt  = 1 / S->D( x );
+  real_type const dt2 = dt * dt;
+  real_type const ddt = -S->DD( x ) * ( dt * dt2 );
+  size_t          ii  = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy )
   {
-    auto & Si{ m_splines[i] };
-    vals[ii] = Si->DD( x ) * dt2 + Si->D( x ) * ddt;
+    auto & Si = m_splines[i];
+    vals[ii]  = Si->DD( x ) * dt2 + Si->D( x ) * ddt;
   }
 }
 
@@ -82,16 +82,16 @@ void eval2_DD( integer const spl, real_type const zeta, real_type & x, real_type
  */
 void eval2_DDD( integer const spl, real_type const zeta, real_type & x, real_type vals[], integer const incy = 1 ) const
 {
-  Spline const *  S{ intersect( spl, zeta, x ) };
-  real_type const dt{ 1 / S->D( x ) };
-  real_type const dt3{ dt * dt * dt };
-  real_type const ddt{ -S->DD( x ) * dt3 };
-  real_type const dddt{ 3 * ( ddt * ddt ) / dt - S->DDD( x ) * ( dt * dt3 ) };
-  size_t          ii{ 0 };
+  Spline const *  S    = intersect( spl, zeta, x );
+  real_type const dt   = 1 / S->D( x );
+  real_type const dt3  = dt * dt * dt;
+  real_type const ddt  = -S->DD( x ) * dt3;
+  real_type const dddt = 3 * ( ddt * ddt ) / dt - S->DDD( x ) * ( dt * dt3 );
+  size_t          ii   = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy )
   {
-    auto & Si{ m_splines[i] };
-    vals[ii] = Si->DDD( x ) * dt3 + 3 * Si->DD( x ) * dt * ddt + Si->D( x ) * dddt;
+    auto & Si = m_splines[i];
+    vals[ii]  = Si->DDD( x ) * dt3 + 3 * Si->DD( x ) * dt * ddt + Si->D( x ) * dddt;
   }
 }
 

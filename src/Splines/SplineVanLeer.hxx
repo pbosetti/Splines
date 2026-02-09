@@ -64,12 +64,12 @@ namespace Splines
 
     void build() override
     {
-      string msg{ fmt::format( "VanLeerSpline[{}]::build():", m_name ) };
+      string msg = fmt::format( "VanLeerSpline[{}]::build():", m_name );
       UTILS_ASSERT( m_npts > 1, "{} npts={} not enought points\n", msg, m_npts );
       Utils::check_NaN( m_X, msg + " X", m_npts, __LINE__, __FILE__ );
       Utils::check_NaN( m_Y, msg + " Y", m_npts, __LINE__, __FILE__ );
-      integer ibegin{ 0 };
-      integer iend{ 0 };
+      integer ibegin = 0;
+      integer iend   = 0;
       do
       {
         // cerca intervallo monotono strettamente crescente
@@ -89,24 +89,24 @@ namespace Splines
       // gc["ydata"]
       //
       */
-      string const where{ fmt::format( "VanLeerSpline[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "VanLeerSpline[{}]::setup( gc ):", m_name );
 
       std::set<std::string> keywords;
       for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
       keywords.erase( "spline_type" );
 
-      GenericContainer const & gc_x{ gc( "xdata", where ) };
+      GenericContainer const & gc_x = gc( "xdata", where );
       keywords.erase( "xdata" );
-      GenericContainer const & gc_y{ gc( "ydata", where ) };
+      GenericContainer const & gc_y = gc( "ydata", where );
       keywords.erase( "ydata" );
 
       vec_real_type x, y;
       {
-        string const ff{ fmt::format( "{}, field `xdata'", where ) };
+        string const ff = fmt::format( "{}, field `xdata'", where );
         gc_x.copyto_vec_real( x, ff );
       }
       {
-        string const ff{ fmt::format( "{}, field `ydata'", where ) };
+        string const ff = fmt::format( "{}, field `ydata'", where );
         gc_y.copyto_vec_real( y, ff );
       }
 

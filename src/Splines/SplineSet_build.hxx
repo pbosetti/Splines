@@ -126,7 +126,7 @@ void build(
   // ===================================================================
   // FASE 3: Costruzione delle singole spline
   // ===================================================================
-  for ( integer spl{ 0 }; spl < nspl; ++spl )
+  for ( integer spl = 0; spl < nspl; ++spl )
   {
     UTILS_ASSERT( Y[spl] != nullptr, "{} Y[{}] array is null\n", msg, spl );
 
@@ -227,7 +227,7 @@ void build(
 
         // Check manuale monotonia per spline lineari
         // NOTA: Potrebbe essere spostato in LinearSpline::is_monotone()
-        integer flag{ 1 };  // 1 = strettamente monotona crescente
+        integer flag = 1;  // 1 = strettamente monotona crescente
         for ( integer j = 1; j < m_npts; ++j )
         {
           if ( pY[j - 1] > pY[j] )

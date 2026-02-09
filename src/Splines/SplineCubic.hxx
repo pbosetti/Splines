@@ -329,8 +329,8 @@ namespace Splines
   class CubicSpline : public CubicSplineBase
   {
   private:
-    CubicSpline_BC m_bc0{ CubicSpline_BC::EXTRAPOLATE };  ///< Boundary condition iniziale
-    CubicSpline_BC m_bcn{ CubicSpline_BC::EXTRAPOLATE };  ///< Boundary condition finale
+    CubicSpline_BC m_bc0 = CubicSpline_BC::EXTRAPOLATE;  ///< Boundary condition iniziale
+    CubicSpline_BC m_bcn = CubicSpline_BC::EXTRAPOLATE;  ///< Boundary condition finale
 
   public:
     //!
@@ -402,7 +402,7 @@ namespace Splines
      */
     void build() override
     {
-      string msg{ fmt::format( "CubicSpline[{}]::build():", m_name ) };
+      string msg = fmt::format( "CubicSpline[{}]::build():", m_name );
 
       // Validazione input
       UTILS_ASSERT( m_npts > 1, "{} npts={} not enough points\n", msg, m_npts );
@@ -411,8 +411,8 @@ namespace Splines
       Utils::check_NaN( m_Y, msg + " Y", m_npts, __LINE__, __FILE__ );
 
       // Costruzione per segmenti monotoni
-      integer ibegin{ 0 };
-      integer iend{ 0 };
+      integer ibegin = 0;
+      integer iend   = 0;
 
       do
       {
@@ -420,8 +420,8 @@ namespace Splines
         for ( ++iend; iend < m_npts && m_X[iend - 1] < m_X[iend]; ++iend ) {}
 
         // Determina le boundary conditions per questo segmento
-        auto seg_bc0{ CubicSpline_BC::NOT_A_KNOT };
-        auto seg_bcn{ CubicSpline_BC::NOT_A_KNOT };
+        auto seg_bc0 = CubicSpline_BC::NOT_A_KNOT;
+        auto seg_bcn = CubicSpline_BC::NOT_A_KNOT;
 
         if ( ibegin == 0 ) seg_bc0 = m_bc0;     // Primo segmento: usa BC iniziale
         if ( iend == m_npts ) seg_bcn = m_bcn;  // Ultimo segmento: usa BC finale
@@ -479,7 +479,7 @@ namespace Splines
      */
     void setup( GenericContainer const & gc ) override
     {
-      string const where{ fmt::format( "CubicSpline[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "CubicSpline[{}]::setup( gc ):", m_name );
 
       // Raccoglie tutte le chiavi presenti per identificare campi non usati
       std::set<std::string> keywords;
@@ -487,19 +487,19 @@ namespace Splines
       keywords.erase( "spline_type" );  // Campo standard, non è un warning
 
       // Estrazione dati X e Y (obbligatori)
-      GenericContainer const & gc_x{ gc( "xdata", where ) };
+      GenericContainer const & gc_x = gc( "xdata", where );
       keywords.erase( "xdata" );
 
-      GenericContainer const & gc_y{ gc( "ydata", where ) };
+      GenericContainer const & gc_y = gc( "ydata", where );
       keywords.erase( "ydata" );
 
       vec_real_type x, y;
       {
-        string const ff{ fmt::format( "{}, field `xdata'", where ) };
+        string const ff = fmt::format( "{}, field `xdata'", where );
         gc_x.copyto_vec_real( x, ff );
       }
       {
-        string const ff{ fmt::format( "{}, field `ydata'", where ) };
+        string const ff = fmt::format( "{}, field `ydata'", where );
         gc_y.copyto_vec_real( y, ff );
       }
 
@@ -507,7 +507,7 @@ namespace Splines
       if ( gc.exists( "bc_begin" ) )
       {
         keywords.erase( "bc_begin" );
-        string_view bc{ gc.get_map_string( "bc_begin", where ) };
+        string_view bc = gc.get_map_string( "bc_begin", where );
 
         if ( bc == "extrapolate" )
           m_bc0 = CubicSpline_BC::EXTRAPOLATE;
@@ -531,7 +531,7 @@ namespace Splines
       if ( gc.exists( "bc_end" ) )
       {
         keywords.erase( "bc_end" );
-        string_view bc{ gc.get_map_string( "bc_end", where ) };
+        string_view bc = gc.get_map_string( "bc_end", where );
 
         if ( bc == "extrapolate" )
           m_bcn = CubicSpline_BC::EXTRAPOLATE;

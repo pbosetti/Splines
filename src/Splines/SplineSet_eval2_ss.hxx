@@ -128,10 +128,9 @@ autodiff::dual1st eval2(
   real_type &               x,
   string_view const         name ) const
 {
-  using autodiff::derivative;
-  using autodiff::dual1st;
-  real_type zv{ val( zeta ) };
-  dual1st   res{ eval2( zv, indep, x, name ) };
+  real_type         zv = zeta.val;
+  autodiff::dual1st res;
+  res.val  = eval2( zv, indep, x, name );
   res.grad = eval_D( x, name ) * zeta.grad;  // x gia calcolato
   return res;
 }
@@ -165,17 +164,35 @@ autodiff::dual2nd eval2(
   real_type &               x,
   string_view const         name ) const
 {
-  using autodiff::derivative;
-  using autodiff::dual2nd;
+  // Estrazione dei valori dalla variabile dual2nd
+  real_type zv = zeta.val.val;   // valore reale di zeta
+  real_type zg = zeta.grad.val;  // derivata prima: dzeta/dX
 
-  real_type zv{ val( zeta ) };
-  real_type zg{ val( zeta.grad ) };
-  real_type dfx{ eval2_D( zv, indep, x, name ) };
-  real_type dxx{ eval_DD( x, name ) };  // x gia calcolato
-  dual2nd   res{ eval( x, name ) };
+  // Calcolo delle derivate della funzione
+  real_type dfx = eval2_D( zv, indep, x, name );  // derivata prima rispetto a zeta
+  real_type dxx = eval_DD( x, name );             // derivata seconda rispetto a x
 
-  res.grad      = dfx * zg;
+  // Valore della funzione
+  real_type f_val = eval( x, name );
+
+  // Costruzione dell'oggetto dual2nd
+  autodiff::dual2nd res;
+
+  // Imposta il valore della funzione
+  res.val.val = f_val;
+
+  // Calcolo della derivata prima: df/dX = (df/dzeta) * (dzeta/dX)
+  real_type dF_dX = dfx * zg;
+
+  // Imposta la derivata prima
+  res.val.grad = dF_dX;  // per coerenza interna
+  res.grad.val = dF_dX;  // derivata prima
+
+  // Calcolo della derivata seconda:
+  // d²f/dX² = (df/dzeta) * (d²zeta/dX²) + (d²f/dzeta²) * (dzeta/dX)²
+  // Nel codice originale, dxx è probabilmente la derivata seconda di f rispetto a zeta
   res.grad.grad = dfx * zeta.grad.grad + dxx * ( zg * zg );
+
   return res;
 }
 

@@ -93,7 +93,7 @@ namespace SplinesTest
       auto Dx   = f.eval( xd, y );
       result.Dx = Dx.grad;
     }
-    
+
     // Derivata prima rispetto a y
     {
       autodiff::dual1st yd;
@@ -124,7 +124,7 @@ namespace SplinesTest
       auto Dyy      = f.eval( x, ydd );
       result.Dyy    = Dyy.grad.grad;
     }
-    
+
     // Derivata mista: prima rispetto a x, poi rispetto a y
     // fxy = d/dy (df/dx)
     {
@@ -144,7 +144,8 @@ namespace SplinesTest
       result.Dxy = Dxy.grad.grad;
     }
 
-    if ( abs( result.Dxy - f.Dxy( x, y ) ) > 1E-10 ) {
+    if ( abs( result.Dxy - f.Dxy( x, y ) ) > 1E-10 )
+    {
       autodiff::dual2nd xdd, ydd;
 
       xdd.val.val   = x;

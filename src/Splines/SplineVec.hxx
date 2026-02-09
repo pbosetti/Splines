@@ -264,7 +264,7 @@ namespace Splines
      */
     void compute_chords()
     {
-      integer const nn{ m_npts - 1 };
+      integer const nn = m_npts - 1;
       switch ( m_dim )
       {
         case 2:
@@ -524,7 +524,7 @@ namespace Splines
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
       real_type     base[4];
-      integer const idx{ res.first };
+      integer const idx = res.first;
       Splines::Hermite3( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
@@ -571,7 +571,7 @@ namespace Splines
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
       real_type     base_D[4];
-      integer const idx{ res.first };
+      integer const idx = res.first;
       Splines::Hermite3_D( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_D );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
@@ -615,7 +615,7 @@ namespace Splines
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
       real_type     base_DD[4];
-      integer const idx{ res.first };
+      integer const idx = res.first;
       Splines::Hermite3_DD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DD );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
@@ -659,7 +659,7 @@ namespace Splines
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
       real_type     base_DDD[4];
-      integer const idx{ res.first };
+      integer const idx = res.first;
       Splines::Hermite3_DDD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DDD );
       real_type const * Y  = m_Y[i];
       real_type const * Yp = m_Yp[i];
@@ -767,11 +767,10 @@ namespace Splines
      */
     autodiff::dual1st eval( autodiff::dual1st const & x, integer const i ) const
     {
-      using autodiff::derivative;
-      using autodiff::dual1st;
-      real_type xv  = val( x );
-      dual1st   res = eval( xv, i );
-      res.grad      = eval_D( xv, i ) * x.grad;
+      real_type         xv = x.val;
+      autodiff::dual1st res;
+      res.val  = eval( xv, i );
+      res.grad = eval_D( xv, i ) * x.grad;
       return res;
     }
 
@@ -792,17 +791,35 @@ namespace Splines
      */
     autodiff::dual2nd eval( autodiff::dual2nd const & x, integer const i ) const
     {
-      using autodiff::derivative;
-      using autodiff::dual2nd;
+      // Estrai il valore reale di x e la sua derivata prima
+      real_type xv = x.val.val;   // valore reale di x
+      real_type xg = x.grad.val;  // derivata prima di x: dx/dX
 
-      real_type xv  = val( x );
-      real_type xg  = val( x.grad );
-      real_type dfx = eval_D( xv, i );
-      real_type dxx = eval_DD( xv, i );
-      dual2nd   res = eval( xv, i );
+      // Calcola la funzione e le sue derivate nel punto xv
+      real_type f_val = eval( xv, i );     // valore della funzione f(x)
+      real_type dfx   = eval_D( xv, i );   // f'(x) = df/dx
+      real_type ddfx  = eval_DD( xv, i );  // f''(x) = d²f/dx²
 
-      res.grad      = dfx * xg;
-      res.grad.grad = dfx * x.grad.grad + dxx * ( xg * xg );
+      // Costruisci l'oggetto dual2nd risultante
+      autodiff::dual2nd res;
+
+      // Imposta il valore della funzione
+      res.val.val = f_val;
+
+      // Calcola la derivata prima: dF/dX = f'(x) * (dx/dX)
+      real_type dF_dX = dfx * xg;
+
+      // Imposta la derivata prima
+      res.val.grad = dF_dX;  // per coerenza interna
+      res.grad.val = dF_dX;  // derivata prima
+
+      // Calcola la derivata seconda:
+      // d²F/dX² = f''(x) * (dx/dX)² + f'(x) * d²x/dX²
+      real_type d2F_dX2 = ddfx * ( xg * xg ) + dfx * x.grad.grad;
+
+      // Imposta la derivata seconda
+      res.grad.grad = d2F_dX2;
+
       return res;
     }
 
@@ -976,7 +993,7 @@ namespace Splines
       std::pair<integer, real_type> res( 0, x );
       m_search.find( res );
       real_type     base_DDD[4];
-      integer const idx{ res.first };
+      integer const idx = res.first;
       Splines::Hermite3_DDD( res.second - m_X[idx], m_X[idx + 1] - m_X[idx], base_DDD );
       real_type * v = vals;
       for ( integer j = 0; j < m_dim; ++j, v += inc )
@@ -1168,7 +1185,7 @@ namespace Splines
       mat_real_type &   m  = vals.set_mat_real( static_cast<unsigned>( m_dim ), static_cast<unsigned>( x.size() ) );
       real_type *       v  = m.data();
       real_type const * px = x.data();
-      integer           j{ static_cast<integer>( x.size() ) };
+      integer           j  = static_cast<integer>( x.size() );
       while ( j-- > 0 )
       {
         eval( *px++, v, 1 );
@@ -1187,7 +1204,7 @@ namespace Splines
       mat_real_type &   m  = vals.set_mat_real( static_cast<unsigned>( m_dim ), static_cast<unsigned>( x.size() ) );
       real_type *       v  = m.data();
       real_type const * px = x.data();
-      integer           j{ static_cast<integer>( x.size() ) };
+      integer           j  = static_cast<integer>( x.size() );
       while ( j-- > 0 )
       {
         eval_D( *px++, v, 1 );
@@ -1204,7 +1221,7 @@ namespace Splines
       mat_real_type &   m  = vals.set_mat_real( static_cast<unsigned>( m_dim ), static_cast<unsigned>( x.size() ) );
       real_type *       v  = m.data();
       real_type const * px = x.data();
-      integer           j{ static_cast<integer>( x.size() ) };
+      integer           j  = static_cast<integer>( x.size() );
       while ( j-- > 0 )
       {
         eval_DD( *px++, v, 1 );
@@ -1221,7 +1238,7 @@ namespace Splines
       mat_real_type &   m  = vals.set_mat_real( static_cast<unsigned>( m_dim ), static_cast<unsigned>( x.size() ) );
       real_type *       v  = m.data();
       real_type const * px = x.data();
-      integer           j{ static_cast<integer>( x.size() ) };
+      integer           j  = static_cast<integer>( x.size() );
       while ( j-- > 0 )
       {
         eval_DDD( *px++, v, 1 );
@@ -1238,7 +1255,7 @@ namespace Splines
       mat_real_type &   m  = vals.set_mat_real( static_cast<unsigned>( m_dim ), static_cast<unsigned>( x.size() ) );
       real_type *       v  = m.data();
       real_type const * px = x.data();
-      integer           j{ static_cast<integer>( x.size() ) };
+      integer           j  = static_cast<integer>( x.size() );
       while ( j-- > 0 )
       {
         eval_DDDD( *px++, v, 1 );
@@ -1255,7 +1272,7 @@ namespace Splines
       mat_real_type &   m  = vals.set_mat_real( static_cast<unsigned>( m_dim ), static_cast<unsigned>( x.size() ) );
       real_type *       v  = m.data();
       real_type const * px = x.data();
-      integer           j{ static_cast<integer>( x.size() ) };
+      integer           j  = static_cast<integer>( x.size() );
       while ( j-- > 0 )
       {
         eval_DDDDD( *px++, v, 1 );
@@ -1397,12 +1414,12 @@ namespace Splines
     void set_knots_chord_length()
     {
       compute_chords();
-      integer const nn{ m_npts - 1 };
-      real_type     acc{ 0 };
+      integer const nn  = m_npts - 1;
+      real_type     acc = 0;
       for ( integer j = 0; j <= nn; ++j )
       {
-        real_type const l{ m_X[j] };
-        m_X[j] = acc;
+        real_type const l = m_X[j];
+        m_X[j]            = acc;
         acc += l;
       }
       for ( integer j = 1; j < nn; ++j ) m_X[j] /= acc;
@@ -1439,12 +1456,12 @@ namespace Splines
     void set_knots_centripetal()
     {
       compute_chords();
-      integer const nn{ m_npts - 1 };
-      real_type     acc{ 0 };
+      integer const nn  = m_npts - 1;
+      real_type     acc = 0;
       for ( integer j = 0; j <= nn; ++j )
       {
-        real_type const l{ std::sqrt( m_X[j] ) };
-        m_X[j] = acc;
+        real_type const l = std::sqrt( m_X[j] );
+        m_X[j]            = acc;
         acc += l;
       }
       for ( integer j = 1; j < nn; ++j ) m_X[j] /= acc;
@@ -1477,7 +1494,7 @@ namespace Splines
     {
       compute_chords();  // m_X now contains chord lengths d_i
 
-      integer const n{ m_npts - 1 };  // number of intervals
+      integer const n = m_npts - 1;  // number of intervals
       if ( n < 2 )
       {
         // For very few points, fall back to uniform parametrization
@@ -1564,7 +1581,7 @@ namespace Splines
       }
 
       // Step 4: Compute cumulative parameter values
-      real_type acc{ 0 };
+      real_type acc = 0;
       for ( integer i = 0; i <= n; ++i )
       {
         if ( i == 0 ) { m_X[0] = acc; }
@@ -1621,8 +1638,8 @@ namespace Splines
     {
       UTILS_ASSERT( m_npts >= 2, "catmull_rom, npts={} must be >= 2\n", m_npts );
 
-      integer const n{ m_npts - 1 };
-      integer const d{ m_dim };
+      integer const n = m_npts - 1;
+      integer const d = m_dim;
 
       real_type l1, l2, ll, a, b;
       for ( integer j = 1; j < n; ++j )
@@ -1683,31 +1700,31 @@ namespace Splines
      */
     void setup( GenericContainer const & gc )
     {
-      string const where{ fmt::format( "SplineVec[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "SplineVec[{}]::setup( gc ):", m_name );
 
       std::set<std::string> keywords;
       for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
 
-      GenericContainer const & data{ gc( "data", where ) };
+      GenericContainer const & data = gc( "data", where );
 
       mat_real_type Y;
       data.copyto_mat_real( Y, where );
 
-      bool transposed{ false };
+      bool transposed = false;
       gc.get_if_exists( "transposed", transposed );
 
       if ( transposed )
       {
-        integer const dim{ static_cast<integer>( Y.num_rows() ) };
-        integer const npts{ static_cast<integer>( Y.num_cols() ) };
+        integer const dim  = static_cast<integer>( Y.num_rows() );
+        integer const npts = static_cast<integer>( Y.num_cols() );
         allocate( dim, npts );
         for ( integer spl = 0; spl < m_dim; ++spl )
           for ( integer j = 0; j < m_npts; ++j ) m_Y[spl][j] = Y( spl, j );
       }
       else
       {
-        integer const dim{ static_cast<integer>( Y.num_cols() ) };
-        integer const npts{ static_cast<integer>( Y.num_rows() ) };
+        integer const dim  = static_cast<integer>( Y.num_cols() );
+        integer const npts = static_cast<integer>( Y.num_rows() );
         allocate( dim, npts );
         for ( integer spl = 0; spl < m_dim; ++spl )
           for ( integer j = 0; j < m_npts; ++j ) m_Y[spl][j] = Y( j, spl );

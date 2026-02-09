@@ -311,9 +311,9 @@ namespace Splines
       // gc["ydata"]
       //
       */
-      string const             where{ "Spline2Dblend[{}]::setup( gc )" };
-      GenericContainer const & gc_surf0{ gc( "surf0", where ) };
-      GenericContainer const & gc_surf1{ gc( "surf1", where ) };
+      string const             where    = "Spline2Dblend[{}]::setup( gc )";
+      GenericContainer const & gc_surf0 = gc( "surf0", where );
+      GenericContainer const & gc_surf1 = gc( "surf1", where );
       m_surf0.setup( gc_surf0 );
       m_surf1.setup( gc_surf1 );
       check_compatibility();

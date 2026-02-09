@@ -213,9 +213,9 @@ namespace Splines
       // gc["ydata"]
       //
       */
-      string const where{ fmt::format( "Spline1D[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "Spline1D[{}]::setup( gc ):", m_name );
 
-      string_view spl_type{ gc.get_map_string( "spline_type", where ) };
+      string_view spl_type = gc.get_map_string( "spline_type", where );
 
       SplineType1D tp;
       if ( spl_type == "constant" )
@@ -299,7 +299,7 @@ namespace Splines
     //!
     void build( SplineType1D tp, vector<real_type> const & x, vector<real_type> const & y )
     {
-      integer n{ integer( x.size() ) };
+      integer n = integer( x.size() );
       this->build( tp, x.data(), y.data(), n );
     }
 
@@ -402,24 +402,36 @@ namespace Splines
     ///@{
     autodiff::dual1st eval( autodiff::dual1st const & x ) const
     {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
       real_type dd[2];
-      D( val( x ), dd );
-      dual1st res{ dd[0] };
+      D( x.val, dd );
+      autodiff::dual1st res;
+      res.val  = dd[0];
       res.grad = dd[1] * x.grad;
       return res;
     }
 
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const
     {
-      using autodiff::dual2nd;
-      using autodiff::detail::val;
-      real_type dd[3], xg{ val( x.grad ) };
-      DD( val( x ), dd );
-      dual2nd res{ dd[0] };
-      res.grad      = dd[1] * xg;
-      res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
+      real_type dd[3];
+      DD( x.val.val, dd );
+      autodiff::dual2nd res;
+
+      // Impostazione del valore
+      res.val.val = dd[0];  // f(x)
+
+      // Calcolo della derivata prima
+      real_type xg    = x.grad.val;  // x' = derivata prima di x
+      real_type dF_dX = dd[1] * xg;  // f'(x) * x'
+
+      // Impostazione della derivata prima
+      res.val.grad = dF_dX;
+      res.grad.val = dF_dX;
+
+      // Calcolo della derivata seconda
+      // d²F/dX² = f''(x) * (x')² + f'(x) * x''
+      real_type d2F_dX2 = dd[2] * ( xg * xg ) + dd[1] * x.grad.grad;
+      res.grad.grad     = d2F_dX2;
+
       return res;
     }
 

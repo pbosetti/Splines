@@ -130,7 +130,7 @@ namespace Splines
       //      nx = nc
       //
       using StrideType = Eigen::OuterStride<Eigen::Dynamic>;
-      integer const tf{ ( transposed ? 1 : 0 ) + ( fortran_storage ? 2 : 0 ) };
+      integer const tf = ( transposed ? 1 : 0 ) + ( fortran_storage ? 2 : 0 );
       switch ( tf )
       {
         case 0:  // NO transpose NO fortran
@@ -645,7 +645,7 @@ namespace Splines
       // gc["zdata"]
       //
       */
-      string const where{ fmt::format( "SplineSurf[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "SplineSurf[{}]::setup( gc ):", m_name );
 
       std::set<std::string> keywords;
       for ( auto const & pair : gc.get_map( where ) ) keywords.insert( pair.first );
@@ -677,44 +677,48 @@ namespace Splines
       //         i
       */
 
-      // cosa mi aspetto in lettura
-      integer const NR = transposed ? m_ny : m_nx;
-      integer const NC = transposed ? m_nx : m_ny;
       // integer const LD = fortran_storage ? NR : NC;
+
+      auto read_mat = [this,&transposed,&fortran_storage,&where] ( GenericContainer const & M ) -> void {
+        bool trans = transposed == fortran_storage;
+        integer const NR = trans ? m_ny : m_nx;
+        integer const NC = trans ? m_nx : m_ny;
+        integer nr = M.num_rows();
+        integer nc = M.num_cols();
+        UTILS_ASSERT(
+          NR == nr && NC == nc,
+          "{}, field `zdata` is a matrix expected to be of size {} x {}, found: {} x {}\n",
+          where, NR, NC, nr, nc
+        );
+
+        if ( GC_type::MAT_REAL == M.get_type() )
+        {
+          auto & mat = M.get_mat_real();  // è in fortran storage!
+          Eigen::Map<const Mat> Z( mat.data(), NR, NC );
+          load_Z( Z, trans );
+        }
+        else
+        {
+          GenericContainer::mat_real_type z_tmp;
+          M.copyto_mat_real( z_tmp );  // è in fortran storage!
+          Eigen::Map<Mat> Z( z_tmp.data(), NR, NC );
+          load_Z( Z, trans );
+        }
+      };
 
       if (
         GC_type::MAT_REAL == gc_z.get_type() || GC_type::MAT_INTEGER == gc_z.get_type() ||
         GC_type::MAT_LONG == gc_z.get_type() )
       {
-        integer nr = gc_z.num_rows();
-        integer nc = gc_z.num_cols();
-        UTILS_ASSERT(
-          NR == nr && NC == nc,
-          "{}, field `zdata` is a matrix expected to be of size {} x {}, found: {} x {}\n",
-          where,
-          NR,
-          NC,
-          nr,
-          nc );
-
-        if ( GC_type::MAT_REAL == gc_z.get_type() )
-        {
-          auto &                mat = gc_z.get_mat_real();  // è in fortran storage!
-          Eigen::Map<const Mat> Z( mat.data(), NR, NC );
-          load_Z( Z, transposed );
-        }
-        else
-        {
-          GenericContainer::mat_real_type z_tmp;
-          gc_z.copyto_mat_real( z_tmp );  // è in fortran storage!
-          Eigen::Map<Mat> Z( z_tmp.data(), NR, NC );
-          load_Z( Z, transposed );
-        }
+        read_mat( gc_z );
       }
       else if (
         GC_type::VEC_REAL == gc_z.get_type() || GC_type::VEC_INTEGER == gc_z.get_type() ||
         GC_type::VEC_LONG == gc_z.get_type() )
       {
+      // cosa mi aspetto in lettura
+        integer NR  = transposed ? m_ny : m_nx;
+        integer NC  = transposed ? m_nx : m_ny;
         integer nz  = static_cast<integer>( gc_z.get_num_elements() );
         integer nxy = m_nx * m_ny;
         UTILS_ASSERT(
@@ -729,7 +733,7 @@ namespace Splines
         for ( integer k = 0; k < nxy; ++k )
         {
           integer         i, j;
-          real_type const v{ gc_z.get_number_at( k ) };
+          real_type const v = gc_z.get_number_at( k );
           if ( fortran_storage )
           {
             i = k % NR;
@@ -748,55 +752,15 @@ namespace Splines
       }
       else if ( GC_type::VECTOR == gc_z.get_type() )
       {
-        vector_type const & data{ gc_z.get_vector() };
-        vec_real_type       tmp;
-
-        if ( transposed )
-        {
-          UTILS_ASSERT(
-            static_cast<size_t>( NC ) == data.size(),
-            "{}, field `zdata` (vector of vector transposed) expected of size {} found of size {}\n",
-            where,
-            NC,
-            data.size() );
-          for ( integer j = 0; j < NC; ++j )
-          {
-            GenericContainer const & col{ data[j] };
-            string const             msg1{ fmt::format( "{}, reading row {}\n", where, j ) };
-            col.copyto_vec_real( tmp, msg1 );
-            UTILS_ASSERT(
-              static_cast<size_t>( NR ) == tmp.size(),
-              "{}, col {}-th of size {}, expected {}\n",
-              where,
-              j,
-              tmp.size(),
-              NR );
-            for ( integer i = 0; i < NC; ++i ) z_node_ref( i, j ) = tmp[i];
-          }
-        }
-        else
-        {
-          UTILS_ASSERT(
-            static_cast<size_t>( NR ) == data.size(),
-            "{}, field `zdata` (vector of vector) expected of size {} found of size {}\n",
-            where,
-            NR,
-            data.size() );
-          for ( integer i = 0; i < NR; ++i )
-          {
-            GenericContainer const & row{ data[i] };
-            string const             msg1{ fmt::format( "{}, reading row {}\n", where, i ) };
-            row.copyto_vec_real( tmp, msg1 );
-            UTILS_ASSERT(
-              static_cast<size_t>( NC ) == tmp.size(),
-              "{}, row {}-th of size {}, expected {}\n",
-              where,
-              i,
-              tmp.size(),
-              NC );
-            for ( integer j = 0; j < NC; ++j ) z_node_ref( i, j ) = tmp[j];
-          }
-        }
+        GenericContainer mat;
+        mat.load(gc_z);
+        mat.collapse();
+        UTILS_ASSERT(
+          GC_type::MAT_REAL == mat.get_type() || GC_type::MAT_INTEGER == mat.get_type() ||
+          GC_type::MAT_LONG == mat.get_type(),
+          "{}, field `zdata` cannot be converted to a matrix\n", where
+        );
+        read_mat( mat );
       }
       else
       {

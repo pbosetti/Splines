@@ -9,7 +9,7 @@
  */
 real_type eval( real_type const x, string_view name ) const
 {
-  Spline const * S{ this->get_spline( name ) };
+  Spline const * S = this->get_spline( name );
   return S->eval( x );
 }
 
@@ -22,7 +22,7 @@ real_type eval( real_type const x, string_view name ) const
  */
 real_type eval_D( real_type const x, string_view name ) const
 {
-  Spline const * S{ this->get_spline( name ) };
+  Spline const * S = this->get_spline( name );
   return S->D( x );
 }
 
@@ -35,7 +35,7 @@ real_type eval_D( real_type const x, string_view name ) const
  */
 real_type eval_DD( real_type const x, string_view name ) const
 {
-  Spline const * S{ this->get_spline( name ) };
+  Spline const * S = this->get_spline( name );
   return S->DD( x );
 }
 
@@ -48,7 +48,7 @@ real_type eval_DD( real_type const x, string_view name ) const
  */
 real_type eval_DDD( real_type const x, string_view name ) const
 {
-  Spline const * S{ this->get_spline( name ) };
+  Spline const * S = this->get_spline( name );
   return S->DDD( x );
 }
 
@@ -61,7 +61,7 @@ real_type eval_DDD( real_type const x, string_view name ) const
  */
 real_type eval_DDDD( real_type const x, string_view name ) const
 {
-  Spline const * S{ this->get_spline( name ) };
+  Spline const * S = this->get_spline( name );
   return S->DDDD( x );
 }
 
@@ -74,7 +74,7 @@ real_type eval_DDDD( real_type const x, string_view name ) const
  */
 real_type eval_DDDDD( real_type const x, string_view name ) const
 {
-  Spline const * S{ this->get_spline( name ) };
+  Spline const * S = this->get_spline( name );
   return S->DDDDD( x );
 }
 
@@ -88,10 +88,9 @@ real_type eval_DDDDD( real_type const x, string_view name ) const
  */
 autodiff::dual1st eval( autodiff::dual1st const & x, string_view name ) const
 {
-  using autodiff::derivative;
-  using autodiff::dual1st;
-  real_type xv{ val( x ) };
-  dual1st   res{ eval( xv, name ) };
+  real_type         xv = x.val;
+  autodiff::dual1st res;
+  res.val  = eval( xv, name );
   res.grad = eval_D( xv, name ) * x.grad;
   return res;
 }
@@ -105,17 +104,30 @@ autodiff::dual1st eval( autodiff::dual1st const & x, string_view name ) const
  */
 autodiff::dual2nd eval( autodiff::dual2nd const & x, string_view name ) const
 {
-  using autodiff::derivative;
-  using autodiff::dual2nd;
+  real_type xv = x.val.val;   // valore reale di x
+  real_type xg = x.grad.val;  // derivata prima di x
 
-  real_type xv{ val( x ) };
-  real_type xg{ val( x.grad ) };
-  real_type dfx{ eval_D( xv, name ) };
-  real_type dxx{ eval_DD( xv, name ) };
-  dual2nd   res{ eval( xv, name ) };
+  // Calcolo delle derivate della funzione rispetto a x
+  real_type f   = eval( xv, name );
+  real_type df  = eval_D( xv, name );
+  real_type ddf = eval_DD( xv, name );
 
-  res.grad      = dfx * xg;
-  res.grad.grad = dfx * x.grad.grad + dxx * ( xg * xg );
+  autodiff::dual2nd res;
+
+  // Impostazione del valore della funzione
+  res.val.val = f;
+
+  // Calcolo della derivata prima
+  real_type dF_dX = df * xg;
+
+  // Impostazione della derivata prima (in due posti per coerenza)
+  res.val.grad = dF_dX;
+  res.grad.val = dF_dX;
+
+  // Calcolo della derivata seconda
+  // d²F/dX² = df * (d²x/dX²) + ddf * (dx/dX)²
+  res.grad.grad = df * x.grad.grad + ddf * ( xg * xg );
+
   return res;
 }
 

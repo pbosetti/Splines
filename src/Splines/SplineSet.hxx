@@ -176,12 +176,12 @@ namespace Splines
        */
       integer search( string_view id ) const
       {
-        size_t U{ data.size() };
-        size_t L{ 0 };
+        size_t U = data.size();
+        size_t L = 0;
         while ( U - L > 1 )
         {
-          size_t const pos{ ( L + U ) >> 1 };  // se L=U+1 --> (L+U)/2 ==> L
-          string_view  id_pos{ data[pos].first };
+          size_t const pos    = ( L + U ) >> 1;  // se L=U+1 --> (L+U)/2 ==> L
+          string_view  id_pos = data[pos].first;
           if ( id_pos < id )
             L = pos;
           else
@@ -213,13 +213,13 @@ namespace Splines
        */
       void insert( string_view const id, integer const position )
       {
-        size_t pos{ data.size() };
+        size_t pos = data.size();
         data.emplace_back( id, position );
         while ( pos > 0 )
         {
-          size_t const pos1{ pos - 1 };
-          data[pos].first  = data[pos1].first;
-          data[pos].second = data[pos1].second;
+          size_t const pos1 = pos - 1;
+          data[pos].first   = data[pos1].first;
+          data[pos].second  = data[pos1].second;
           if ( data[pos1].first < id ) break;
           pos = pos1;
         }
@@ -244,35 +244,35 @@ namespace Splines
     vector<std::unique_ptr<Spline>> m_splines;
 
     /// Number of points in each spline (shared across all splines)
-    integer m_npts{ 0 };
+    integer m_npts = 0;
 
     /// Number of splines in the set
-    integer m_nspl{ 0 };
+    integer m_nspl = 0;
 
     /// Array of x-nodes (independent variable values), size = m_npts
-    real_type * m_X{ nullptr };
+    real_type * m_X = nullptr;
 
     /// Array of pointers to y-values for each spline, size = m_nspl × m_npts
-    real_type ** m_Y{ nullptr };
+    real_type ** m_Y = nullptr;
 
     /// Array of pointers to first derivatives for each spline (if available)
-    real_type ** m_Yp{ nullptr };
+    real_type ** m_Yp = nullptr;
 
     /// Array of pointers to second derivatives for each spline (if available)
-    real_type ** m_Ypp{ nullptr };
+    real_type ** m_Ypp = nullptr;
 
     /// Minimum y-value for each spline, size = m_nspl
-    real_type * m_Ymin{ nullptr };
+    real_type * m_Ymin = nullptr;
 
     /// Maximum y-value for each spline, size = m_nspl
-    real_type * m_Ymax{ nullptr };
+    real_type * m_Ymax = nullptr;
 
     /// Monotonicity information for each spline, size = m_nspl
     /// - -2: non-monotone data
     /// - -1: not monotone
     /// - 0: monotone (non-strict)
     /// - 1: strictly monotone
-    int * m_is_monotone{ nullptr };
+    int * m_is_monotone = nullptr;
 
     /// Map from spline name to its index for O(1) lookup
     std::map<string, integer> m_header_to_position;
@@ -313,7 +313,7 @@ namespace Splines
         spl );
       Spline * S = m_splines[spl].get();
       // cerco intervallo intersezione
-      real_type const * Y{ m_Y[spl] };
+      real_type const * Y = m_Y[spl];
       UTILS_ASSERT(
         zeta >= Y[0] && zeta <= Y[m_npts - 1],
         "{} evaluation at zeta = {} is out of range: [{},{}]\n",
@@ -322,7 +322,7 @@ namespace Splines
         Y[0],
         Y[m_npts - 1] );
 
-      integer interval{ static_cast<integer>( std::lower_bound( Y, Y + m_npts, zeta ) - Y ) };
+      integer interval = static_cast<integer>( std::lower_bound( Y, Y + m_npts, zeta ) - Y );
       if ( interval > 0 ) --interval;
       if ( Utils::is_zero( Y[interval] - Y[interval + 1] ) ) ++interval;  // degenerate interval for duplicated nodes
       if ( interval >= m_npts - 1 ) interval = m_npts - 2;
@@ -435,7 +435,7 @@ namespace Splines
      */
     string name_list() const
     {
-      string tmp{ "[ " };
+      string tmp = "[ ";
       for ( integer i = 0; i < m_nspl; ++i ) tmp += fmt::format( "'{}' ", m_splines[i]->name() );
       tmp += "]";
       return tmp;
@@ -479,7 +479,7 @@ namespace Splines
      */
     integer get_position( string_view hdr ) const
     {
-      integer const pos{ m_header_to_position.at( hdr.data() ) };
+      integer const pos = m_header_to_position.at( hdr.data() );
       UTILS_ASSERT(
         pos >= 0 && pos < m_nspl,
         "SplineSet[{}]::get_position(\"{}\") not found!\n"
@@ -573,7 +573,7 @@ namespace Splines
      */
     real_type y_min( string_view spl ) const
     {
-      integer idx{ this->get_position( spl ) };
+      integer idx = this->get_position( spl );
       return m_Ymin[idx];
     }
 
@@ -587,7 +587,7 @@ namespace Splines
      */
     real_type y_max( string_view spl ) const
     {
-      integer idx{ this->get_position( spl ) };
+      integer idx = this->get_position( spl );
       return m_Ymax[idx];
     }
 
@@ -627,7 +627,7 @@ namespace Splines
      */
     Spline * get_spline( string_view hdr ) const
     {
-      integer idx{ this->get_position( hdr ) };
+      integer idx = this->get_position( hdr );
       return m_splines[idx].get();
     }
 
@@ -775,7 +775,7 @@ namespace Splines
      */
     string info() const
     {
-      string res{ fmt::format( "SplineSet[{}] n.points={} n.splines={}", name(), m_npts, m_nspl ) };
+      string res = fmt::format( "SplineSet[{}] n.points={} n.splines={}", name(), m_npts, m_nspl );
 
       for ( integer i = 0; i < m_nspl; ++i )
       {
@@ -825,14 +825,14 @@ namespace Splines
     {
       Malloc_real mem( "SplineSet::dump_table" );
       mem.allocate( m_nspl );
-      real_type * vals{ mem( m_nspl ) };
+      real_type * vals = mem( m_nspl );
       stream << 's';
       for ( integer i = 0; i < m_nspl; ++i ) stream << '\t' << header( i );
       stream << '\n';
 
       for ( integer j = 0; j < num_points; ++j )
       {
-        real_type const s{ x_min() + ( ( x_max() - x_min() ) * j ) / ( num_points - 1 ) };
+        real_type const s = x_min() + ( ( x_max() - x_min() ) * j ) / ( num_points - 1 );
         this->eval( s, vals, 1 );
         stream << s;
         for ( integer i = 0; i < m_nspl; ++i ) stream << '\t' << vals[i];

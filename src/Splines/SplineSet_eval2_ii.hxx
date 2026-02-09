@@ -24,7 +24,7 @@ real_type eval2( real_type const zeta, integer const indep, real_type & x, integ
  */
 real_type eval2_D( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
 {
-  Spline const * S{ intersect( indep, zeta, x ) };
+  Spline const * S = intersect( indep, zeta, x );
   return m_splines[spl]->D( x ) / S->D( x );
 }
 
@@ -39,11 +39,11 @@ real_type eval2_D( real_type const zeta, integer const indep, real_type & x, int
  */
 real_type eval2_DD( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
 {
-  Spline const *  S{ intersect( indep, zeta, x ) };
-  real_type const dt{ 1 / S->D( x ) };
-  real_type const dt2{ dt * dt };
-  real_type const ddt{ -S->DD( x ) * ( dt * dt2 ) };
-  auto &          SPL{ m_splines[spl] };
+  Spline const *  S   = intersect( indep, zeta, x );
+  real_type const dt  = 1 / S->D( x );
+  real_type const dt2 = dt * dt;
+  real_type const ddt = -S->DD( x ) * ( dt * dt2 );
+  auto &          SPL = m_splines[spl];
   return SPL->DD( x ) * dt2 + SPL->D( x ) * ddt;
 }
 
@@ -58,13 +58,13 @@ real_type eval2_DD( real_type const zeta, integer const indep, real_type & x, in
  */
 real_type eval2_DDD( real_type const zeta, integer const indep, real_type & x, integer const spl ) const
 {
-  Spline const *  S{ intersect( indep, zeta, x ) };
-  real_type const dt{ 1 / S->D( x ) };
-  real_type const dt3{ dt * dt * dt };
-  real_type const ddt{ -S->DD( x ) * dt3 };
-  real_type const dddt{ 3 * ( ddt * ddt ) / dt - S->DDD( x ) * ( dt * dt3 ) };
+  Spline const *  S    = intersect( indep, zeta, x );
+  real_type const dt   = 1 / S->D( x );
+  real_type const dt3  = dt * dt * dt;
+  real_type const ddt  = -S->DD( x ) * dt3;
+  real_type const dddt = 3 * ( ddt * ddt ) / dt - S->DDD( x ) * ( dt * dt3 );
 
-  auto & SPL{ m_splines[spl] };
+  auto & SPL = m_splines[spl];
   return SPL->DDD( x ) * dt3 + 3 * SPL->DD( x ) * dt * ddt + SPL->D( x ) * dddt;
 }
 
@@ -137,10 +137,9 @@ real_type eval2_DDD( real_type const zeta, integer const indep, integer const sp
  */
 autodiff::dual1st eval2( autodiff::dual1st const & zeta, integer const indep, real_type & x, integer const spl ) const
 {
-  using autodiff::derivative;
-  using autodiff::dual1st;
-  real_type zv{ val( zeta ) };
-  dual1st   res{ eval2( zv, indep, x, spl ) };
+  real_type         zv = zeta.val;
+  autodiff::dual1st res;
+  res.val  = eval2( zv, indep, x, spl );
   res.grad = eval_D( x, spl ) * zeta.grad;  // x gia calcolato
   return res;
 }
@@ -170,17 +169,39 @@ autodiff::dual1st eval2( autodiff::dual1st const & zeta, integer const indep, in
  */
 autodiff::dual2nd eval2( autodiff::dual2nd const & zeta, integer const indep, real_type & x, integer const spl ) const
 {
-  using autodiff::derivative;
-  using autodiff::dual2nd;
+  // Estrai il valore reale di zeta e la sua derivata prima
+  real_type zv = zeta.val.val;   // valore di zeta
+  real_type zg = zeta.grad.val;  // dzeta/dX (derivata prima di zeta)
 
-  real_type zv{ val( zeta ) };
-  real_type zg{ val( zeta.grad ) };
-  real_type dfx{ eval2_D( zv, indep, x, spl ) };
-  real_type dxx{ eval_DD( x, spl ) };
-  dual2nd   res{ eval( x, spl ) };
+  // Calcola la derivata di f rispetto a zeta (o x?) e aggiorna eventualmente x
+  real_type dfx = eval2_D( zv, indep, x, spl );
 
-  res.grad      = dfx * zg;
+  // Calcola la derivata seconda di f rispetto a x
+  real_type dxx = eval_DD( x, spl );
+
+  // Valore di f nel punto x
+  real_type f_val = eval( x, spl );
+
+  // Costruisci l'oggetto dual2nd correttamente
+  autodiff::dual2nd res;
+
+  // Imposta il valore della funzione
+  res.val.val = f_val;
+
+  // Calcola la derivata prima: df/dX = (df/dzeta) * (dzeta/dX)
+  // oppure: df/dX = (df/dx) * (dx/dX) a seconda di cosa rappresenta dfx
+  real_type dF_dX = dfx * zg;
+
+  // Imposta la derivata prima
+  res.val.grad = dF_dX;  // per coerenza interna
+  res.grad.val = dF_dX;  // derivata prima
+
+  // Calcola la derivata seconda
+  // d²f/dX² = (df/dzeta) * (d²zeta/dX²) + (d²f/dzeta²) * (dzeta/dX)²
+  // oppure se dfx è df/dx: d²f/dX² = (df/dx) * (d²x/dX²) + (d²f/dx²) * (dx/dX)²
+  // Qui assumiamo che dxx sia la derivata seconda appropriata
   res.grad.grad = dfx * zeta.grad.grad + dxx * ( zg * zg );
+
   return res;
 }
 

@@ -98,9 +98,9 @@ namespace Splines
       // gc["ydata"]
       //
       */
-      string const             where{ "Spline1Dblend[{}]::setup( gc )" };
-      GenericContainer const & gc_spline0{ gc( "spline0", where ) };
-      GenericContainer const & gc_spline1{ gc( "spline1", where ) };
+      string const             where      = "Spline1Dblend[{}]::setup( gc )";
+      GenericContainer const & gc_spline0 = gc( "spline0", where );
+      GenericContainer const & gc_spline1 = gc( "spline1", where );
       m_spline0.setup( gc_spline0 );
       m_spline1.setup( gc_spline1 );
       check_compatibility();
@@ -321,24 +321,37 @@ namespace Splines
     ///@{
     autodiff::dual1st eval( autodiff::dual1st const & x, real_type const s ) const
     {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
       real_type dd[2];
-      D( val( x ), s, dd );
-      dual1st res = dd[0];
-      res.grad    = dd[1] * x.grad;
+      D( x.val, s, dd );
+      autodiff::dual1st res;
+      res.val  = dd[0];
+      res.grad = dd[1] * x.grad;
       return res;
     }
 
     autodiff::dual2nd eval( autodiff::dual2nd const & x, real_type const s ) const
     {
-      using autodiff::dual2nd;
-      using autodiff::detail::val;
-      real_type dd[3], xg{ val( x.grad ) };
-      DD( val( x ), s, dd );
-      dual2nd res   = dd[0];
-      res.grad      = dd[1] * xg;
-      res.grad.grad = dd[1] * x.grad.grad + dd[2] * ( xg * xg );
+      real_type dd[3];
+      DD( x.val.val, s, dd );
+
+      autodiff::dual2nd res;
+
+      // Impostazione del valore della funzione
+      res.val.val = dd[0];  // f(x, s)
+
+      // Calcolo della derivata prima
+      real_type xg    = x.grad.val;  // dx/dX
+      real_type dF_dX = dd[1] * xg;  // f_x(x, s) * dx/dX
+
+      // Impostazione della derivata prima
+      res.val.grad = dF_dX;
+      res.grad.val = dF_dX;
+
+      // Calcolo della derivata seconda
+      // d²F/dX² = f_xx(x, s) * (dx/dX)² + f_x(x, s) * d²x/dX²
+      real_type d2F_dX2 = dd[2] * ( xg * xg ) + dd[1] * x.grad.grad;
+      res.grad.grad     = d2F_dX2;
+
       return res;
     }
 
@@ -356,7 +369,7 @@ namespace Splines
         return eval( autodiff::detail::to_dual( x ), s );
       }
     }
-    ///@}
+///@}
 #endif
 
     //!

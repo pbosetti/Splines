@@ -349,7 +349,7 @@ namespace Splines
 
       integer const i = X.first;
       integer const j = Y.first;
-      
+
       autodiff::dual1st XX, YY;
       XX.val  = X.second;
       XX.grad = x.grad;
@@ -358,55 +358,31 @@ namespace Splines
 
       autodiff::dual1st const dx = XX - mX.coeff( i );
       autodiff::dual1st const dy = YY - mY.coeff( j );
-      real_type         const DX = mX.coeff( i + 1 ) - mX.coeff( i );
-      real_type         const DY = mY.coeff( j + 1 ) - mY.coeff( j );
+      real_type const         DX = mX.coeff( i + 1 ) - mX.coeff( i );
+      real_type const         DY = mY.coeff( j + 1 ) - mY.coeff( j );
 
       Hermite5<autodiff::dual1st>( dx, DX, u );
       Hermite5<autodiff::dual1st>( dy, DY, v );
 
       load( i, j, M );
-      
-      Mv[0] = M.coeff(0,0) * v[0] +
-              M.coeff(0,1) * v[1] +
-              M.coeff(0,2) * v[2] +
-              M.coeff(0,3) * v[3] +
-              M.coeff(0,4) * v[4] +
-              M.coeff(0,5) * v[5];
-      
-      Mv[1] = M.coeff(1,0) * v[0] +
-              M.coeff(1,1) * v[1] +
-              M.coeff(1,2) * v[2] +
-              M.coeff(1,3) * v[3] +
-              M.coeff(1,4) * v[4] +
-              M.coeff(1,5) * v[5];
-      
-      Mv[2] = M.coeff(2,0) * v[0] +
-              M.coeff(2,1) * v[1] +
-              M.coeff(2,2) * v[2] +
-              M.coeff(2,3) * v[3] +
-              M.coeff(2,4) * v[4] +
-              M.coeff(2,5) * v[5];
-      
-      Mv[3] = M.coeff(3,0) * v[0] +
-              M.coeff(3,1) * v[1] +
-              M.coeff(3,2) * v[2] +
-              M.coeff(3,3) * v[3] +
-              M.coeff(3,4) * v[4] +
-              M.coeff(3,5) * v[5];
-      
-      Mv[4] = M.coeff(4,0) * v[0] +
-              M.coeff(4,1) * v[1] +
-              M.coeff(4,2) * v[2] +
-              M.coeff(4,3) * v[3] +
-              M.coeff(4,4) * v[4] +
-              M.coeff(4,5) * v[5];
 
-      Mv[5] = M.coeff(5,0) * v[0] +
-              M.coeff(5,1) * v[1] +
-              M.coeff(5,2) * v[2] +
-              M.coeff(5,3) * v[3] +
-              M.coeff(5,4) * v[4] +
-              M.coeff(5,5) * v[5];
+      Mv[0] = M.coeff( 0, 0 ) * v[0] + M.coeff( 0, 1 ) * v[1] + M.coeff( 0, 2 ) * v[2] + M.coeff( 0, 3 ) * v[3] +
+              M.coeff( 0, 4 ) * v[4] + M.coeff( 0, 5 ) * v[5];
+
+      Mv[1] = M.coeff( 1, 0 ) * v[0] + M.coeff( 1, 1 ) * v[1] + M.coeff( 1, 2 ) * v[2] + M.coeff( 1, 3 ) * v[3] +
+              M.coeff( 1, 4 ) * v[4] + M.coeff( 1, 5 ) * v[5];
+
+      Mv[2] = M.coeff( 2, 0 ) * v[0] + M.coeff( 2, 1 ) * v[1] + M.coeff( 2, 2 ) * v[2] + M.coeff( 2, 3 ) * v[3] +
+              M.coeff( 2, 4 ) * v[4] + M.coeff( 2, 5 ) * v[5];
+
+      Mv[3] = M.coeff( 3, 0 ) * v[0] + M.coeff( 3, 1 ) * v[1] + M.coeff( 3, 2 ) * v[2] + M.coeff( 3, 3 ) * v[3] +
+              M.coeff( 3, 4 ) * v[4] + M.coeff( 3, 5 ) * v[5];
+
+      Mv[4] = M.coeff( 4, 0 ) * v[0] + M.coeff( 4, 1 ) * v[1] + M.coeff( 4, 2 ) * v[2] + M.coeff( 4, 3 ) * v[3] +
+              M.coeff( 4, 4 ) * v[4] + M.coeff( 4, 5 ) * v[5];
+
+      Mv[5] = M.coeff( 5, 0 ) * v[0] + M.coeff( 5, 1 ) * v[1] + M.coeff( 5, 2 ) * v[2] + M.coeff( 5, 3 ) * v[3] +
+              M.coeff( 5, 4 ) * v[4] + M.coeff( 5, 5 ) * v[5];
 
       return u[0] * Mv[0] + u[1] * Mv[1] + u[2] * Mv[2] + u[3] * Mv[3] + u[4] * Mv[4] + u[5] * Mv[5];
     }
@@ -422,7 +398,7 @@ namespace Splines
 
       integer const i = X.first;
       integer const j = Y.first;
-      
+
       autodiff::dual2nd XX, YY;
 
       XX.val.val   = X.second;
@@ -437,55 +413,31 @@ namespace Splines
 
       autodiff::dual2nd const dx = XX - mX.coeff( i );
       autodiff::dual2nd const dy = YY - mY.coeff( j );
-      real_type         const DX = mX.coeff( i + 1 ) - mX.coeff( i );
-      real_type         const DY = mY.coeff( j + 1 ) - mY.coeff( j );
+      real_type const         DX = mX.coeff( i + 1 ) - mX.coeff( i );
+      real_type const         DY = mY.coeff( j + 1 ) - mY.coeff( j );
 
       Hermite5<autodiff::dual2nd>( dx, DX, u );
       Hermite5<autodiff::dual2nd>( dy, DY, v );
 
       load( i, j, M );
-      
-      Mv[0] = M.coeff(0,0) * v[0] +
-              M.coeff(0,1) * v[1] +
-              M.coeff(0,2) * v[2] +
-              M.coeff(0,3) * v[3] +
-              M.coeff(0,4) * v[4] +
-              M.coeff(0,5) * v[5];
-      
-      Mv[1] = M.coeff(1,0) * v[0] +
-              M.coeff(1,1) * v[1] +
-              M.coeff(1,2) * v[2] +
-              M.coeff(1,3) * v[3] +
-              M.coeff(1,4) * v[4] +
-              M.coeff(1,5) * v[5];
-      
-      Mv[2] = M.coeff(2,0) * v[0] +
-              M.coeff(2,1) * v[1] +
-              M.coeff(2,2) * v[2] +
-              M.coeff(2,3) * v[3] +
-              M.coeff(2,4) * v[4] +
-              M.coeff(2,5) * v[5];
-      
-      Mv[3] = M.coeff(3,0) * v[0] +
-              M.coeff(3,1) * v[1] +
-              M.coeff(3,2) * v[2] +
-              M.coeff(3,3) * v[3] +
-              M.coeff(3,4) * v[4] +
-              M.coeff(3,5) * v[5];
-      
-      Mv[4] = M.coeff(4,0) * v[0] +
-              M.coeff(4,1) * v[1] +
-              M.coeff(4,2) * v[2] +
-              M.coeff(4,3) * v[3] +
-              M.coeff(4,4) * v[4] +
-              M.coeff(4,5) * v[5];
 
-      Mv[5] = M.coeff(5,0) * v[0] +
-              M.coeff(5,1) * v[1] +
-              M.coeff(5,2) * v[2] +
-              M.coeff(5,3) * v[3] +
-              M.coeff(5,4) * v[4] +
-              M.coeff(5,5) * v[5];
+      Mv[0] = M.coeff( 0, 0 ) * v[0] + M.coeff( 0, 1 ) * v[1] + M.coeff( 0, 2 ) * v[2] + M.coeff( 0, 3 ) * v[3] +
+              M.coeff( 0, 4 ) * v[4] + M.coeff( 0, 5 ) * v[5];
+
+      Mv[1] = M.coeff( 1, 0 ) * v[0] + M.coeff( 1, 1 ) * v[1] + M.coeff( 1, 2 ) * v[2] + M.coeff( 1, 3 ) * v[3] +
+              M.coeff( 1, 4 ) * v[4] + M.coeff( 1, 5 ) * v[5];
+
+      Mv[2] = M.coeff( 2, 0 ) * v[0] + M.coeff( 2, 1 ) * v[1] + M.coeff( 2, 2 ) * v[2] + M.coeff( 2, 3 ) * v[3] +
+              M.coeff( 2, 4 ) * v[4] + M.coeff( 2, 5 ) * v[5];
+
+      Mv[3] = M.coeff( 3, 0 ) * v[0] + M.coeff( 3, 1 ) * v[1] + M.coeff( 3, 2 ) * v[2] + M.coeff( 3, 3 ) * v[3] +
+              M.coeff( 3, 4 ) * v[4] + M.coeff( 3, 5 ) * v[5];
+
+      Mv[4] = M.coeff( 4, 0 ) * v[0] + M.coeff( 4, 1 ) * v[1] + M.coeff( 4, 2 ) * v[2] + M.coeff( 4, 3 ) * v[3] +
+              M.coeff( 4, 4 ) * v[4] + M.coeff( 4, 5 ) * v[5];
+
+      Mv[5] = M.coeff( 5, 0 ) * v[0] + M.coeff( 5, 1 ) * v[1] + M.coeff( 5, 2 ) * v[2] + M.coeff( 5, 3 ) * v[3] +
+              M.coeff( 5, 4 ) * v[4] + M.coeff( 5, 5 ) * v[5];
 
       return u[0] * Mv[0] + u[1] * Mv[1] + u[2] * Mv[2] + u[3] * Mv[3] + u[4] * Mv[4] + u[5] * Mv[5];
     }

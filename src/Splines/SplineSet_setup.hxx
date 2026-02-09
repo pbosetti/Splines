@@ -36,7 +36,7 @@
  */
 void setup( GenericContainer const & gc )
 {
-  string const where{ fmt::format( "SplineSet[{}]::setup( gc ): ", m_name ) };
+  string const where = fmt::format( "SplineSet[{}]::setup( gc ): ", m_name );
 
   // ===================================================================
   // FASE 1: Raccolta e tracciamento delle chiavi disponibili
@@ -56,15 +56,15 @@ void setup( GenericContainer const & gc )
   // ===================================================================
 
   // --- Lettura "spline_type" (obbligatorio) ---
-  GenericContainer const & gc_stype{ gc( "spline_type", where ) };
+  GenericContainer const & gc_stype = gc( "spline_type", where );
   keywords.erase( "spline_type" );
 
   // --- Lettura "xdata" (obbligatorio) ---
-  GenericContainer const & gc_xdata{ gc( "xdata", where ) };
+  GenericContainer const & gc_xdata = gc( "xdata", where );
   keywords.erase( "xdata" );
 
   // --- Lettura "ydata" (obbligatorio) ---
-  GenericContainer const & gc_ydata{ gc( "ydata", where ) };
+  GenericContainer const & gc_ydata = gc( "ydata", where );
   keywords.erase( "ydata" );
 
   // ===================================================================
@@ -78,7 +78,7 @@ void setup( GenericContainer const & gc )
 
   // Conversione da stringhe a enum SplineType1D
   stype.resize( m_nspl );
-  for ( integer spl{ 0 }; spl < m_nspl; ++spl )
+  for ( integer spl = 0; spl < m_nspl; ++spl )
   {
     // NOTA: string_to_splineType1D lancia eccezione se tipo non riconosciuto
     stype[spl] = string_to_splineType1D( spline_type_vec[spl] );
@@ -91,7 +91,7 @@ void setup( GenericContainer const & gc )
   // Altrimenti, gli headers devono essere forniti esplicitamente.
   if ( GC_type::MAP != gc_ydata.get_type() )
   {
-    GenericContainer const & gc_headers{ gc( "headers", where ) };
+    GenericContainer const & gc_headers = gc( "headers", where );
     keywords.erase( "headers" );
     gc_headers.copyto_vec_string( headers, ( where + ", reading 'headers'" ) );
 
@@ -104,7 +104,7 @@ void setup( GenericContainer const & gc )
       headers.size() );
 
     // Validazione: nessun header può essere vuoto o null
-    for ( integer spl{ 0 }; spl < m_nspl; ++spl )
+    for ( integer spl = 0; spl < m_nspl; ++spl )
     {
       UTILS_ASSERT( !headers[spl].empty(), "{} header[{}] cannot be empty\n", where, spl );
     }
@@ -120,7 +120,7 @@ void setup( GenericContainer const & gc )
   UTILS_ASSERT( m_npts > 1, "{} expected at least 2 points, got npts = {}\n", where, m_npts );
 
   // Validazione: X deve essere strettamente crescente
-  for ( integer i{ 1 }; i < m_npts; ++i )
+  for ( integer i = 1; i < m_npts; ++i )
   {
     UTILS_ASSERT(
       X[i] > X[i - 1],
@@ -202,7 +202,7 @@ void setup( GenericContainer const & gc )
         data.num_rows() );
 
       // Estrazione delle colonne
-      for ( integer i{ 0 }; i < m_nspl; ++i ) { data.get_column( static_cast<unsigned>( i ), Y[i] ); }
+      for ( integer i = 0; i < m_nspl; ++i ) { data.get_column( static_cast<unsigned>( i ), Y[i] ); }
     }
     break;
 
@@ -211,7 +211,7 @@ void setup( GenericContainer const & gc )
     // ---------------------------------------------------------------
     case GC_type::VECTOR:
     {
-      vector_type const & data{ gc_ydata.get_vector() };
+      vector_type const & data = gc_ydata.get_vector();
 
       // Dimensione del vettore deve corrispondere al numero di spline
       UTILS_ASSERT(
@@ -221,13 +221,13 @@ void setup( GenericContainer const & gc )
         m_nspl,
         data.size() );
 
-      string msg1{ where + " reading 'ydata' columns" };
-      for ( integer spl{ 0 }; spl < m_nspl; ++spl )
+      string msg1 = where + " reading 'ydata' columns";
+      for ( integer spl = 0; spl < m_nspl; ++spl )
       {
-        GenericContainer const & datai{ data[spl] };
+        GenericContainer const & datai = data[spl];
 
         // Calcola numero atteso di righe (n-1 per CONSTANT, n altrimenti)
-        integer expected_npts{ m_npts };
+        integer expected_npts = m_npts;
         if ( stype[spl] == SplineType1D::CONSTANT ) { --expected_npts; }
 
         datai.copyto_vec_real( Y[spl], msg1 );
@@ -250,7 +250,7 @@ void setup( GenericContainer const & gc )
     // ---------------------------------------------------------------
     case GC_type::MAP:
     {
-      map_type const & data{ gc_ydata.get_map() };
+      map_type const & data = gc_ydata.get_map();
 
       // Dimensione mappa deve corrispondere al numero di spline
       UTILS_ASSERT(
@@ -264,8 +264,8 @@ void setup( GenericContainer const & gc )
       headers.clear();
       headers.reserve( data.size() );
 
-      string  msg1{ where + " reading 'ydata' columns" };
-      integer spl{ 0 };
+      string  msg1 = where + " reading 'ydata' columns";
+      integer spl  = 0;
 
       for ( auto const & [name, container] : data )
       {
@@ -276,7 +276,7 @@ void setup( GenericContainer const & gc )
         UTILS_ASSERT( !name.empty(), "{} spline name cannot be empty in ydata map\n", where );
 
         // Calcola numero atteso di righe
-        integer expected_npts{ m_npts };
+        integer expected_npts = m_npts;
         if ( stype[spl] == SplineType1D::CONSTANT ) { --expected_npts; }
 
         container.copyto_vec_real( Y[spl], msg1 );
@@ -317,7 +317,7 @@ void setup( GenericContainer const & gc )
   // ===================================================================
   if ( gc.exists( "ypdata" ) )
   {
-    GenericContainer const & gc_ypdata{ gc( "ypdata", where ) };
+    GenericContainer const & gc_ypdata = gc( "ypdata", where );
     keywords.erase( "ypdata" );
 
     // Le derivate devono essere fornite come MAP (nome → valori)
@@ -333,26 +333,26 @@ void setup( GenericContainer const & gc )
     std::unordered_map<string, integer> h_to_pos;
     h_to_pos.reserve( headers.size() );
 
-    for ( integer idx{ 0 }; idx < static_cast<integer>( headers.size() ); ++idx ) { h_to_pos[headers[idx]] = idx; }
+    for ( integer idx = 0; idx < static_cast<integer>( headers.size() ); ++idx ) { h_to_pos[headers[idx]] = idx; }
 
-    string           msg1{ where + " reading 'ypdata' columns" };
-    map_type const & data{ gc_ypdata.get_map() };
+    string           msg1 = where + " reading 'ypdata' columns";
+    map_type const & data = gc_ypdata.get_map();
 
     // Per ogni derivata fornita nella mappa
     for ( auto const & [name, container] : data )
     {
       // Cerca la posizione corrispondente negli headers
-      auto it_pos{ h_to_pos.find( name ) };
+      auto it_pos = h_to_pos.find( name );
       UTILS_ASSERT(
         it_pos != h_to_pos.end(),
         "{} column '{}' of 'ypdata' does not match any spline name in headers\n",
         where,
         name );
 
-      integer spl{ it_pos->second };
+      integer spl = it_pos->second;
 
       // Calcola numero atteso di punti
-      integer expected_npts{ m_npts };
+      integer expected_npts = m_npts;
       if ( stype[spl] == SplineType1D::CONSTANT ) { --expected_npts; }
 
       container.copyto_vec_real( Yp[spl], msg1 );
@@ -385,7 +385,7 @@ void setup( GenericContainer const & gc )
 
   // Conversione da vector<string>/vector<vector<real_type>> a puntatori C
   // ATTENZIONE: headers deve rimanere valido fino alla fine di build()
-  for ( integer spl{ 0 }; spl < m_nspl; ++spl )
+  for ( integer spl = 0; spl < m_nspl; ++spl )
   {
     // Puntatore al nome della spline (const char*)
     // SICUREZZA: headers[spl] deve rimanere valido durante build()
@@ -419,10 +419,10 @@ void setup( GenericContainer const & gc )
   // ===================================================================
   if ( gc.exists( "boundary" ) )
   {
-    GenericContainer const & gc_boundary{ gc( "boundary" ) };
+    GenericContainer const & gc_boundary = gc( "boundary" );
     keywords.erase( "boundary" );
 
-    integer ne{ static_cast<integer>( gc_boundary.get_num_elements() ) };
+    integer ne = static_cast<integer>( gc_boundary.get_num_elements() );
 
     // Validazione: una configurazione boundary per ogni spline
     // FIXED: Ordine corretto dei parametri nel messaggio
@@ -434,10 +434,10 @@ void setup( GenericContainer const & gc )
       ne );
 
     // Configurazione boundary per ogni spline
-    for ( integer ispl{ 0 }; ispl < ne; ++ispl )
+    for ( integer ispl = 0; ispl < ne; ++ispl )
     {
-      Spline *                 S{ m_splines[ispl].get() };
-      GenericContainer const & item{ gc_boundary( ispl, "SplineSet boundary data" ) };
+      Spline *                 S    = m_splines[ispl].get();
+      GenericContainer const & item = gc_boundary( ispl, "SplineSet boundary data" );
 
       // Raccolta keywords per questo elemento boundary
       std::set<std::string> keywords2;
@@ -446,7 +446,7 @@ void setup( GenericContainer const & gc )
       // ---------------------------------------------------------------
       // Configurazione closed/open
       // ---------------------------------------------------------------
-      bool is_closed{ false };
+      bool is_closed = false;
       item.get_if_exists( "closed", is_closed );
       keywords2.erase( "closed" );
 
@@ -462,7 +462,7 @@ void setup( GenericContainer const & gc )
         keywords2.erase( "can_extend" );
         S->make_opened();
 
-        bool can_extend{ false };
+        bool can_extend = false;
         // Supporta sia "extend" che "can_extend" come alias
         if ( !item.get_if_exists( "extend", can_extend ) ) { item.get_if_exists( "can_extend", can_extend ); }
 
@@ -471,7 +471,7 @@ void setup( GenericContainer const & gc )
           // Permette valutazione oltre il range dei dati
           S->make_unbounded();
 
-          bool extend_constant{ false };
+          bool extend_constant = false;
           keywords2.erase( "extend_constant" );
           item.get_if_exists( "extend_constant", extend_constant );
 

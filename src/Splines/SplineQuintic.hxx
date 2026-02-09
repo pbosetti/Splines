@@ -47,9 +47,17 @@ namespace Splines
     //!
     //! Build an empty spline of `QuinticSpline` type
     //!
+    //! \param type spline type
     //! \param name the name of the spline
     //!
     explicit QuinticSpline( Spline_sub_type type, string_view name = "Spline" ) : QuinticSplineBase( type, name ) {}
+
+    //!
+    //! Build an empty spline of `QuinticSpline` type
+    //!
+    //! \param name the name of the spline
+    //!
+    explicit QuinticSpline( string_view name ) : QuinticSplineBase( Spline_sub_type::PCHIP, name ) {}
 
     //!
     //! Spline destructor.
@@ -62,13 +70,13 @@ namespace Splines
     //! Build a Monotone quintic spline from previously inserted points
     void build() override
     {
-      string msg{ fmt::format( "QuinticSpline[{}]::build():", m_name ) };
+      string msg = fmt::format( "QuinticSpline[{}]::build():", m_name );
       UTILS_ASSERT( m_npts > 1, "{} npts = {} not enought points\n", msg, m_npts );
       Utils::check_NaN( m_X, msg + " X", m_npts, __LINE__, __FILE__ );
       Utils::check_NaN( m_Y, msg + " Y", m_npts, __LINE__, __FILE__ );
 
-      integer ibegin{ 0 };
-      integer iend{ 0 };
+      integer ibegin = 0;
+      integer iend   = 0;
       do
       {
         // cerca intervallo monotono strettamente crescente
@@ -85,30 +93,30 @@ namespace Splines
     //! Build a Monotone quintic spline from data from `gc`
     void setup( GenericContainer const & gc ) override
     {
-      string const where{ fmt::format( "QuinticSpline[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "QuinticSpline[{}]::setup( gc ):", m_name );
 
       std::set<std::string> keywords;
       for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
       keywords.erase( "spline_type" );
 
-      GenericContainer const & gc_x{ gc( "xdata", where ) };
+      GenericContainer const & gc_x = gc( "xdata", where );
       keywords.erase( "xdata" );
-      GenericContainer const & gc_y{ gc( "ydata", where ) };
+      GenericContainer const & gc_y = gc( "ydata", where );
       keywords.erase( "ydata" );
 
       vec_real_type x, y;
       {
-        string const ff{ fmt::format( "{}, field `xdata'", where ) };
+        string const ff = fmt::format( "{}, field `xdata'", where );
         gc_x.copyto_vec_real( x, ff );
       }
       {
-        string const ff{ fmt::format( "{}, field `ydata'", where ) };
+        string const ff = fmt::format( "{}, field `ydata'", where );
         gc_y.copyto_vec_real( y, ff );
       }
 
       if ( gc.exists( "spline_sub_type" ) )
       {
-        string_view st{ gc.get_map_string( "spline_sub_type", where ) };
+        string_view st = gc.get_map_string( "spline_sub_type", where );
         keywords.erase( "spline_sub_type" );
 
         // OTTIMIZZAZIONE 5: Switch più efficiente del if-else chain

@@ -56,13 +56,13 @@ extern "C"
   typedef std::map<std::string, Spline *> MAP_SPLINE;
 
   static std::map<std::string, Spline *> spline_stored;
-  static Spline *                        head{ nullptr };
+  static Spline *                        head = nullptr;
 
   int SPLINE_new( char const id[], char const type[] )
   {
     fmt::print( "SPLINE_new, id={} type={}\n", id, type );
     if ( auto const it = spline_stored.find( id ); it != spline_stored.end() ) delete it->second;
-    int ok{ 0 };
+    int ok = 0;
     switch ( Splines::string_to_splineType1D( type ) )
     {
       case SplineType1D::AKIMA: head = new AkimaSpline; break;

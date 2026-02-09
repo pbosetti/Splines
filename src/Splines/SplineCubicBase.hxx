@@ -36,8 +36,8 @@ namespace Splines
   {
   protected:
     Malloc_real m_mem_cubic;
-    real_type * m_Yp{ nullptr };
-    bool        m_external_alloc{ false };
+    real_type * m_Yp             = nullptr;
+    bool        m_external_alloc = false;
 
   public:
     using Spline::build;
@@ -201,7 +201,7 @@ namespace Splines
       vector<real_type> & x_max_pos,
       vector<real_type> & y_max ) const override
     {
-      constexpr real_type epsi{ 1e-8 };
+      constexpr real_type epsi = 1e-8;
       i_min_pos.clear();
       i_max_pos.clear();
       x_min_pos.clear();
@@ -239,9 +239,9 @@ namespace Splines
         integer const nr = q.getRootsInOpenRange( 0, H, r );
         for ( integer j = 0; j < nr; ++j )
         {
-          real_type const rr = r[j];
-          real_type const yy = ( ( ( A * rr ) + B ) * rr + C ) * rr + D;
-          real_type const ddy{ 3 * A * rr + B };
+          real_type const rr  = r[j];
+          real_type const yy  = ( ( ( A * rr ) + B ) * rr + C ) * rr + D;
+          real_type const ddy = 3 * A * rr + B;
           if ( ddy > 0 )
           {
             y_min.emplace_back( yy );
@@ -418,23 +418,41 @@ namespace Splines
     real_type id_DDDDD( integer const, real_type const ) const override { return 0; }
     ///@}
 
+
 #ifdef AUTODIFF_SUPPORT
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override
     {
       if ( m_curve_can_extend && m_curve_extended_constant )
       {
-        // estendo solo quando esco effettivamente
-        if ( x < m_X[0] ) return m_Y[0];
-        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+        // Estendo solo quando esco effettivamente
+        if ( x.val < m_X[0] )
+        {
+          autodiff::dual1st res;
+          res.val  = m_Y[0];
+          res.grad = 0;
+          return res;
+        }
+        if ( x.val > m_X[m_npts - 1] )
+        {
+          autodiff::dual1st res;
+          res.val  = m_Y[m_npts - 1];
+          res.grad = 0;
+          return res;
+        }
       }
-      std::pair<integer, real_type> res( 0, x.val );
-      m_search.find( res );
-      integer           ni  = res.first;
-      integer           ni1 = ni + 1;
-      autodiff::dual1st xx  = x;
-      xx.val                = res.second;
+
+      std::pair<integer, real_type> X( 0, x.val );
+      m_search.find( X );
+      integer ni  = X.first;
+      integer ni1 = ni + 1;
+
+      autodiff::dual1st XX;
+      XX.val  = X.second - m_X[ni];
+      XX.grad = x.grad;
+
       autodiff::dual1st base[4];
-      Splines::Hermite3<autodiff::dual1st>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+      Splines::Hermite3<autodiff::dual1st>( XX, m_X[ni1] - m_X[ni], base );
+
       return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1];
     }
 
@@ -444,25 +462,53 @@ namespace Splines
     {
       if ( m_curve_can_extend && m_curve_extended_constant )
       {
-        // estendo solo quando esco effettivamente
-        if ( x < m_X[0] ) return m_Y[0];
-        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+        // Estendo solo quando esco effettivamente
+        if ( x.val.val < m_X[0] )
+        {
+          autodiff::dual2nd res;
+          res.val.val   = m_Y[0];
+          res.val.grad  = 0;
+          res.grad.val  = 0;
+          res.grad.grad = 0;
+          return res;
+        }
+        if ( x.val.val > m_X[m_npts - 1] )
+        {
+          autodiff::dual2nd res;
+          res.val.val   = m_Y[m_npts - 1];
+          res.val.grad  = 0;
+          res.grad.val  = 0;
+          res.grad.grad = 0;
+          return res;
+        }
       }
-      std::pair<integer, real_type> res( 0, x.val.val );
-      m_search.find( res );
-      integer           ni  = res.first;
-      integer           ni1 = ni + 1;
-      autodiff::dual2nd xx  = x;
-      xx.val.val            = res.second;
+
+      std::pair<integer, real_type> X( 0, x.val.val );
+      m_search.find( X );
+      integer ni  = X.first;
+      integer ni1 = ni + 1;
+
+      autodiff::dual2nd XX;
+      // Costruzione corretta di XX = (x - m_X[ni])
+      // Dobbiamo impostare tutti i campi
+      XX.val.val  = X.second - m_X[ni];  // valore
+      XX.val.grad = x.val.grad;          // derivata prima del valore
+
+      // La derivata prima di XX è la stessa di x
+      XX.grad.val = x.grad.val;  // derivata prima
+      // La derivata seconda di XX è la stessa di x
+      XX.grad.grad = x.grad.grad;  // derivata seconda
+
       autodiff::dual2nd base[4];
-      Splines::Hermite3<autodiff::dual2nd>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+      Splines::Hermite3<autodiff::dual2nd>( XX, m_X[ni1] - m_X[ni], base );
+
       return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1];
     }
 #endif
 
     void write_to_stream( ostream_type & s ) const override
     {
-      integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
+      integer const nseg = m_npts > 0 ? m_npts - 1 : 0;
       for ( integer i = 0; i < nseg; ++i )
         fmt::print(
           s,
@@ -537,7 +583,7 @@ namespace Splines
     //!
     void build( vector<real_type> const & x, vector<real_type> const & y, vector<real_type> const & yp )
     {
-      integer N{ static_cast<integer>( x.size() ) };
+      integer N = static_cast<integer>( x.size() );
       if ( N > static_cast<integer>( y.size() ) ) N = static_cast<integer>( y.size() );
       if ( N > static_cast<integer>( yp.size() ) ) N = static_cast<integer>( yp.size() );
       this->build( x.data(), 1, y.data(), 1, yp.data(), 1, N );
@@ -579,7 +625,7 @@ namespace Splines
       integer const n = m_npts - 1;
       for ( integer i = 0; i < n; ++i )
       {
-        real_type const H{ m_X[i + 1] - m_X[i] };
+        real_type const H = m_X[i + 1] - m_X[i];
         real_type       a, b, c, d;
 
         Hermite3_to_poly( H, m_Y[i], m_Y[i + 1], m_Yp[i], m_Yp[i + 1], a, b, c, d );

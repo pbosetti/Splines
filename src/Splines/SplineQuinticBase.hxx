@@ -141,7 +141,7 @@ namespace Splines
         Hermite5_to_poly( H, P0, P1, DP0, DP1, DDP0, DDP1, A, B, C, D, E, F );
         q.setup( 5 * A, 4 * B, 3 * C, 2 * D, E );
         real_type     r[4];
-        integer const nr{ q.getRootsInOpenRange( 0, H, r ) };
+        integer const nr = q.getRootsInOpenRange( 0, H, r );
         for ( integer j = 0; j < nr; ++j )
         {
           real_type const rr = r[j];
@@ -182,7 +182,7 @@ namespace Splines
       std::vector<real_type> & x_max_pos,
       std::vector<real_type> & y_max ) const override
     {
-      constexpr real_type epsi{ 1e-8 };
+      constexpr real_type epsi = 1e-8;
       i_min_pos.clear();
       i_max_pos.clear();
       x_min_pos.clear();
@@ -433,17 +433,34 @@ namespace Splines
       if ( m_curve_can_extend && m_curve_extended_constant )
       {
         // estendo solo quando esco effettivamente
-        if ( x < m_X[0] ) return m_Y[0];
-        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+        if ( x.val < m_X[0] )
+        {
+          autodiff::dual1st res;
+          res.val  = m_Y[0];
+          res.grad = 0;
+          return res;
+        }
+        if ( x.val > m_X[m_npts - 1] )
+        {
+          autodiff::dual1st res;
+          res.val  = m_Y[m_npts - 1];
+          res.grad = 0;
+          return res;
+        }
       }
+
       std::pair<integer, real_type> res( 0, x.val );
       m_search.find( res );
-      integer           ni  = res.first;
-      integer           ni1 = ni + 1;
-      autodiff::dual1st xx  = x;
-      xx.val                = res.second;
+      integer ni  = res.first;
+      integer ni1 = ni + 1;
+
+      autodiff::dual1st xx;
+      xx.val  = res.second;  // Potrebbe essere clampato se x.val è fuori dall'intervallo
+      xx.grad = x.grad;
+
       autodiff::dual1st base[6];
       Hermite5<autodiff::dual1st>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+
       return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1] + base[4] * m_Ypp[ni] +
              base[5] * m_Ypp[ni1];
     }
@@ -453,18 +470,40 @@ namespace Splines
       if ( m_curve_can_extend && m_curve_extended_constant )
       {
         // estendo solo quando esco effettivamente
-        if ( x < m_X[0] ) return m_Y[0];
-        if ( x > m_X[m_npts - 1] ) return m_Y[m_npts - 1];
+        if ( x.val.val < m_X[0] )
+        {
+          autodiff::dual2nd res;
+          res.val.val   = m_Y[0];
+          res.val.grad  = 0;
+          res.grad.val  = 0;
+          res.grad.grad = 0;
+          return res;
+        }
+        if ( x.val.val > m_X[m_npts - 1] )
+        {
+          autodiff::dual2nd res;
+          res.val.val   = m_Y[m_npts - 1];
+          res.val.grad  = 0;
+          res.grad.val  = 0;
+          res.grad.grad = 0;
+          return res;
+        }
       }
 
       std::pair<integer, real_type> res( 0, x.val.val );
       m_search.find( res );
-      integer           ni  = res.first;
-      integer           ni1 = ni + 1;
-      autodiff::dual2nd xx  = x;
-      xx.val.val            = res.second;
+      integer ni  = res.first;
+      integer ni1 = ni + 1;
+
+      autodiff::dual2nd xx;
+      xx.val.val   = res.second;  // Potrebbe essere clampato se x.val.val è fuori dall'intervallo
+      xx.val.grad  = x.val.grad;
+      xx.grad.val  = x.grad.val;
+      xx.grad.grad = x.grad.grad;
+
       autodiff::dual2nd base[6];
       Hermite5<autodiff::dual2nd>( xx - m_X[ni], m_X[ni1] - m_X[ni], base );
+
       return base[0] * m_Y[ni] + base[1] * m_Y[ni1] + base[2] * m_Yp[ni] + base[3] * m_Yp[ni1] + base[4] * m_Ypp[ni] +
              base[5] * m_Ypp[ni1];
     }
@@ -593,7 +632,7 @@ namespace Splines
     {
       UTILS_ASSERT( m_npts >= 2, "QuinticSplineBase, npts={} must be >= 2\n", m_npts );
 
-      integer const n{ m_npts - 1 };
+      integer const n = m_npts - 1;
 
       for ( integer i = 0; i < n; ++i )
       {

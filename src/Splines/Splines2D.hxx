@@ -52,8 +52,8 @@ namespace Splines
   class Spline2D
   {
   protected:
-    std::string  m_name;                  ///< Name identifier for the spline surface
-    SplineSurf * m_spline_2D{ nullptr };  ///< Pointer to the actual spline implementation
+    std::string  m_name;                 ///< Name identifier for the spline surface
+    SplineSurf * m_spline_2D = nullptr;  ///< Pointer to the actual spline implementation
 
     //! \brief Internal method to create a new spline of the specified type
     //! \param[in] tp The type of spline surface to create (e.g., bilinear, bicubic, biquintic)
@@ -334,8 +334,8 @@ namespace Splines
     //! \param[in] gc The GenericContainer holding the spline configuration.
     void setup( GenericContainer const & gc )
     {
-      string const   where{ fmt::format( "Spline2D[{}]::setup( gc ):", m_name ) };
-      string const & type{ gc.get_map_string( "spline_type", where ) };
+      string const   where = fmt::format( "Spline2D[{}]::setup( gc ):", m_name );
+      string const & type  = gc.get_map_string( "spline_type", where );
       new_spline( string_to_splineType2D( type ) );
       m_spline_2D->setup( gc );
     }
@@ -362,6 +362,7 @@ namespace Splines
     real_type eval( real_type const x, real_type const y ) const { return m_spline_2D->eval( x, y ); }
 
 #ifdef AUTODIFF_SUPPORT
+
     //! \brief Evaluates the spline using first‑order automatic differentiation.
     autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
     {

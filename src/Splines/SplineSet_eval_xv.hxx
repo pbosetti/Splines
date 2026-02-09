@@ -11,7 +11,7 @@
  */
 void eval( real_type const x, real_type vals[], integer const incy = 1 ) const
 {
-  integer ii{ 0 };
+  integer ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->eval( x );
 }
 
@@ -24,7 +24,7 @@ void eval( real_type const x, real_type vals[], integer const incy = 1 ) const
  */
 void eval_D( real_type const x, real_type vals[], integer const incy = 1 ) const
 {
-  size_t ii{ 0 };
+  size_t ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->D( x );
 }
 
@@ -37,7 +37,7 @@ void eval_D( real_type const x, real_type vals[], integer const incy = 1 ) const
  */
 void eval_DD( real_type const x, real_type vals[], integer const incy = 1 ) const
 {
-  size_t ii{ 0 };
+  size_t ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DD( x );
 }
 
@@ -50,7 +50,7 @@ void eval_DD( real_type const x, real_type vals[], integer const incy = 1 ) cons
  */
 void eval_DDD( real_type const x, real_type vals[], integer const incy = 1 ) const
 {
-  size_t ii{ 0 };
+  size_t ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DDD( x );
 }
 
@@ -63,7 +63,7 @@ void eval_DDD( real_type const x, real_type vals[], integer const incy = 1 ) con
  */
 void eval_DDDD( real_type const x, real_type vals[], integer const incy = 1 ) const
 {
-  size_t ii{ 0 };
+  size_t ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DDDD( x );
 }
 
@@ -76,6 +76,6 @@ void eval_DDDD( real_type const x, real_type vals[], integer const incy = 1 ) co
  */
 void eval_DDDDD( real_type const x, real_type vals[], integer const incy = 1 ) const
 {
-  size_t ii{ 0 };
+  size_t ii = 0;
   for ( integer i = 0; i < m_nspl; ++i, ii += incy ) vals[ii] = m_splines[i]->DDDDD( x );
 }

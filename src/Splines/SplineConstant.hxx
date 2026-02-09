@@ -35,7 +35,7 @@ namespace Splines
   class ConstantSpline : public Spline
   {
     Malloc_real m_mem_constant;
-    bool        m_external_alloc{ false };
+    bool        m_external_alloc = false;
 
   public:
     using Spline::build;
@@ -128,10 +128,9 @@ namespace Splines
 #ifdef AUTODIFF_SUPPORT
     autodiff::dual1st eval( autodiff::dual1st const & x ) const override
     {
-      using autodiff::dual1st;
-      using autodiff::detail::val;
-      dual1st res = eval( val( x ) );
-      res.grad    = 0;
+      autodiff::dual1st res;
+      res.val  = eval( x.val );
+      res.grad = 0;
       return res;
     }
 
@@ -139,10 +138,10 @@ namespace Splines
 
     autodiff::dual2nd eval( autodiff::dual2nd const & x ) const override
     {
-      using autodiff::dual2nd;
-      using autodiff::detail::val;
-      dual2nd res   = eval( val( x ) );
-      res.grad      = 0;
+      autodiff::dual2nd res;
+      res.val.val   = eval( x.val.val );
+      res.val.grad  = 0;
+      res.grad.val  = 0;
       res.grad.grad = 0;
       return res;
     }
@@ -150,7 +149,7 @@ namespace Splines
 
     void write_to_stream( ostream_type & s ) const override
     {
-      integer const nseg{ m_npts > 0 ? m_npts - 1 : 0 };
+      integer const nseg = m_npts > 0 ? m_npts - 1 : 0;
       for ( integer i = 0; i < nseg; ++i )
         fmt::print( s, "segment N. {:4} X:[{:.5},{:.5}] Y:{:.5}\n", i, m_X[i], m_X[i + 1], m_Y[i] );
     }
@@ -209,24 +208,24 @@ namespace Splines
       // gc["ydata"]
       //
       */
-      string const where{ fmt::format( "ConstantSpline[{}]::setup( gc ):", m_name ) };
+      string const where = fmt::format( "ConstantSpline[{}]::setup( gc ):", m_name );
 
       std::set<std::string> keywords;
       for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
       keywords.erase( "spline_type" );
 
-      GenericContainer const & gc_x{ gc( "xdata", where ) };
+      GenericContainer const & gc_x = gc( "xdata", where );
       keywords.erase( "xdata" );
-      GenericContainer const & gc_y{ gc( "ydata", where ) };
+      GenericContainer const & gc_y = gc( "ydata", where );
       keywords.erase( "ydata" );
 
       vec_real_type x, y;
       {
-        string const ff{ fmt::format( "{}, field `xdata'", where ) };
+        string const ff = fmt::format( "{}, field `xdata'", where );
         gc_x.copyto_vec_real( x, ff );
       }
       {
-        string const ff{ fmt::format( "{}, field `ydata'", where ) };
+        string const ff = fmt::format( "{}, field `ydata'", where );
         gc_y.copyto_vec_real( y, ff );
       }
 
@@ -264,7 +263,7 @@ namespace Splines
       y_min = y_max = m_Y[0];
       for ( integer i = 1; i < m_npts - 1; ++i )
       {
-        real_type const & P1{ m_Y[i] };
+        real_type const & P1 = m_Y[i];
         if ( P1 > y_max )
         {
           y_max     = P1;
@@ -298,9 +297,9 @@ namespace Splines
       // find max min along the nodes
       for ( integer i = 1; i < m_npts - 1; ++i )
       {
-        real_type const & P0{ m_Y[i - 1] };
-        real_type const & P1{ m_Y[i] };
-        real_type const & P2{ m_Y[i + 1] };
+        real_type const & P0 = m_Y[i - 1];
+        real_type const & P1 = m_Y[i];
+        real_type const & P2 = m_Y[i + 1];
         if ( P1 > P0 && P1 > P2 )
         {
           y_max.emplace_back( P1 );
