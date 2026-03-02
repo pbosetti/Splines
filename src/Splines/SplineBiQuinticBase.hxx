@@ -89,7 +89,7 @@ namespace Splines
     using SplineSurf::eval;
 
     //! spline constructor
-    explicit BiQuinticSplineBase( Spline_sub_type sub_type, string_view name = "Spline" )
+    explicit BiQuinticSplineBase( Spline_sub_type sub_type = Spline_sub_type::PCHIP, string_view name = "Spline" )
       : SplineSurf( name ), m_sub_type( sub_type )
     {
     }

@@ -50,7 +50,7 @@ namespace Splines
     //! \param type spline type
     //! \param name the name of the spline
     //!
-    explicit QuinticSpline( Spline_sub_type type, string_view name = "Spline" ) : QuinticSplineBase( type, name ) {}
+    explicit QuinticSpline( Spline_sub_type type = Spline_sub_type::PCHIP, string_view name = "Spline" ) : QuinticSplineBase( type, name ) {}
 
     //!
     //! Build an empty spline of `QuinticSpline` type
