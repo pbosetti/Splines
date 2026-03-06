@@ -50,21 +50,15 @@ namespace SplinesTest
 
   // Function 1: Simple 2D polynomial (for basic testing)
   real_type poly_function( real_type x, real_type y )
-  {
-    return 1.0 + 0.5 * x - 0.3 * y + 0.2 * x * x - 0.1 * x * y + 0.05 * y * y;
-  }
+  { return 1.0 + 0.5 * x - 0.3 * y + 0.2 * x * x - 0.1 * x * y + 0.05 * y * y; }
 
   // Function 2: Smooth exponential function (for more challenging tests)
   real_type exp_function( real_type x, real_type y )
-  {
-    return exp( -0.1 * ( x * x + y * y ) ) * cos( x ) * sin( y );
-  }
+  { return exp( -0.1 * ( x * x + y * y ) ) * cos( x ) * sin( y ); }
 
   // Function 3: Gentle sine-cosine product (for accuracy tests)
   real_type trig_function( real_type x, real_type y )
-  {
-    return sin( 0.5 * x ) * cos( 0.5 * y );
-  }
+  { return sin( 0.5 * x ) * cos( 0.5 * y ); }
 
   // ===========================================================================
   // UTILITY FUNCTIONS - AUTODIFF

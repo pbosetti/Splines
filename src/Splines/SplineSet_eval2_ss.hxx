@@ -9,9 +9,7 @@
  * \return Value of spline `name` at computed x
  */
 real_type eval2( real_type const zeta, string_view const indep, real_type & x, string_view const name ) const
-{
-  return this->eval2( zeta, this->get_position( indep ), x, this->get_position( name ) );
-}
+{ return this->eval2( zeta, this->get_position( indep ), x, this->get_position( name ) ); }
 
 /**
  * \brief Evaluate first derivative using another spline as independent variable
@@ -23,9 +21,7 @@ real_type eval2( real_type const zeta, string_view const indep, real_type & x, s
  * \return First derivative of spline `name` with respect to independent spline value
  */
 real_type eval2_D( real_type const zeta, string_view const indep, real_type & x, string_view const name ) const
-{
-  return this->eval2_D( zeta, this->get_position( indep ), x, this->get_position( name ) );
-}
+{ return this->eval2_D( zeta, this->get_position( indep ), x, this->get_position( name ) ); }
 
 /**
  * \brief Evaluate second derivative using another spline as independent variable
@@ -37,9 +33,7 @@ real_type eval2_D( real_type const zeta, string_view const indep, real_type & x,
  * \return Second derivative of spline `name` with respect to independent spline value
  */
 real_type eval2_DD( real_type const zeta, string_view const indep, real_type & x, string_view const name ) const
-{
-  return this->eval2_DD( zeta, this->get_position( indep ), x, this->get_position( name ) );
-}
+{ return this->eval2_DD( zeta, this->get_position( indep ), x, this->get_position( name ) ); }
 
 /**
  * \brief Evaluate third derivative using another spline as independent variable
@@ -51,9 +45,7 @@ real_type eval2_DD( real_type const zeta, string_view const indep, real_type & x
  * \return Third derivative of spline `name` with respect to independent spline value
  */
 real_type eval2_DDD( real_type const zeta, string_view const indep, real_type & x, string_view const name ) const
-{
-  return this->eval2_DDD( zeta, this->get_position( indep ), x, this->get_position( name ) );
-}
+{ return this->eval2_DDD( zeta, this->get_position( indep ), x, this->get_position( name ) ); }
 
 /**
  * \brief Evaluate a specific spline using another spline as independent variable

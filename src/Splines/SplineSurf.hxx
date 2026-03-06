@@ -679,21 +679,25 @@ namespace Splines
 
       // integer const LD = fortran_storage ? NR : NC;
 
-      auto read_mat = [this,&transposed,&fortran_storage,&where] ( GenericContainer const & M ) -> void {
-        bool trans = transposed == fortran_storage;
-        integer const NR = trans ? m_ny : m_nx;
-        integer const NC = trans ? m_nx : m_ny;
-        integer nr = M.num_rows();
-        integer nc = M.num_cols();
+      auto read_mat = [this, &transposed, &fortran_storage, &where]( GenericContainer const & M ) -> void
+      {
+        bool          trans = transposed == fortran_storage;
+        integer const NR    = trans ? m_ny : m_nx;
+        integer const NC    = trans ? m_nx : m_ny;
+        integer       nr    = M.num_rows();
+        integer       nc    = M.num_cols();
         UTILS_ASSERT(
           NR == nr && NC == nc,
           "{}, field `zdata` is a matrix expected to be of size {} x {}, found: {} x {}\n",
-          where, NR, NC, nr, nc
-        );
+          where,
+          NR,
+          NC,
+          nr,
+          nc );
 
         if ( GC_type::MAT_REAL == M.get_type() )
         {
-          auto & mat = M.get_mat_real();  // è in fortran storage!
+          auto &                mat = M.get_mat_real();  // è in fortran storage!
           Eigen::Map<const Mat> Z( mat.data(), NR, NC );
           load_Z( Z, trans );
         }
@@ -716,7 +720,7 @@ namespace Splines
         GC_type::VEC_REAL == gc_z.get_type() || GC_type::VEC_INTEGER == gc_z.get_type() ||
         GC_type::VEC_LONG == gc_z.get_type() )
       {
-      // cosa mi aspetto in lettura
+        // cosa mi aspetto in lettura
         integer NR  = transposed ? m_ny : m_nx;
         integer NC  = transposed ? m_nx : m_ny;
         integer nz  = static_cast<integer>( gc_z.get_num_elements() );
@@ -753,13 +757,13 @@ namespace Splines
       else if ( GC_type::VECTOR == gc_z.get_type() )
       {
         GenericContainer mat;
-        mat.load(gc_z);
+        mat.load( gc_z );
         mat.collapse();
         UTILS_ASSERT(
           GC_type::MAT_REAL == mat.get_type() || GC_type::MAT_INTEGER == mat.get_type() ||
-          GC_type::MAT_LONG == mat.get_type(),
-          "{}, field `zdata` cannot be converted to a matrix\n", where
-        );
+            GC_type::MAT_LONG == mat.get_type(),
+          "{}, field `zdata` cannot be converted to a matrix\n",
+          where );
         read_mat( mat );
       }
       else
@@ -870,9 +874,7 @@ namespace Splines
 
     // Operator() per due parametri
     template <typename T1, typename T2> auto operator()( T1 const & x, T2 const & y ) const -> decltype( eval( x, y ) )
-    {
-      return this->eval( x, y );
-    }
+    { return this->eval( x, y ); }
 #endif
 
     //!

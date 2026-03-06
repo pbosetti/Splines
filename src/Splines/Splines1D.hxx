@@ -286,9 +286,7 @@ namespace Splines
     //! \param n  total number of points
     //!
     void build( SplineType1D tp, real_type const x[], real_type const y[], integer const n )
-    {
-      this->build( tp, x, 1, y, 1, n );
-    }
+    { this->build( tp, x, 1, y, 1, n ); }
 
     //!
     //! Build a spline.
@@ -344,17 +342,13 @@ namespace Splines
     //! dump a sample of the spline
     //!
     void dump( ostream_type & s, integer nintervals, string_view header = "x\ty" ) const
-    {
-      m_spline->dump( s, nintervals, header );
-    }
+    { m_spline->dump( s, nintervals, header ); }
 
     //!
     //! dump a sample of the spline
     //!
     void dump( string_view fname, integer nintervals, string_view header = "x\ty" ) const
-    {
-      m_spline->dump( fname, nintervals, header );
-    }
+    { m_spline->dump( fname, nintervals, header ); }
 
     ///////////////////////////////////////////////////////////////////////////
     //! \name Evaluation
@@ -530,9 +524,7 @@ namespace Splines
     //!
     integer  // order
     coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const
-    {
-      return m_spline->coeffs( cfs, nodes, transpose );
-    }
+    { return m_spline->coeffs( cfs, nodes, transpose ); }
 
     //!
     //! \return the order of the spline (`degree+1`)

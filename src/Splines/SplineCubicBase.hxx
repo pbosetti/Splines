@@ -570,9 +570,7 @@ namespace Splines
     //! \param[in] n  total number of points
     //!
     inline void build( real_type const x[], real_type const y[], real_type const yp[], integer const n )
-    {
-      this->build( x, 1, y, 1, yp, 1, n );
-    }
+    { this->build( x, 1, y, 1, yp, 1, n ); }
 
     //!
     //! Build a spline.

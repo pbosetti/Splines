@@ -116,13 +116,9 @@ namespace Splines
     real_type id_eval( integer const ni, [[maybe_unused]] real_type const x ) const override { return m_Y[ni]; }
     real_type id_D( [[maybe_unused]] integer const ni, [[maybe_unused]] real_type const x ) const override { return 0; }
     real_type id_DD( [[maybe_unused]] integer const ni, [[maybe_unused]] real_type const x ) const override
-    {
-      return 0;
-    }
+    { return 0; }
     real_type id_DDD( [[maybe_unused]] integer const ni, [[maybe_unused]] real_type const x ) const override
-    {
-      return 0;
-    }
+    { return 0; }
     ///@}
 
 #ifdef AUTODIFF_SUPPORT

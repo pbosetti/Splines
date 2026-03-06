@@ -162,8 +162,6 @@ template <typename T> auto eval( T const & x, string_view name ) const
  * \return Result matching input type
  */
 template <typename T> auto operator()( T const & x, string_view name ) const -> decltype( eval( x, name ) )
-{
-  return eval( x, name );
-}
+{ return eval( x, name ); }
 
 #endif

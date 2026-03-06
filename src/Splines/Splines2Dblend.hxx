@@ -335,27 +335,19 @@ namespace Splines
     //! Evaluate spline value at `(x,y)`.
     //!
     real_type operator()( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y ); }
 
     //!
     //! Evaluate spline value at `(x,y)`.
     //!
     real_type eval( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y ); }
 
 #ifdef AUTODIFF_SUPPORT
     autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y ); }
     autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.eval( x, y ) + s * m_surf1.eval( x, y ); }
 
     template <typename T1, typename T2>
     autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> eval(
@@ -394,18 +386,14 @@ namespace Splines
     //! of the spline: \f$ S_x(x,y) \f$.
     //!
     real_type Dx( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.Dx( x, y ) + s * m_surf1.Dx( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.Dx( x, y ) + s * m_surf1.Dx( x, y ); }
 
     //!
     //! First derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_x(x,y) \f$.
     //!
     real_type Dy( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.Dy( x, y ) + s * m_surf1.Dy( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.Dy( x, y ) + s * m_surf1.Dy( x, y ); }
 
     //!
     //! First derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
@@ -453,52 +441,40 @@ namespace Splines
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
     real_type Dxx( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.Dxx( x, y ) + s * m_surf1.Dxx( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.Dxx( x, y ) + s * m_surf1.Dxx( x, y ); }
 
     //!
     //! Mixed second derivatives: \f$ S_{xy}(x,y) \f$.
     //!
     real_type Dxy( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.Dxy( x, y ) + s * m_surf1.Dxy( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.Dxy( x, y ) + s * m_surf1.Dxy( x, y ); }
 
     //!
     //! Second derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
     real_type Dyy( real_type const x, real_type const y, real_type const s ) const
-    {
-      return ( 1 - s ) * m_surf0.Dyy( x, y ) + s * m_surf1.Dyy( x, y );
-    }
+    { return ( 1 - s ) * m_surf0.Dyy( x, y ) + s * m_surf1.Dyy( x, y ); }
 
     //!
     //! Second derivatives respect to \f$ x \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
     real_type eval_D_1_1( real_type const x, real_type const y, real_type const s ) const
-    {
-      return this->Dxx( x, y, s );
-    }
+    { return this->Dxx( x, y, s ); }
 
     //!
     //! Mixed second derivatives: \f$ S_{xy}(x,y) \f$.
     //!
     real_type eval_D_1_2( real_type const x, real_type const y, real_type const s ) const
-    {
-      return this->Dxy( x, y, s );
-    }
+    { return this->Dxy( x, y, s ); }
 
     //!
     //! Second derivatives respect to \f$ y \f$ at point \f$ (x,y) \f$
     //! of the spline: \f$ S_{xx}(x,y) \f$.
     //!
     real_type eval_D_2_2( real_type const x, real_type const y, real_type const s ) const
-    {
-      return this->Dyy( x, y, s );
-    }
+    { return this->Dyy( x, y, s ); }
     ///@}
   };
 

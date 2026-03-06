@@ -249,49 +249,37 @@ namespace Splines
     //! Evaluate spline value at `x`.
     //!
     real_type eval( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.eval( x ) + s * m_spline1.eval( x );
-    }
+    { return ( 1 - s ) * m_spline0.eval( x ) + s * m_spline1.eval( x ); }
 
     //!
     //! First derivative at `x`.
     //!
     real_type D( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.D( x ) + s * m_spline1.D( x );
-    }
+    { return ( 1 - s ) * m_spline0.D( x ) + s * m_spline1.D( x ); }
 
     //!
     //! Second derivative at `x`.
     //!
     real_type DD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DD( x ) + s * m_spline1.DD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DD( x ) + s * m_spline1.DD( x ); }
 
     //!
     //! Third derivative at `x`.
     //!
     real_type DDD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DDD( x ) + s * m_spline1.DDD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DDD( x ) + s * m_spline1.DDD( x ); }
 
     //!
     //! 4th derivative at `x`.
     //!
     real_type DDDD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DDDD( x ) + s * m_spline1.DDDD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DDDD( x ) + s * m_spline1.DDDD( x ); }
 
     //!
     //! 5th derivative at `x`.
     //!
     real_type DDDDD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DDDDD( x ) + s * m_spline1.DDDDD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DDDDD( x ) + s * m_spline1.DDDDD( x ); }
 
     void D( real_type const x, real_type const s, real_type dd[2] ) const
     {
@@ -378,39 +366,27 @@ namespace Splines
     ///@{
     //! the value of the spline at `x`
     real_type operator()( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.eval( x ) + s * m_spline1.eval( x );
-    }
+    { return ( 1 - s ) * m_spline0.eval( x ) + s * m_spline1.eval( x ); }
 
     //! the value of the first derivative of the spline at `x`
     real_type eval_D( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.D( x ) + s * m_spline1.D( x );
-    }
+    { return ( 1 - s ) * m_spline0.D( x ) + s * m_spline1.D( x ); }
 
     //! the value of the second derivative of the spline at `x`
     real_type eval_DD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DD( x ) + s * m_spline1.DD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DD( x ) + s * m_spline1.DD( x ); }
 
     //! the value of the third derivative of the spline at `x`
     real_type eval_DDD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DDD( x ) + s * m_spline1.DDD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DDD( x ) + s * m_spline1.DDD( x ); }
 
     //! the value of the 4-th derivative of the spline at `x`
     real_type eval_DDDD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DDDD( x ) + s * m_spline1.DDDD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DDDD( x ) + s * m_spline1.DDDD( x ); }
 
     //! the value of the 5-th derivative of the spline at `x`
     real_type eval_DDDDD( real_type const x, real_type const s ) const
-    {
-      return ( 1 - s ) * m_spline0.DDDDD( x ) + s * m_spline1.DDDDD( x );
-    }
+    { return ( 1 - s ) * m_spline0.DDDDD( x ) + s * m_spline1.DDDDD( x ); }
     ///@}
 
     //!

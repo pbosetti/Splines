@@ -77,21 +77,15 @@ static integer nn[] = { 11, 11, 11, 9, 12, 4, 5 };
 
 // Function for central finite differences (2nd order)
 real_type finite_diff_central( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h );
-}
+{ return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h ); }
 
 // Function for forward finite differences (1st order)
 real_type finite_diff_forward( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x + h, i ) - ss( x, i ) ) / h;
-}
+{ return ( ss( x + h, i ) - ss( x, i ) ) / h; }
 
 // Function for backward finite differences (1st order)
 real_type finite_diff_backward( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x, i ) - ss( x - h, i ) ) / h;
-}
+{ return ( ss( x, i ) - ss( x - h, i ) ) / h; }
 
 // Adaptive finite difference function (chooses optimal method for 2nd order)
 real_type finite_diff_adaptive(

@@ -222,8 +222,8 @@ void test_spline1d()
   TEST_SECTION( "6. Indexed Evaluation" );
   for ( integer i = 0; i < spline.num_points() - 1; ++i )
   {
-    real_type xi = x[static_cast<size_t>( i )] +
-                   0.5 * ( x[static_cast<size_t>( i + 1 )] - x[static_cast<size_t>( i )] );
+    real_type xi  = x[static_cast<size_t>( i )] +
+                    0.5 * ( x[static_cast<size_t>( i + 1 )] - x[static_cast<size_t>( i )] );
     real_type val = spline.id_eval( i, xi );
     real_type d1  = spline.id_D( i, xi );
     real_type d2  = spline.id_DD( i, xi );

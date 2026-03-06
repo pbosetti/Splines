@@ -332,9 +332,7 @@ namespace Splines
       : m_name( name )
       , m_mem( fmt::format( "SplineVec[{}]::m_mem", name ) )
       , m_mem_p( fmt::format( "SplineVec[{}]::m_mem_p", name ) )
-    {
-      m_search.setup( &m_name, &m_npts, &m_X, &m_curve_is_closed, &m_curve_can_extend );
-    }
+    { m_search.setup( &m_name, &m_npts, &m_X, &m_curve_is_closed, &m_curve_can_extend ); }
 
     /**
      * \brief Destructor - releases all allocated memory
@@ -704,9 +702,7 @@ namespace Splines
      * This is an alias for DDDD() method.
      */
     real_type eval_DDDD( [[maybe_unused]] real_type const x, [[maybe_unused]] integer const i ) const
-    {
-      return this->DDDD( x, i );
-    }
+    { return this->DDDD( x, i ); }
 
     /**
      * \brief Evaluate fifth derivative of a single component at parameter x
@@ -861,9 +857,7 @@ namespace Splines
      * \return Result matching input type
      */
     template <typename T> auto operator()( T const & x, integer const i ) const -> decltype( eval( x, i ) )
-    {
-      return eval( x, i );
-    }
+    { return eval( x, i ); }
 ///@}
 #endif
 

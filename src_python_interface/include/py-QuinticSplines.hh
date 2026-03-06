@@ -27,9 +27,7 @@ namespace pySpline
     PythonicQuinticSplineBase string_view name = "QuinticSplineBase" ) : QuinticSplineBase(name) {}
 
     real_type operator()( real_type x ) const override
-    {
-      PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, operator(), x );
-    }
+    { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, operator(), x ); }
 
     real_type D( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, D, x ); }
 
@@ -42,23 +40,17 @@ namespace pySpline
     real_type DDDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, DDDDD, x ); }
 
     integer coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const override
-    {
-      PYBIND11_OVERLOAD_PURE( integer, QuinticSplineBase, coeffs, cfs, nodes, transpose );
-    }
+    { PYBIND11_OVERLOAD_PURE( integer, QuinticSplineBase, coeffs, cfs, nodes, transpose ); }
 
     integer order() const override { PYBIND11_OVERLOAD_PURE( integer, QuinticSplineBase, order ); }
 
     void write_to_stream( ostream_type & s ) const override
-    {
-      PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, write_to_stream, s );
-    }
+    { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, write_to_stream, s ); }
 
     unsigned type() const override { PYBIND11_OVERLOAD_PURE( unsigned, QuinticSplineBase, type ); }
 
     void build( real_type const x[], integer incx, real_type const y[], integer incy, integer n ) override
-    {
-      PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, build, x, incx, y, incy, n );
-    }
+    { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, build, x, incx, y, incy, n ); }
 
     void reserve( integer npts ) override { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, reserve, npts ); }
 

@@ -53,9 +53,7 @@ static integer npt = 5;
 
 // Function for central finite differences
 real_type finite_diff_central( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h );
-}
+{ return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h ); }
 
 // Function for forward/backward finite differences
 real_type finite_diff_forward( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )

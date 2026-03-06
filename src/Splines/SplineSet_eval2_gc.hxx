@@ -491,9 +491,7 @@ void eval2_DDD(
  * \param[out] gc GenericContainer to store results (map: spline_name -> value)
  */
 void eval2( real_type const zeta, string_view indep, real_type & x, GenericContainer & gc ) const
-{
-  this->eval2( zeta, this->get_position( indep ), x, gc );
-}
+{ this->eval2( zeta, this->get_position( indep ), x, gc ); }
 
 /**
  * \brief Evaluate first derivatives using independent spline by name
@@ -506,9 +504,7 @@ void eval2( real_type const zeta, string_view indep, real_type & x, GenericConta
  * \param[out] gc GenericContainer with derivative values (map: spline_name -> dy/dx)
  */
 void eval2_D( real_type const zeta, string_view indep, real_type & x, GenericContainer & gc ) const
-{
-  this->eval2_D( zeta, this->get_position( indep ), x, gc );
-}
+{ this->eval2_D( zeta, this->get_position( indep ), x, gc ); }
 
 /**
  * \brief Evaluate second derivatives using independent spline by name
@@ -521,9 +517,7 @@ void eval2_D( real_type const zeta, string_view indep, real_type & x, GenericCon
  * \param[out] gc GenericContainer with second derivative values (map: spline_name -> d²y/dx²)
  */
 void eval2_DD( real_type const zeta, string_view indep, real_type & x, GenericContainer & gc ) const
-{
-  this->eval2_DD( zeta, this->get_position( indep ), x, gc );
-}
+{ this->eval2_DD( zeta, this->get_position( indep ), x, gc ); }
 
 /**
  * \brief Evaluate third derivatives using independent spline by name
@@ -536,9 +530,7 @@ void eval2_DD( real_type const zeta, string_view indep, real_type & x, GenericCo
  * \param[out] gc GenericContainer with third derivative values (map: spline_name -> d³y/dx³)
  */
 void eval2_DDD( real_type const zeta, string_view indep, real_type & x, GenericContainer & gc ) const
-{
-  this->eval2_DDD( zeta, this->get_position( indep ), x, gc );
-}
+{ this->eval2_DDD( zeta, this->get_position( indep ), x, gc ); }
 
 /**
  * \brief Evaluate all splines at multiple zeta values using independent spline by name
@@ -550,9 +542,7 @@ void eval2_DDD( real_type const zeta, string_view indep, real_type & x, GenericC
  * \param[out] gc GenericContainer with results (map: spline_name -> vector of values)
  */
 void eval2( vec_real_type const & zetas, string_view indep, GenericContainer & gc ) const
-{
-  this->eval2( zetas, this->get_position( indep ), gc );
-}
+{ this->eval2( zetas, this->get_position( indep ), gc ); }
 
 /**
  * \brief Evaluate first derivatives at multiple zeta values using independent spline by name
@@ -564,9 +554,7 @@ void eval2( vec_real_type const & zetas, string_view indep, GenericContainer & g
  * \param[out] gc GenericContainer with vectors of derivatives (map: spline_name -> vector of dy/dx)
  */
 void eval2_D( vec_real_type const & zetas, string_view indep, GenericContainer & gc ) const
-{
-  this->eval2_D( zetas, this->get_position( indep ), gc );
-}
+{ this->eval2_D( zetas, this->get_position( indep ), gc ); }
 
 /**
  * \brief Evaluate second derivatives at multiple zeta values using independent spline by name
@@ -578,9 +566,7 @@ void eval2_D( vec_real_type const & zetas, string_view indep, GenericContainer &
  * \param[out] gc GenericContainer with vectors of second derivatives (map: spline_name -> vector of d²y/dx²)
  */
 void eval2_DD( vec_real_type const & zetas, string_view indep, GenericContainer & gc ) const
-{
-  this->eval2_DD( zetas, this->get_position( indep ), gc );
-}
+{ this->eval2_DD( zetas, this->get_position( indep ), gc ); }
 
 /**
  * \brief Evaluate third derivatives at multiple zeta values using independent spline by name
@@ -592,9 +578,7 @@ void eval2_DD( vec_real_type const & zetas, string_view indep, GenericContainer 
  * \param[out] gc GenericContainer with vectors of third derivatives (map: spline_name -> vector of d³y/dx³)
  */
 void eval2_DDD( vec_real_type const & zetas, string_view indep, GenericContainer & gc ) const
-{
-  this->eval2_DDD( zetas, this->get_position( indep ), gc );
-}
+{ this->eval2_DDD( zetas, this->get_position( indep ), gc ); }
 
 /**
  * \brief Evaluate specific splines using independent spline by name
@@ -613,9 +597,7 @@ void eval2(
   real_type &             x,
   vec_string_type const & columns,
   GenericContainer &      gc ) const
-{
-  this->eval2( zeta, this->get_position( indep ), x, columns, gc );
-}
+{ this->eval2( zeta, this->get_position( indep ), x, columns, gc ); }
 
 /**
  * \brief Evaluate first derivatives of specific splines using independent spline by name
@@ -634,9 +616,7 @@ void eval2_D(
   real_type &             x,
   vec_string_type const & columns,
   GenericContainer &      gc ) const
-{
-  this->eval2_D( zeta, this->get_position( indep ), x, columns, gc );
-}
+{ this->eval2_D( zeta, this->get_position( indep ), x, columns, gc ); }
 
 /**
  * \brief Evaluate second derivatives of specific splines using independent spline by name
@@ -655,9 +635,7 @@ void eval2_DD(
   real_type &             x,
   vec_string_type const & columns,
   GenericContainer &      gc ) const
-{
-  this->eval2_DD( zeta, this->get_position( indep ), x, columns, gc );
-}
+{ this->eval2_DD( zeta, this->get_position( indep ), x, columns, gc ); }
 
 /**
  * \brief Evaluate third derivatives of specific splines using independent spline by name
@@ -676,9 +654,7 @@ void eval2_DDD(
   real_type &             x,
   vec_string_type const & columns,
   GenericContainer &      gc ) const
-{
-  this->eval2_DDD( zeta, this->get_position( indep ), x, columns, gc );
-}
+{ this->eval2_DDD( zeta, this->get_position( indep ), x, columns, gc ); }
 
 /**
  * \brief Evaluate specific splines at multiple zeta values using independent spline by name
@@ -692,9 +668,7 @@ void eval2_DDD(
  */
 void eval2( vec_real_type const & zetas, string_view indep, vec_string_type const & columns, GenericContainer & gc )
   const
-{
-  this->eval2( zetas, this->get_position( indep ), columns, gc );
-}
+{ this->eval2( zetas, this->get_position( indep ), columns, gc ); }
 
 /**
  * \brief Evaluate first derivatives of specific splines at multiple zeta values using independent spline by name
@@ -708,9 +682,7 @@ void eval2( vec_real_type const & zetas, string_view indep, vec_string_type cons
  */
 void eval2_D( vec_real_type const & zetas, string_view indep, vec_string_type const & columns, GenericContainer & gc )
   const
-{
-  this->eval2_D( zetas, this->get_position( indep ), columns, gc );
-}
+{ this->eval2_D( zetas, this->get_position( indep ), columns, gc ); }
 
 /**
  * \brief Evaluate second derivatives of specific splines at multiple zeta values using independent spline by name
@@ -724,9 +696,7 @@ void eval2_D( vec_real_type const & zetas, string_view indep, vec_string_type co
  */
 void eval2_DD( vec_real_type const & zetas, string_view indep, vec_string_type const & columns, GenericContainer & gc )
   const
-{
-  this->eval2_DD( zetas, this->get_position( indep ), columns, gc );
-}
+{ this->eval2_DD( zetas, this->get_position( indep ), columns, gc ); }
 
 /**
  * \brief Evaluate third derivatives of specific splines at multiple zeta values using independent spline by name
@@ -740,6 +710,4 @@ void eval2_DD( vec_real_type const & zetas, string_view indep, vec_string_type c
  */
 void eval2_DDD( vec_real_type const & zetas, string_view indep, vec_string_type const & columns, GenericContainer & gc )
   const
-{
-  this->eval2_DDD( zetas, this->get_position( indep ), columns, gc );
-}
+{ this->eval2_DDD( zetas, this->get_position( indep ), columns, gc ); }

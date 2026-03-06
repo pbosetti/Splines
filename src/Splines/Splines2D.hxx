@@ -365,28 +365,20 @@ namespace Splines
 
     //! \brief Evaluates the spline using first‑order automatic differentiation.
     autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const
-    {
-      return m_spline_2D->eval( x, y );
-    }
+    { return m_spline_2D->eval( x, y ); }
     //! \brief Evaluates the spline using second‑order automatic differentiation.
     autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const
-    {
-      return m_spline_2D->eval( x, y );
-    }
+    { return m_spline_2D->eval( x, y ); }
 
     //! \brief Evaluates the spline with higher‑order automatic differentiation.
     template <typename T1, typename T2> auto eval( T1 const & x, T2 const & y ) const
       -> decltype( m_spline_2D->eval( x, y ) )
-    {
-      return m_spline_2D->eval( x, y );
-    }
+    { return m_spline_2D->eval( x, y ); }
 
     // Operator() per due parametri
     template <typename T1, typename T2> auto operator()( T1 const & x, T2 const & y ) const
       -> decltype( m_spline_2D->eval( x, y ) )
-    {
-      return m_spline_2D->eval( x, y );
-    }
+    { return m_spline_2D->eval( x, y ); }
 
 #endif
 

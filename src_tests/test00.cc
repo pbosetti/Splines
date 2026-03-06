@@ -59,27 +59,19 @@ void print_header( const string & title, fmt::color color = fmt::color::cyan )
 
 // Funzione per stampare un messaggio di successo
 void print_success( const string & message )
-{
-  fmt::print( fg( fmt::color::green ) | fmt::emphasis::bold, "✅  {}\n", message );
-}
+{ fmt::print( fg( fmt::color::green ) | fmt::emphasis::bold, "✅  {}\n", message ); }
 
 // Funzione per stampare un messaggio di errore
 void print_error( const string & message )
-{
-  fmt::print( fg( fmt::color::red ) | fmt::emphasis::bold, "❌  {}\n", message );
-}
+{ fmt::print( fg( fmt::color::red ) | fmt::emphasis::bold, "❌  {}\n", message ); }
 
 // Funzione per stampare un messaggio di avviso
 void print_warning( const string & message )
-{
-  fmt::print( fg( fmt::color::yellow ) | fmt::emphasis::bold, "⚠️  {}\n", message );
-}
+{ fmt::print( fg( fmt::color::yellow ) | fmt::emphasis::bold, "⚠️  {}\n", message ); }
 
 // Funzione per stampare un messaggio informativo
 void print_info( const string & message )
-{
-  fmt::print( fg( fmt::color::blue ) | fmt::emphasis::bold, "ℹ️  {}\n", message );
-}
+{ fmt::print( fg( fmt::color::blue ) | fmt::emphasis::bold, "ℹ️  {}\n", message ); }
 
 // Classe di test per SearchInterval
 class SearchIntervalTester

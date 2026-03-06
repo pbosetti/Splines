@@ -232,8 +232,6 @@ template <typename T> auto eval( T const & x, integer const spl ) const
  * \return Result matching input type
  */
 template <typename T> auto operator()( T const & x, integer const spl ) const -> decltype( eval( x, spl ) )
-{
-  return eval( x, spl );
-}
+{ return eval( x, spl ); }
 
 #endif

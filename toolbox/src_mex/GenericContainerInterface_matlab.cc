@@ -430,9 +430,7 @@ namespace GC_namespace
   }
 
   void to_mxArray( real_type const & val, mxArray *& mx )
-  {
-    mx = mxCreateDoubleScalar( val );
-  }
+  { mx = mxCreateDoubleScalar( val ); }
 
   void to_mxArray( complex_type const & val, mxArray *& mx )
   {
@@ -450,9 +448,7 @@ namespace GC_namespace
   }
 
   void to_mxArray( string_view val, mxArray *& mx )
-  {
-    mx = mxCreateString( val.data() );
-  }
+  { mx = mxCreateString( val.data() ); }
 
   void to_mxArray( vec_bool_type const & val, mxArray *& mx )
   {

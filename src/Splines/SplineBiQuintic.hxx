@@ -93,14 +93,17 @@ namespace Splines
     //! \param type spline type
     //! \param name the name of the spline
     //!
-    explicit BiQuinticSpline( Spline_sub_type sub_type = Spline_sub_type::PCHIP, string_view name = "BiQuinticSpline" ) : BiQuinticSplineBase( sub_type, name ) { }
+    explicit BiQuinticSpline( Spline_sub_type sub_type = Spline_sub_type::PCHIP, string_view name = "BiQuinticSpline" )
+      : BiQuinticSplineBase( sub_type, name )
+    {
+    }
 
     //!
     //! Build an empty spline of `BiQuinticSpline` type
     //!
     //! \param name the name of the spline
     //!
-    explicit BiQuinticSpline( string_view name ) : BiQuinticSplineBase( Spline_sub_type::PCHIP, name ) { }
+    explicit BiQuinticSpline( string_view name ) : BiQuinticSplineBase( Spline_sub_type::PCHIP, name ) {}
 
     //!
     //! Spline destructor.

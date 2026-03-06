@@ -83,24 +83,16 @@ template <typename... Args> void print_header( fmt::string_view format, Args &&.
 }
 
 template <typename... Args> void print_success( fmt::string_view format, Args &&... args )
-{
-  fmt::print( fg( Color::SUCCESS ) | fmt::emphasis::bold, "✓ {}\n", fmt::format( format, args... ) );
-}
+{ fmt::print( fg( Color::SUCCESS ) | fmt::emphasis::bold, "✓ {}\n", fmt::format( format, args... ) ); }
 
 template <typename... Args> void print_error( fmt::string_view format, Args &&... args )
-{
-  fmt::print( fg( Color::ERROR ) | fmt::emphasis::bold, "✗ {}\n", fmt::format( format, args... ) );
-}
+{ fmt::print( fg( Color::ERROR ) | fmt::emphasis::bold, "✗ {}\n", fmt::format( format, args... ) ); }
 
 template <typename... Args> void print_warning( fmt::string_view format, Args &&... args )
-{
-  fmt::print( fg( Color::WARNING ) | fmt::emphasis::bold, "⚠ {}\n", fmt::format( format, args... ) );
-}
+{ fmt::print( fg( Color::WARNING ) | fmt::emphasis::bold, "⚠ {}\n", fmt::format( format, args... ) ); }
 
 template <typename... Args> void print_info( fmt::string_view format, Args &&... args )
-{
-  fmt::print( fg( Color::INFO ), "➤ {}\n", fmt::format( format, args... ) );
-}
+{ fmt::print( fg( Color::INFO ), "➤ {}\n", fmt::format( format, args... ) ); }
 
 // ============================================================================
 // Test data definition

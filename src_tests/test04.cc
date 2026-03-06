@@ -76,20 +76,14 @@ static integer nn[] = { 12, 12, 12, 10, 13, 4 };
 
 // Function for central finite differences
 real_type finite_diff_central( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h );
-}
+{ return ( ss( x + h, i ) - ss( x - h, i ) ) / ( 2 * h ); }
 
 // Function for forward/backward finite differences
 real_type finite_diff_forward( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x + h, i ) - ss( x, i ) ) / h;
-}
+{ return ( ss( x + h, i ) - ss( x, i ) ) / h; }
 
 real_type finite_diff_backward( SplineSet const & ss, real_type x, integer i, real_type h = 1e-6 )
-{
-  return ( ss( x, i ) - ss( x - h, i ) ) / h;
-}
+{ return ( ss( x, i ) - ss( x - h, i ) ) / h; }
 
 // Adaptive finite difference function
 real_type finite_diff_adaptive(
@@ -206,9 +200,7 @@ bool is_near_knot( real_type x, real_type const * knots, integer n, real_type ep
 }
 
 bool is_spline_differentiable_at_knots( string const & spline_name )
-{
-  return !( spline_name == "CONSTANT" || spline_name == "LINEAR" );
-}
+{ return !( spline_name == "CONSTANT" || spline_name == "LINEAR" ); }
 
 // ===========================================================================
 // MAIN FUNCTION

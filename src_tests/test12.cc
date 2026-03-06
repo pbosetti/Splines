@@ -75,45 +75,27 @@ typedef real_type ( *TestFunctionPtr )( real_type );
 
 // Test 1: Polinomio di grado 1: f(x) = 2x + 1
 real_type test_poly1( real_type x )
-{
-  return 2.0 * x + 1.0;
-}
+{ return 2.0 * x + 1.0; }
 real_type test_poly1_D( real_type )
-{
-  return 2.0;
-}
+{ return 2.0; }
 real_type test_poly1_DD( real_type )
-{
-  return 0.0;
-}
+{ return 0.0; }
 
 // Test 2: Polinomio di grado 2: f(x) = x^2 - 3x + 2
 real_type test_poly2( real_type x )
-{
-  return x * x - 3.0 * x + 2.0;
-}
+{ return x * x - 3.0 * x + 2.0; }
 real_type test_poly2_D( real_type x )
-{
-  return 2.0 * x - 3.0;
-}
+{ return 2.0 * x - 3.0; }
 real_type test_poly2_DD( real_type )
-{
-  return 2.0;
-}
+{ return 2.0; }
 
 // Test 3: Polinomio di grado 3: f(x) = x^3 - 2x^2 + x - 5
 real_type test_poly3( real_type x )
-{
-  return x * x * x - 2.0 * x * x + x - 5.0;
-}
+{ return x * x * x - 2.0 * x * x + x - 5.0; }
 real_type test_poly3_D( real_type x )
-{
-  return 3.0 * x * x - 4.0 * x + 1.0;
-}
+{ return 3.0 * x * x - 4.0 * x + 1.0; }
 real_type test_poly3_DD( real_type x )
-{
-  return 6.0 * x - 4.0;
-}
+{ return 6.0 * x - 4.0; }
 
 // Test 4: Polinomio di grado 4: f(x) = x^4 + x^3 - 2x^2 + 3x - 1
 real_type test_poly4( real_type x )
@@ -122,27 +104,17 @@ real_type test_poly4( real_type x )
   return x2 * x2 + x * x2 - 2.0 * x2 + 3.0 * x - 1.0;
 }
 real_type test_poly4_D( real_type x )
-{
-  return 4.0 * x * x * x + 3.0 * x * x - 4.0 * x + 3.0;
-}
+{ return 4.0 * x * x * x + 3.0 * x * x - 4.0 * x + 3.0; }
 real_type test_poly4_DD( real_type x )
-{
-  return 12.0 * x * x + 6.0 * x - 4.0;
-}
+{ return 12.0 * x * x + 6.0 * x - 4.0; }
 
 // Test 5: Funzione esponenziale/trigonometrica: f(x) = exp(x) + sin(2x)
 real_type test_exp_trig( real_type x )
-{
-  return exp( x ) + sin( 2.0 * x );
-}
+{ return exp( x ) + sin( 2.0 * x ); }
 real_type test_exp_trig_D( real_type x )
-{
-  return exp( x ) + 2.0 * cos( 2.0 * x );
-}
+{ return exp( x ) + 2.0 * cos( 2.0 * x ); }
 real_type test_exp_trig_DD( real_type x )
-{
-  return exp( x ) - 4.0 * sin( 2.0 * x );
-}
+{ return exp( x ) - 4.0 * sin( 2.0 * x ); }
 
 // Struttura per informazioni sulle funzioni test
 struct TestFunctionInfo

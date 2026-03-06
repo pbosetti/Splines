@@ -39,9 +39,7 @@ namespace pySpline
     void setup( GenericContainer const & gc ) override { PYBIND11_OVERLOAD_PURE( void, Spline, setup, gc ); }
 
     void build( real_type const x[], integer incx, real_type const y[], integer incy, integer n ) override
-    {
-      PYBIND11_OVERLOAD_PURE( void, Spline, build, x, incx, y, incy, n );
-    }
+    { PYBIND11_OVERLOAD_PURE( void, Spline, build, x, incx, y, incy, n ); }
 
     void clear() override { PYBIND11_OVERLOAD_PURE( void, Spline, clear ); }
 
@@ -60,16 +58,12 @@ namespace pySpline
     real_type DDDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DDDDD, x ); }
 
     integer coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const override
-    {
-      PYBIND11_OVERLOAD_PURE( integer, Spline, coeffs, cfs, nodes, transpose );
-    }
+    { PYBIND11_OVERLOAD_PURE( integer, Spline, coeffs, cfs, nodes, transpose ); }
 
     integer order() const override { PYBIND11_OVERLOAD_PURE( integer, Spline, order ); }
 
     void write_to_stream( ostream_type & s ) const override
-    {
-      PYBIND11_OVERLOAD_PURE( void, Spline, write_to_stream, s );
-    }
+    { PYBIND11_OVERLOAD_PURE( void, Spline, write_to_stream, s ); }
   };
 
   void python_register_splines_class( module & m );
