@@ -37,10 +37,10 @@ namespace Splines
     if ( n == "vanleer" ) return SplineType1D::VANLEER;
     if ( n == "pchip" ) return SplineType1D::PCHIP;
 
-    if ( n == "quintic" ) return SplineType1D::QUINTIC_CUBIC;
+    if ( n == "quintic_cubic" ) return SplineType1D::QUINTIC_CUBIC;
     if ( n == "quintic_akima" ) return SplineType1D::QUINTIC_AKIMA;
     if ( n == "quintic_vanleer" ) return SplineType1D::QUINTIC_VANLEER;
-    if ( n == "quintic_pchip" ) return SplineType1D::QUINTIC_PCHIP;
+    if ( n == "quintic_pchip" || n == "quintic" ) return SplineType1D::QUINTIC_PCHIP;
 
     if ( n == "hermite" ) return SplineType1D::HERMITE;
     if ( n == "spline_set" ) return SplineType1D::SPLINE_SET;
@@ -66,12 +66,12 @@ namespace Splines
     std::transform( n.begin(), n.end(), n.begin(), []( unsigned char c ) { return char( std::tolower( c ) ); } );
     if ( n == "bilinear" ) return SplineType2D::BILINEAR;
 
-    if ( n == "bicubic" ) return SplineType2D::BICUBIC_CUBIC;
+    if ( n == "bicubic" || n == "bicubic_cubic" ) return SplineType2D::BICUBIC_CUBIC;
     if ( n == "bicubic_akima" ) return SplineType2D::BICUBIC_AKIMA;
     if ( n == "bicubic_vanleer" ) return SplineType2D::BICUBIC_VANLEER;
     if ( n == "bicubic_pchip" ) return SplineType2D::BICUBIC_PCHIP;
 
-    if ( n == "biquintic" ) return SplineType2D::BIQUINTIC_CUBIC;
+    if ( n == "biquintic" || n == "biquintic_cubic" ) return SplineType2D::BIQUINTIC_CUBIC;
     if ( n == "biquintic_akima" ) return SplineType2D::BIQUINTIC_AKIMA;
     if ( n == "biquintic_vanleer" ) return SplineType2D::BIQUINTIC_VANLEER;
     if ( n == "biquintic_pchip" ) return SplineType2D::BIQUINTIC_PCHIP;
@@ -246,7 +246,8 @@ namespace Splines
 
   // Helper function: Determinante 2D (analogo al prodotto vettoriale "cross" in 3D)
   // Restituisce v1.x * v2.y - v1.y * v2.x
-  static inline real_type kross( const Vec2 & a, const Vec2 & b ) { return a.x() * b.y() - a.y() * b.x(); };
+  static inline real_type kross( const Vec2 & a, const Vec2 & b )
+  { return a.x() * b.y() - a.y() * b.x(); };
 
   real_type curvature( real_type const s, Spline const & X, Spline const & Y )
   {

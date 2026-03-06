@@ -17,8 +17,7 @@
  |                                                                          |
 \*--------------------------------------------------------------------------*/
 
-#ifndef SPLINE_HERMITE_HXX
-#define SPLINE_HERMITE_HXX
+#include "Splines.hh"
 
 namespace Splines
 {
@@ -32,43 +31,56 @@ namespace Splines
    |                                             |_|
   \*/
 
-  //! Hermite Spline Management Class
-  class HermiteSpline : public CubicSplineBase
+  void HermiteSpline::setup( GenericContainer const & gc )
   {
-  public:
-    using CubicSplineBase::build;
-    using CubicSplineBase::reserve;
+    /*
+    // gc["xdata"]
+    // gc["ydata"]
+    //
+    */
+    string const where = fmt::format( "HermiteSpline[{}]::setup( gc ):", m_name );
 
-    //!
-    //! Build an empty spline of `HermiteSpline` type
-    //!
-    //! \param name the name of the spline
-    //!
-    HermiteSpline( string_view name = "HermiteSpline" ) : CubicSplineBase( name ) {}
+    std::set<std::string> keywords;
+    for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
+    keywords.erase( "spline_type" );
 
-    //!
-    //! Spline destructor.
-    //!
-    ~HermiteSpline() override {}
+    GenericContainer const & gc_x = gc( "xdata", where );
+    keywords.erase( "xdata" );
+    GenericContainer const & gc_y = gc( "ydata", where );
+    keywords.erase( "ydata" );
+    GenericContainer const & gc_yp = gc( "ypdata", where );
+    keywords.erase( "ypdata" );
 
-    //! Return spline type (as number)
-    SplineType1D type() const override { return SplineType1D::HERMITE; }
+    vec_real_type x, y, yp;
+    {
+      string const ff = fmt::format( "{}, field `xdata'", where );
+      gc_x.copyto_vec_real( x, ff );
+    }
+    {
+      string const ff = fmt::format( "{}, field `ydata'", where );
+      gc_y.copyto_vec_real( y, ff );
+    }
+    {
+      string const ff = fmt::format( "{}, field `ypdata'", where );
+      gc_yp.copyto_vec_real( yp, ff );
+    }
 
-    // --------------------------- VIRTUALS -----------------------------------
+    UTILS_WARNING(
+      keywords.empty(),
+      "{}: unused keys\n{}\n",
+      where,
+      [&keywords]() -> string
+      {
+        string res;
+        for ( auto const & it : keywords )
+        {
+          res += it;
+          res += ' ';
+        };
+        return res;
+      }() );
 
-    void build() override { m_search.must_reset(); }
-
-    //!
-    //!
-    //! Setup a spline using a `GenericContainer`
-    //!
-    //! - gc("xdata")  vector with the `x` coordinate of the data
-    //! - gc("ydata")  vector with the `y` coordinate of the data
-    //! - gc("ypdata") vector with the `y` derivative of the data
-    //!
-    void setup( GenericContainer const & gc ) override;
-  };
+    this->build( x, y, yp );
+  }
 
 }  // namespace Splines
-
-#endif  // SPLINE_HERMITE_HXX
