@@ -46,6 +46,9 @@
 #include <thread>
 #include <mutex>
 #include <set>
+#include <functional>
+#include <type_traits>
+#include <utility>
 
 #define AUTODIFF_SUPPORT
 

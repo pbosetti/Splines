@@ -977,8 +977,6 @@ void test_2D_splines_with_autodiff()
       real_type max_error_Dxx = 0.0;
       real_type max_error_Dxy = 0.0;
       real_type max_error_Dyy = 0.0;
-      size_t    test_count    = 0;
-
       // Test at various points
       for ( real_type x : test_x )
       {
@@ -1032,7 +1030,6 @@ void test_2D_splines_with_autodiff()
           max_error_Dxy = std::max( max_error_Dxy, error_Dxy );
           max_error_Dyy = std::max( max_error_Dyy, error_Dyy );
 #endif
-          test_count++;
         }
       }
 

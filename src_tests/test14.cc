@@ -722,7 +722,7 @@ bool test_spline_2D_type(
           real_type         y_const = yy;
           autodiff::dual1st val_x   = spline.eval( x_dual, y_const );
 
-          bool passed_dx = add_test( "Dx", val_x.grad, spline.Dx( xx, yy ), tolerance_1st );
+          add_test( "Dx", val_x.grad, spline.Dx( xx, yy ), tolerance_1st );
 
           // ∂f/∂y
           real_type         x_const = xx;
@@ -730,7 +730,7 @@ bool test_spline_2D_type(
           y_dual.grad               = 1.0;
           autodiff::dual1st val_y   = spline.eval( x_const, y_dual );
 
-          bool passed_dy = add_test( "Dy", val_y.grad, spline.Dy( xx, yy ), tolerance_1st );
+          add_test( "Dy", val_y.grad, spline.Dy( xx, yy ), tolerance_1st );
         }
 
         // ================================================================
@@ -745,7 +745,7 @@ bool test_spline_2D_type(
           x_dual.grad.grad         = 0;
           autodiff::dual2nd val_xx = spline.eval( x_dual, yy );
 
-          bool passed_dxx = add_test( "Dxx", val_xx.grad.grad, spline.Dxx( xx, yy ), tolerance_2nd );
+          add_test( "Dxx", val_xx.grad.grad, spline.Dxx( xx, yy ), tolerance_2nd );
 
           // ∂²f/∂y²
           autodiff::dual2nd y_dual;
@@ -755,7 +755,7 @@ bool test_spline_2D_type(
           y_dual.grad.grad         = 0;
           autodiff::dual2nd val_yy = spline.eval( xx, y_dual );
 
-          bool passed_dyy = add_test( "Dyy", val_yy.grad.grad, spline.Dyy( xx, yy ), tolerance_2nd );
+          add_test( "Dyy", val_yy.grad.grad, spline.Dyy( xx, yy ), tolerance_2nd );
         }
 
         // ================================================================
@@ -782,7 +782,7 @@ bool test_spline_2D_type(
           // Derivata mista approssimata
           real_type Dxy_fd = ( Dx_at_yh - Dx_at_y ) / h;
 
-          bool passed_dxy = add_test( "Dxy", Dxy_fd, spline.Dxy( xx, yy ), tolerance_2nd_mixed );
+          add_test( "Dxy", Dxy_fd, spline.Dxy( xx, yy ), tolerance_2nd_mixed );
         }
 
         // Aggiorna statistiche per questo punto

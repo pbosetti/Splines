@@ -338,6 +338,65 @@ namespace Splines
     //!
     ///@{
 
+
+    ///
+    /// Build the surface spline from generic coordinate/value accessors.
+    ///
+    /// The arguments `X`, `Y`, and `Z` must be callable objects.
+    ///
+    /// Required interface:
+    /// - `X(ix)` returns the x-coordinate of node `ix`, for `0 <= ix < nx`
+    /// - `Y(iy)` returns the y-coordinate of node `iy`, for `0 <= iy < ny`
+    /// - `Z(ix, iy)` returns the scalar value associated with `X(ix), Y(iy)`
+    ///
+    /// The callable objects may be:
+    /// - lambdas
+    /// - functors
+    /// - wrappers around vectors/matrices
+    /// - any object accepted by `std::invoke`
+    ///
+    /// \tparam XFunc  callable type for x-coordinates
+    /// \tparam YFunc  callable type for y-coordinates
+    /// \tparam ZFunc  callable type for surface values
+    ///
+    /// \param X   accessor for x-coordinates
+    /// \param Y   accessor for y-coordinates
+    /// \param Z   accessor for surface values
+    /// \param nx  number of grid points along the x-direction
+    /// \param ny  number of grid points along the y-direction
+    ///
+    template <typename XFunc, typename YFunc, typename ZFunc>
+    void build( XFunc && X, YFunc && Y, ZFunc && Z, integer const nx, integer const ny )
+    {
+      static_assert(
+        std::is_invocable_r_v<real_type, XFunc, integer>,
+        "build(): X(i) must be callable and return real_type" );
+
+      static_assert(
+        std::is_invocable_r_v<real_type, YFunc, integer>,
+        "build(): Y(j) must be callable and return real_type" );
+
+      static_assert(
+        std::is_invocable_r_v<real_type, ZFunc, integer, integer>,
+        "build(): Z(ix, iy) must be callable and return real_type" );
+
+      resize( nx, ny );
+
+      for ( integer i = 0; i < nx; ++i ) { mX.coeffRef( i ) = std::invoke( std::forward<XFunc>( X ), i ); }
+
+      for ( integer j = 0; j < ny; ++j ) { mY.coeffRef( j ) = std::invoke( std::forward<YFunc>( Y ), j ); }
+
+      for ( integer ix = 0; ix < m_nx; ++ix )
+      {
+        for ( integer iy = 0; iy < m_ny; ++iy )
+        {
+          z_node_ref( ix, iy ) = std::invoke( std::forward<ZFunc>( Z ), ix, iy );
+        }
+      }
+
+      make_spline();
+    }
+
     //!
     //! Build surface spline
     //!

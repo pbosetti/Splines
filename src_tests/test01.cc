@@ -850,7 +850,7 @@ void print_convergence_table_for_test(
   const vector<ConvergenceResult> & results,
   const string &                    mesh_type,
   const TestFunctionInfo &          test_func,
-  integer                           func_index )
+  [[maybe_unused]] integer          func_index )
 {
   print_header( fmt::format( "CONVERGENCE TEST - {} - {} MESH", test_func.name, mesh_type ) );
 
