@@ -230,7 +230,7 @@ namespace Splines
     //! If false the spline is estrapolated for `x` values
     //! outside the range.
     //!
-    bool is_x_bounded() const { return m_x_can_extend; }
+    bool is_x_bounded() const { return !m_x_can_extend; }
 
     //!
     //! Make the spline surface unbounded in the `x` direction.
@@ -247,7 +247,7 @@ namespace Splines
     //! If false the spline is extrapolated for `y` values
     //! outside the range.
     //!
-    bool is_y_bounded() const { return m_y_can_extend; }
+    bool is_y_bounded() const { return !m_y_can_extend; }
 
     //!
     //! Make the spline surface unbounded in the `y` direction
@@ -493,6 +493,14 @@ namespace Splines
     {
       integer nx  = static_cast<integer>( x.size() );
       integer ny  = static_cast<integer>( y.size() );
+      size_t  nz  = static_cast<size_t>( nx ) * static_cast<size_t>( ny );
+      UTILS_ASSERT(
+        z.size() == nz,
+        "SplineSurf::build( x, y, z, ... ) bad z size found {} expected {} = {} x {}",
+        z.size(),
+        nz,
+        nx,
+        ny );
       integer ldZ = fortran_storage ? nx : ny;
       build( x.data(), 1, y.data(), 1, z.data(), ldZ, nx, ny, fortran_storage, transposed );
     }
@@ -525,6 +533,14 @@ namespace Splines
       bool                      fortran_storage = false,
       bool                      transposed      = false )
     {
+      size_t nz = static_cast<size_t>( nx ) * static_cast<size_t>( ny );
+      UTILS_ASSERT(
+        z.size() == nz,
+        "SplineSurf::build( z, nx, ny, ... ) bad z size found {} expected {} = {} x {}",
+        z.size(),
+        nz,
+        nx,
+        ny );
       integer ldZ = fortran_storage ? nx : ny;
       this->build( z.data(), ldZ, nx, ny, fortran_storage, transposed );
     }

@@ -851,7 +851,7 @@ int main()
               max_diff       = std::max( max_diff, diff );
               avg_diff += diff;
             }
-            avg_diff /= quintic_subtype_results[i].size();
+            avg_diff /= static_cast<real_type>( quintic_subtype_results[i].size() );
 
             if ( max_diff > 1e-12 )
             {

@@ -391,7 +391,10 @@ void print_failure_summary( const FailureStats & stats, integer total_tests, boo
   fmt::print( "      Maximum relative error: {:.2e}\n", stats.max_error_rel );
   fmt::print( "      Total tests: {}\n", total_tests );
   fmt::print( "      Total failures: {}\n", stats.worst_failures.size() );
-  fmt::print( "      Success rate: {:.1f}%\n", 100.0 * ( total_tests - stats.worst_failures.size() ) / total_tests );
+  fmt::print(
+    "      Success rate: {:.1f}%\n",
+    100.0 * static_cast<double>( total_tests - stats.worst_failures.size() ) / static_cast<double>( total_tests )
+  );
 }
 
 // ============================================================================

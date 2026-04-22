@@ -95,7 +95,7 @@ struct DerivativeErrorStats
 
   void finalize()
   {
-    if ( points_checked > 0 ) { avg_abs_error /= points_checked; }
+    if ( points_checked > 0 ) { avg_abs_error /= static_cast<real_type>( points_checked ); }
   }
 };
 

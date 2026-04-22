@@ -256,7 +256,7 @@ template <typename SplineType> DerivativeContinuityResult test_derivative_contin
     {
       real_type sum = 0.0;
       for ( real_type j : jumps[d] ) sum += j;
-      result.avg_jumps[d] = sum / jumps[d].size();
+      result.avg_jumps[d] = sum / static_cast<real_type>( jumps[d].size() );
     }
   }
 
@@ -439,7 +439,7 @@ void print_discontinuity_details( const vector<DerivativeContinuityResult> & res
       if ( total_knots == 0 ) { fmt::print( "{:^10} ", "N/A" ); }
       else
       {
-        real_type  percentage = 100.0 * disc_points / total_knots;
+        real_type  percentage = 100.0 * static_cast<real_type>( disc_points ) / static_cast<real_type>( total_knots );
         fmt::color color      = fmt::color::green;
         if ( percentage > 0 ) color = fmt::color::yellow;
         if ( percentage > 50 ) color = fmt::color::red;
@@ -1542,7 +1542,7 @@ int main()
     }
 
     // Convert to percentages
-    for ( integer d = 0; d < 5; ++d ) { continuity_percent[d] = 100.0 * continuity_percent[d] / num_datasets; }
+    for ( integer d = 0; d < 5; ++d ) { continuity_percent[d] = 100.0 * continuity_percent[d] / static_cast<real_type>( num_datasets ); }
 
     // Determine empirical continuity class
     string empirical_class = "C⁴⁺";
@@ -1650,7 +1650,7 @@ int main()
       for ( integer d = 0; d < 5; ++d ) { avg_jumps[d] += result.avg_jumps[d]; }
     }
 
-    for ( integer d = 0; d < 5; ++d ) { avg_jumps[d] /= num_datasets; }
+    for ( integer d = 0; d < 5; ++d ) { avg_jumps[d] /= static_cast<real_type>( num_datasets ); }
 
     fmt::print( TABLE_COLOR, "│ " );
     fmt::print( fg( fmt::color::white ), "{:<22} ", subtype );

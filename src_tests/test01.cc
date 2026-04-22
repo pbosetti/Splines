@@ -640,8 +640,8 @@ template <typename SplineType> DerivativeErrors1D check_derivatives_1D(
   // Calculate averages
   auto calculate_averages = []( DerivativeErrorStats & stats )
   {
-    if ( stats.points_checked_interior > 0 ) stats.avg_abs_error_interior /= stats.points_checked_interior;
-    if ( stats.points_checked_boundary > 0 ) stats.avg_abs_error_boundary /= stats.points_checked_boundary;
+    if ( stats.points_checked_interior > 0 ) stats.avg_abs_error_interior /= static_cast<real_type>( stats.points_checked_interior );
+    if ( stats.points_checked_boundary > 0 ) stats.avg_abs_error_boundary /= static_cast<real_type>( stats.points_checked_boundary );
   };
 
   calculate_averages( errors.D );

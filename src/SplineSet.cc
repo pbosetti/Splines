@@ -73,11 +73,13 @@ namespace Splines
     }
 
     // ===================================================================
-    // FASE 4: Lettura headers (se ydata non è MAP)
+    // FASE 4: Lettura headers
     // ===================================================================
-    // Quando ydata è una mappa, le chiavi diventano i nomi delle spline.
-    // Altrimenti, gli headers devono essere forniti esplicitamente.
-    if ( GC_type::MAP != gc_ydata.get_type() )
+    // Per ydata non-MAP gli headers sono obbligatori.
+    // Per ydata come MAP gli headers sono opzionali ma, se presenti,
+    // definiscono l'ordine stabile con cui associare tipi, dati e boundary.
+    bool const has_explicit_headers = gc.exists( "headers" );
+    if ( has_explicit_headers )
     {
       GenericContainer const & gc_headers = gc( "headers", where );
       keywords.erase( "headers" );
@@ -96,6 +98,10 @@ namespace Splines
       {
         UTILS_ASSERT( !headers[spl].empty(), "{} header[{}] cannot be empty\n", where, spl );
       }
+    }
+    else if ( GC_type::MAP != gc_ydata.get_type() )
+    {
+      UTILS_ERROR( "{} missing required field 'headers'\n", where );
     }
 
     // ===================================================================
@@ -248,38 +254,59 @@ namespace Splines
           m_nspl,
           data.size() );
 
-        // In modalità MAP, gli headers vengono estratti dalle chiavi della mappa
-        headers.clear();
-        headers.reserve( data.size() );
-
         string  msg1 = where + " reading 'ydata' columns";
-        integer spl  = 0;
-
-        for ( auto const & [name, container] : data )
+        if ( headers.empty() )
         {
-          // Estrai nome dalla chiave
-          headers.emplace_back( name );
+          headers.clear();
+          headers.reserve( data.size() );
 
-          // Validazione: nome non vuoto
-          UTILS_ASSERT( !name.empty(), "{} spline name cannot be empty in ydata map\n", where );
+          integer spl = 0;
+          for ( auto const & [name, container] : data )
+          {
+            headers.emplace_back( name );
+            UTILS_ASSERT( !name.empty(), "{} spline name cannot be empty in ydata map\n", where );
 
-          // Calcola numero atteso di righe
-          integer expected_npts = m_npts;
-          if ( stype[spl] == SplineType1D::CONSTANT ) { --expected_npts; }
+            integer expected_npts = m_npts;
+            if ( stype[spl] == SplineType1D::CONSTANT ) { --expected_npts; }
 
-          container.copyto_vec_real( Y[spl], msg1 );
+            container.copyto_vec_real( Y[spl], msg1 );
 
-          // Validazione dimensione (FIXED: era "ot type")
-          UTILS_ASSERT(
-            static_cast<size_t>( expected_npts ) == Y[spl].size(),
-            "{} column '{}' of 'ydata' of type '{}' expected of size {} found of size {}\n",
-            where,
-            name,
-            spline_type_vec[spl],
-            expected_npts,
-            Y[spl].size() );
+            UTILS_ASSERT(
+              static_cast<size_t>( expected_npts ) == Y[spl].size(),
+              "{} column '{}' of 'ydata' of type '{}' expected of size {} found of size {}\n",
+              where,
+              name,
+              spline_type_vec[spl],
+              expected_npts,
+              Y[spl].size() );
 
-          ++spl;
+            ++spl;
+          }
+        }
+        else
+        {
+          for ( integer spl = 0; spl < m_nspl; ++spl )
+          {
+            string const & name = headers[spl];
+            auto const     it   = data.find( name );
+
+            UTILS_ASSERT( !name.empty(), "{} header[{}] cannot be empty\n", where, spl );
+            UTILS_ASSERT( it != data.end(), "{} column '{}' listed in 'headers' was not found in 'ydata'\n", where, name );
+
+            integer expected_npts = m_npts;
+            if ( stype[spl] == SplineType1D::CONSTANT ) { --expected_npts; }
+
+            it->second.copyto_vec_real( Y[spl], msg1 );
+
+            UTILS_ASSERT(
+              static_cast<size_t>( expected_npts ) == Y[spl].size(),
+              "{} column '{}' of 'ydata' of type '{}' expected of size {} found of size {}\n",
+              where,
+              name,
+              spline_type_vec[spl],
+              expected_npts,
+              Y[spl].size() );
+          }
         }
       }
       break;
@@ -618,7 +645,10 @@ namespace Splines
 
       // Allocazione e copia dei valori Y
       pY = m_mem( m_npts );
-      if ( npts > 0 ) std::memcpy( pY, Y[spl], npts * sizeof( *pY ) );
+      integer y_npts = npts;
+      if ( stype[spl] == SplineType1D::CONSTANT ) --y_npts;
+      if ( y_npts > 0 ) std::memcpy( pY, Y[spl], y_npts * sizeof( *pY ) );
+      if ( stype[spl] == SplineType1D::CONSTANT ) pY[npts - 1] = pY[y_npts - 1];
 
       // ---------------------------------------------------------------
       // Calcolo min/max per questa spline

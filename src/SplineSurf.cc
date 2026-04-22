@@ -240,6 +240,7 @@ namespace Splines
     keywords.erase( "ydata" );
     GenericContainer const & gc_z = gc( "zdata", where );
     keywords.erase( "zdata" );
+    keywords.erase( "spline_type" );
 
     integer nx = static_cast<integer>( gc_x.get_num_elements() );
     integer ny = static_cast<integer>( gc_y.get_num_elements() );
@@ -249,9 +250,11 @@ namespace Splines
     for ( integer i = 0; i < m_nx; ++i ) mX.coeffRef( i ) = gc_x.get_number_at( i );
     for ( integer j = 0; j < m_ny; ++j ) mY.coeffRef( j ) = gc_y.get_number_at( j );
 
-    bool fortran_storage = gc.get_map_bool( "fortran_storage", where );
+    bool fortran_storage = false;
+    gc.get_if_exists( "fortran_storage", fortran_storage );
     keywords.erase( "fortran_storage" );
-    bool transposed = gc.get_map_bool( "transposed", where );
+    bool transposed = false;
+    gc.get_if_exists( "transposed", transposed );
     keywords.erase( "transposed" );
 
     /*
@@ -318,10 +321,22 @@ namespace Splines
         m_ny,
         nz );
 
+      bool first_value = true;
       for ( integer k = 0; k < nxy; ++k )
       {
         integer         i, j;
         real_type const v = gc_z.get_number_at( k );
+        if ( first_value )
+        {
+          m_Z_min     = v;
+          m_Z_max     = v;
+          first_value = false;
+        }
+        else
+        {
+          m_Z_min = std::min( m_Z_min, v );
+          m_Z_max = std::max( m_Z_max, v );
+        }
         if ( fortran_storage )
         {
           i = k % NR;

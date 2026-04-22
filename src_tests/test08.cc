@@ -444,7 +444,7 @@ void test_json_string_constructors()
         }
 
         auto max_diff = *max_element( differences.begin(), differences.end() );
-        auto avg_diff = accumulate( differences.begin(), differences.end(), 0.0 ) / differences.size();
+        auto avg_diff = accumulate( differences.begin(), differences.end(), 0.0 ) / static_cast<double>( differences.size() );
 
         fmt::print(
           fg( Color::WARNING ),

@@ -51,6 +51,80 @@ using namespace SplinesLoad;
 
 using namespace std;  // load standard namspace
 
+namespace
+{
+  template <typename F> int
+  c_api_call_int( F const & fn ) noexcept
+  {
+    try
+    {
+      return fn();
+    }
+    catch ( ... )
+    {
+      return -1;
+    }
+  }
+
+  template <typename F> double
+  c_api_call_real( F const & fn ) noexcept
+  {
+    try
+    {
+      return fn();
+    }
+    catch ( ... )
+    {
+      return 0;
+    }
+  }
+
+  template <typename F> char const *
+  c_api_call_cstr( F const & fn ) noexcept
+  {
+    try
+    {
+      return fn();
+    }
+    catch ( ... )
+    {
+      return "ERROR";
+    }
+  }
+
+  template <typename F> void *
+  c_api_call_ptr( F const & fn ) noexcept
+  {
+    try
+    {
+      return fn();
+    }
+    catch ( ... )
+    {
+      return nullptr;
+    }
+  }
+
+  Spline *
+  make_spline( SplineType1D const type )
+  {
+    switch ( type )
+    {
+      case SplineType1D::AKIMA: return new AkimaSpline;
+      case SplineType1D::VANLEER: return new VanLeerSpline;
+      case SplineType1D::PCHIP: return new PchipSpline;
+      case SplineType1D::CUBIC: return new CubicSpline;
+      case SplineType1D::LINEAR: return new LinearSpline;
+      case SplineType1D::CONSTANT: return new ConstantSpline;
+      case SplineType1D::QUINTIC_CUBIC: return new QuinticSpline( Splines::Spline_sub_type::CUBIC );
+      case SplineType1D::QUINTIC_AKIMA: return new QuinticSpline( Splines::Spline_sub_type::AKIMA );
+      case SplineType1D::QUINTIC_VANLEER: return new QuinticSpline( Splines::Spline_sub_type::VANLEER );
+      case SplineType1D::QUINTIC_PCHIP: return new QuinticSpline( Splines::Spline_sub_type::PCHIP );
+      default: return nullptr;
+    }
+  }
+}  // namespace
+
 extern "C"
 {
   typedef std::map<std::string, Spline *> MAP_SPLINE;
@@ -60,185 +134,210 @@ extern "C"
 
   int SPLINE_new( char const id[], char const type[] )
   {
-    fmt::print( "SPLINE_new, id={} type={}\n", id, type );
-    if ( auto const it = spline_stored.find( id ); it != spline_stored.end() ) delete it->second;
-    int ok = 0;
-    switch ( Splines::string_to_splineType1D( type ) )
-    {
-      case SplineType1D::AKIMA: head = new AkimaSpline; break;
-      case SplineType1D::VANLEER: head = new VanLeerSpline; break;
-      case SplineType1D::PCHIP: head = new PchipSpline; break;
-      case SplineType1D::CUBIC: head = new CubicSpline; break;
-      case SplineType1D::LINEAR: head = new LinearSpline; break;
-      case SplineType1D::CONSTANT: head = new ConstantSpline; break;
-      case SplineType1D::QUINTIC_CUBIC: head = new QuinticSpline( Splines::Spline_sub_type::CUBIC ); break;
-      case SplineType1D::QUINTIC_AKIMA: head = new QuinticSpline( Splines::Spline_sub_type::AKIMA ); break;
-      case SplineType1D::QUINTIC_VANLEER: head = new QuinticSpline( Splines::Spline_sub_type::VANLEER ); break;
-      case SplineType1D::QUINTIC_PCHIP: head = new QuinticSpline( Splines::Spline_sub_type::PCHIP ); break;
-      default:
-        head = nullptr;
-        ok   = -1;
-        break;
-    }
-    spline_stored[id] = head;
-    return ok;
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( id == nullptr || type == nullptr ) return -1;
+
+        if ( auto const it = spline_stored.find( id ); it != spline_stored.end() )
+        {
+          if ( head == it->second ) head = nullptr;
+          delete it->second;
+          spline_stored.erase( it );
+        }
+
+        Spline * spline = make_spline( Splines::string_to_splineType1D( type ) );
+        if ( spline == nullptr ) return -1;
+
+        head             = spline;
+        spline_stored[id] = spline;
+        return 0;
+      } );
   }
 
   int SPLINE_select( char const id[] )
   {
-    if ( auto const it = spline_stored.find( id ); it != spline_stored.end() ) { head = it->second; }
-    else
-    {
-      return -1;  // spline non trovata
-    }
-    return 0;
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( id == nullptr ) return -1;
+        if ( auto const it = spline_stored.find( id ); it != spline_stored.end() )
+        {
+          head = it->second;
+          return 0;
+        }
+        return -1;
+      } );
   }
 
   int SPLINE_delete( char const id[] )
   {
-    if ( auto const it = spline_stored.find( id ); it != spline_stored.end() )
-    {
-      delete it->second;
-      spline_stored.erase( it );
-      head = nullptr;
-    }
-    else
-    {
-      return -1;  // spline non trovata
-    }
-    return 0;
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( id == nullptr ) return -1;
+        if ( auto const it = spline_stored.find( id ); it != spline_stored.end() )
+        {
+          if ( head == it->second ) head = nullptr;
+          delete it->second;
+          spline_stored.erase( it );
+          return 0;
+        }
+        return -1;
+      } );
   }
 
   int SPLINE_print()
   {
-    if ( head != nullptr )
-    {
-      head->write_to_stream( cout );
-      return 0;
-    }
-    else
-    {
-      cout << "No Spline!\n";
-      return -1;
-    }
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( head != nullptr )
+        {
+          head->write_to_stream( cout );
+          return 0;
+        }
+        cout << "No Spline!\n";
+        return -1;
+      } );
   }
 
   char const * SPLINE_get_type_name()
   {
-    if ( head == nullptr ) return "NOTYPE - head = nullptr";
-    return head->type_name();
+    return c_api_call_cstr(
+      [&]() -> char const *
+      {
+        if ( head == nullptr ) return "NOTYPE - head = nullptr";
+        return head->type_name();
+      } );
   }
 
   void * SPLINE_mem_ptr( char const id[] )
   {
-    // check if exists ?
-    return static_cast<void *>( &spline_stored[id] );
+    return c_api_call_ptr(
+      [&]() -> void *
+      {
+        if ( id == nullptr ) return nullptr;
+        if ( auto const it = spline_stored.find( id ); it != spline_stored.end() )
+          return static_cast<void *>( it->second );
+        return nullptr;
+      } );
   }
 
   int SPLINE_init()
   {
-    if ( head != nullptr )
-    {
-      head->clear();
-      return 0;
-    }
-    else
-    {
-      return -1;
-    }
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( head != nullptr )
+        {
+          head->clear();
+          return 0;
+        }
+        return -1;
+      } );
   }
 
   int SPLINE_push( double const x, double const y )
   {
-    if ( head != nullptr )
-    {
-      head->push_back( x, y );
-      return 0;
-    }
-    else
-    {
-      return -1;
-    }
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( head != nullptr )
+        {
+          head->push_back( x, y );
+          return 0;
+        }
+        return -1;
+      } );
   }
 
   int SPLINE_build()
   {
-    if ( head != nullptr )
-    {
-      head->build();
-      return 0;
-    }
-    else
-    {
-      return -1;
-    }
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( head != nullptr )
+        {
+          head->build();
+          return 0;
+        }
+        return -1;
+      } );
   }
 
   int SPLINE_build2( double const x[], double const y[], int const n )
   {
-    if ( head != nullptr )
-    {
-      head->build( x, y, n );
-      return 0;
-    }
-    else
-    {
-      return -1;
-    }
+    return c_api_call_int(
+      [&]() -> int
+      {
+        if ( head != nullptr )
+        {
+          head->build( x, y, n );
+          return 0;
+        }
+        return -1;
+      } );
   }
 
   double SPLINE_eval( double const x )
   {
-    if ( head != nullptr ) { return head->eval( x ); }
-    else
-    {
-      return 0;
-    }
+    return c_api_call_real(
+      [&]() -> double
+      {
+        if ( head != nullptr ) return head->eval( x );
+        return 0;
+      } );
   }
 
   double SPLINE_eval_D( double const x )
   {
-    if ( head != nullptr ) { return head->D( x ); }
-    else
-    {
-      return 0;
-    }
+    return c_api_call_real(
+      [&]() -> double
+      {
+        if ( head != nullptr ) return head->D( x );
+        return 0;
+      } );
   }
 
   double SPLINE_eval_DD( double const x )
   {
-    if ( head != nullptr ) { return head->DD( x ); }
-    else
-    {
-      return 0;
-    }
+    return c_api_call_real(
+      [&]() -> double
+      {
+        if ( head != nullptr ) return head->DD( x );
+        return 0;
+      } );
   }
 
   double SPLINE_eval_DDD( double const x )
   {
-    if ( head != nullptr ) { return head->DDD( x ); }
-    else
-    {
-      return 0;
-    }
+    return c_api_call_real(
+      [&]() -> double
+      {
+        if ( head != nullptr ) return head->DDD( x );
+        return 0;
+      } );
   }
 
   double SPLINE_eval_DDDD( double const x )
   {
-    if ( head != nullptr ) { return head->DDDD( x ); }
-    else
-    {
-      return 0;
-    }
+    return c_api_call_real(
+      [&]() -> double
+      {
+        if ( head != nullptr ) return head->DDDD( x );
+        return 0;
+      } );
   }
 
   double SPLINE_eval_DDDDD( double const x )
   {
-    if ( head != nullptr ) { return head->DDDDD( x ); }
-    else
-    {
-      return 0;
-    }
+    return c_api_call_real(
+      [&]() -> double
+      {
+        if ( head != nullptr ) return head->DDDDD( x );
+        return 0;
+      } );
   }
 }
 

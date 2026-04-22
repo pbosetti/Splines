@@ -1117,7 +1117,7 @@ namespace Splines
     double len = 0;
     for ( mwSize i{ 1 }; i <= 100; ++i )
     {
-      double t = ( i * H ) / 100;
+      double t = ( static_cast<double>( i ) * H ) / 100.0;
       Hermite3( t, H, A );
       double dst2 = 0;
       for ( mwSize j{ 0 }; j < nr1; ++j )

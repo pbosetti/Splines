@@ -292,6 +292,7 @@ namespace Splines
     {
       m_surf0.build( tp0, z0, nx0, ny0, fortran_storage0, transposed0 );
       m_surf1.build( tp1, z1, nx1, ny1, fortran_storage1, transposed1 );
+      check_compatibility();
     }
 
     //!
@@ -356,7 +357,7 @@ namespace Splines
       real_type const s ) const
     {
       autodiff::HigherOrderDual<autodiff::detail::DualOrder<T1, T2>::value, real_type> X{ x }, Y{ y };
-      return ( 1 - s ) * m_surf0.eval( X, Y, s ) + s * m_surf1.eval( X, Y, s );
+      return ( 1 - s ) * m_surf0.eval( X, Y ) + s * m_surf1.eval( X, Y );
     }
 #endif
 

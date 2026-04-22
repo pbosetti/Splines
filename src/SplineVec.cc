@@ -504,12 +504,14 @@ namespace Splines
     for ( auto const & pair : gc.get_map( where ) ) { keywords.insert( pair.first ); }
 
     GenericContainer const & data = gc( "data", where );
+    keywords.erase( "data" );
 
     mat_real_type Y;
     data.copyto_mat_real( Y, where );
 
     bool transposed = false;
     gc.get_if_exists( "transposed", transposed );
+    keywords.erase( "transposed" );
 
     if ( transposed )
     {
