@@ -175,6 +175,24 @@ namespace Splines
 #endif
 
     void write_to_stream( ostream_type & s ) const override;
+    void export_csv( ostream_type & s ) const;
+    void export_csv( string_view fname ) const
+    {
+      std::ofstream file( fname.data() );
+      this->export_csv( file );
+    }
+    void export_json( ostream_type & s ) const;
+    void export_json( string_view fname ) const
+    {
+      std::ofstream file( fname.data() );
+      this->export_json( file );
+    }
+    void export_yaml( ostream_type & s ) const;
+    void export_yaml( string_view fname ) const
+    {
+      std::ofstream file( fname.data() );
+      this->export_yaml( file );
+    }
 
     // --------------------------- VIRTUALS -----------------------------------
 

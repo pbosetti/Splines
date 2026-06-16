@@ -31,7 +31,25 @@ if ( NOT DEFINED CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE Release )
 endif()
 
-set(Matlab_ROOT_DIR "/Applications/MATLAB_R2025b.app")
+if ( NOT Matlab_ROOT_DIR AND DEFINED ENV{Matlab_ROOT_DIR} AND NOT "$ENV{Matlab_ROOT_DIR}" STREQUAL "" )
+  set( Matlab_ROOT_DIR "$ENV{Matlab_ROOT_DIR}" )
+endif()
+
+if ( APPLE AND NOT Matlab_ROOT_DIR )
+  file( GLOB MATLAB_APP_BUNDLES "/Applications/MATLAB_R*.app" )
+  if ( MATLAB_APP_BUNDLES )
+    list( SORT MATLAB_APP_BUNDLES ORDER DESCENDING )
+    list( GET MATLAB_APP_BUNDLES 0 Matlab_ROOT_DIR )
+  endif()
+endif()
+
+if ( Matlab_ROOT_DIR )
+  set( Matlab_ROOT_DIR "${Matlab_ROOT_DIR}" CACHE PATH "MATLAB root directory" FORCE )
+  message( STATUS "Using Matlab_ROOT_DIR = ${Matlab_ROOT_DIR}" )
+else()
+  message( STATUS "Matlab_ROOT_DIR not preset, relying on CMake autodetection" )
+endif()
+
 find_package( Matlab REQUIRED COMPONENTS MX_LIBRARY MEX_LIBRARY MAIN_PROGRAM )
 
 # Aggiunge le directory di include di MATLAB

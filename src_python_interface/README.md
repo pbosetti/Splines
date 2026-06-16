@@ -1,51 +1,118 @@
 # Python Wrapper
 
-The python wrapper is one to one with the Splines library. 
+The Python wrapper exposes the Splines C++ library through `pybind11`.
 
-## Requirements
+These instructions are for the `src_python_interface` directory and use
+**Conda** for Python, CMake, compiler toolchain, and `pybind11`.
 
-The wrapper uses the Github version of `pybind11`, and it is not compatible with 
-the `pip` version (that lacks cmake support).
+## Requirements
 
-In order to compile `pybind11` (commands valid on a Unix machine, Win version should
-apply some minor modifications):
+Install Miniconda or Miniforge. On macOS, for example:
 
-``` bash
-export PYTHON_TARGET=/usr/bin/python3 # or /usr/bin/python2 for py2 version
-git clone https://github.com/pybind/pybind11.git
-cd pybind11
-mkdir build && cd build
-cmake -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON_TARGET ..
-sudo make install -j8
+```bash
+brew install --cask miniconda
+conda init "$(basename "${SHELL}")"
 ```
 
-## Compile the wrapper
+Then restart the terminal.
 
-It is possible to compile the wrapper for both python 2 and 3. In order to compile
-the wrapper:
+## Create the Conda environment
 
-``` bash
-export PYTHON_TARGET=/usr/bin/python3 # or /usr/bin/python2 for py2 version
-cd src_py
-mkdir build && cd build
-cmake -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON_TARGET ..
-make install -j8
+From `src_python_interface`:
+
+```bash
+conda env create -f environment.yml
+conda activate splines-py
 ```
 
-The shared object to be imported in python is stored in `{splines_dir}/lib/lib/Splines.{ext}`,
-near the Splines static library.
+Check that the environment is coherent:
+
+```bash
+python --version
+cmake --version
+python -c "import pybind11; print(pybind11.get_cmake_dir())"
+```
+
+## Configure and build
+
+The wrapper CMakeLists uses modern `FindPython`, so the important variable is
+`Python_EXECUTABLE`.
+
+From `src_python_interface`:
+
+```bash
+rm -rf build
+
+cmake -S . -B build \
+  -DPython_EXECUTABLE:FILEPATH="${CONDA_PREFIX}/bin/python"
+
+cmake --build build --parallel
+cmake --install build
+```
+
+The installed module is written to:
+
+```text
+../lib/lib/Splines.{ext}
+```
+
+On macOS, for example:
+
+```text
+../lib/lib/Splines.cpython-312-darwin.so
+```
+
+## If CMake picks the wrong Python or cannot find pybind11
+
+On some systems CMake may resolve the base Conda interpreter instead of the
+active environment. In that case configure explicitly with:
+
+```bash
+cmake -S . -B build \
+  -DPython_EXECUTABLE:FILEPATH="${CONDA_PREFIX}/bin/python" \
+  -DPython_ROOT_DIR:PATH="${CONDA_PREFIX}" \
+  -DPython_FIND_VIRTUALENV=ONLY \
+  -Dpybind11_DIR:PATH="$(python -c 'import pybind11; print(pybind11.get_cmake_dir())')"
+```
+
+## Test the wrapper
+
+After the build:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+Or run the smoke test directly against the installed module:
+
+```bash
+python test_splines.py --module-dir ./../lib/lib
+```
+
+You can also test the module directly from the build directory before install:
+
+```bash
+python test_splines.py --module-dir ./build
+```
 
 ## Usage
 
-In python:
+In Python:
 
-``` python
+```python
 import sys
-sys.path.insert(0, "{splines_dir}/lib/lib")
+sys.path.insert(0, "../lib/lib")
 
 import Splines
 
 help(Splines)
 ```
 
-The wrapper wraps one to one the original C++ library, the same interface should be expected.
+The wrapper follows the current C++ API. For example, the monotone cubic
+variant exposed in Python is `VanLeerSpline`.
+
+## Notes
+
+- `libSplines_*` depends on `libquarticRootsFlocke_*`, and the wrapper links it automatically through CMake.
+- If you switch Python environments, remove `build` and reconfigure.
+- Do not install `pybind11` manually from GitHub unless you explicitly need a custom upstream revision.

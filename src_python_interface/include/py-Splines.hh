@@ -9,6 +9,7 @@
 #define PY_SPLINES_HH
 
 #include <string>
+#include <vector>
 
 #include <Splines.hh>
 #include <pybind11/pybind11.h>
@@ -30,7 +31,7 @@ namespace pySpline
   class PythonicSpline : public Spline
   {
   public:
-    PythonicSpline( string_view name = "Spline" ) : Spline( name ) {}
+    PythonicSpline( std::string const & name = "Spline" ) : Spline( name ) {}
 
     void reserve( integer npts ) override { PYBIND11_OVERLOAD_PURE( void, Spline, reserve, npts ); }
 
@@ -38,14 +39,11 @@ namespace pySpline
 
     void setup( GenericContainer const & gc ) override { PYBIND11_OVERLOAD_PURE( void, Spline, setup, gc ); }
 
-    void build( real_type const x[], integer incx, real_type const y[], integer incy, integer n ) override
-    { PYBIND11_OVERLOAD_PURE( void, Spline, build, x, incx, y, incy, n ); }
-
     void clear() override { PYBIND11_OVERLOAD_PURE( void, Spline, clear ); }
 
-    unsigned type() const override { PYBIND11_OVERLOAD_PURE( unsigned, Spline, type ); }
+    Splines::SplineType1D type() const override { PYBIND11_OVERLOAD_PURE( Splines::SplineType1D, Spline, type ); }
 
-    real_type operator()( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, operator(), x ); }
+    real_type eval( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, eval, x ); }
 
     real_type D( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, D, x ); }
 
@@ -56,6 +54,18 @@ namespace pySpline
     real_type DDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DDDD, x ); }
 
     real_type DDDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, DDDDD, x ); }
+
+    void D( real_type x, real_type dd[2] ) const override { PYBIND11_OVERLOAD_PURE( void, Spline, D, x, dd ); }
+
+    void DD( real_type x, real_type dd[3] ) const override { PYBIND11_OVERLOAD_PURE( void, Spline, DD, x, dd ); }
+
+    real_type id_eval( integer ni, real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, id_eval, ni, x ); }
+
+    real_type id_D( integer ni, real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, id_D, ni, x ); }
+
+    real_type id_DD( integer ni, real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, id_DD, ni, x ); }
+
+    real_type id_DDD( integer ni, real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, Spline, id_DDD, ni, x ); }
 
     integer coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const override
     { PYBIND11_OVERLOAD_PURE( integer, Spline, coeffs, cfs, nodes, transpose ); }

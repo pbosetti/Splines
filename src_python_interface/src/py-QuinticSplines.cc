@@ -15,6 +15,7 @@ namespace pySpline
 
   using Splines::integer;
   using Splines::real_type;
+  using Splines::Spline_sub_type;
 
   using Splines::QuinticSpline;
   using Splines::QuinticSplineBase;
@@ -33,7 +34,7 @@ namespace pySpline
   {
     py::class_<QuinticSpline, QuinticSplineBase>( m, "QuinticSpline" )
       .def( py::init<std::string const &>(), py::arg( "name" ) = "QuinticSpline" )
-      .def( "setQuinticType", &QuinticSpline::setQuinticType );
+      .def( py::init<Spline_sub_type, std::string const &>(), py::arg( "type" ), py::arg( "name" ) = "QuinticSpline" );
   }
 
 }  // namespace pySpline

@@ -31,6 +31,59 @@
 
 namespace Splines
 {
+  namespace
+  {
+    void
+    fill_quintic_export_data( QuinticSplineBase const & spline, GenericContainer & gc )
+    {
+      integer const nseg = spline.num_points() > 0 ? spline.num_points() - 1 : 0;
+
+      auto & root = gc.set_map();
+      root["name"].set_string( spline.name() );
+      root["spline_type"].set_string( spline.type_name() );
+      root["polynomial_order"].set_int( 5 );
+      root["num_points"].set_int( spline.num_points() );
+      root["num_segments"].set_int( nseg );
+      root["closed"].set_bool( spline.is_closed() );
+      root["cyclic"].set_bool( spline.is_closed() );
+      root["bounded"].set_bool( spline.is_bounded() );
+      root["can_extend"].set_bool( !spline.is_bounded() );
+      root["extended_constant"].set_bool( spline.is_extended_constant() );
+      if ( spline.num_points() > 0 )
+      {
+        root["xmin"].set_real( spline.x_min() );
+        root["xmax"].set_real( spline.x_max() );
+      }
+      else
+      {
+        root["xmin"].set_real( 0 );
+        root["xmax"].set_real( 0 );
+      }
+
+      auto & segments = root["segments"].set_vector( static_cast<unsigned>( nseg ) );
+      if ( nseg <= 0 ) return;
+
+      std::vector<real_type> coeffs( static_cast<size_t>( 6 * nseg ) );
+      std::vector<real_type> nodes( static_cast<size_t>( spline.num_points() ) );
+      spline.coeffs( coeffs.data(), nodes.data(), true );
+
+      for ( integer i = 0; i < nseg; ++i )
+      {
+        auto & seg = segments[static_cast<unsigned>( i )].set_map();
+        seg["index"].set_int( i );
+        seg["x"].set_real( nodes[static_cast<size_t>( i )] );
+        seg["x_next"].set_real( nodes[static_cast<size_t>( i + 1 )] );
+        seg["h"].set_real( nodes[static_cast<size_t>( i + 1 )] - nodes[static_cast<size_t>( i )] );
+        seg["a"].set_real( coeffs[static_cast<size_t>( 6 * i + 0 )] );
+        seg["b"].set_real( coeffs[static_cast<size_t>( 6 * i + 1 )] );
+        seg["c"].set_real( coeffs[static_cast<size_t>( 6 * i + 2 )] );
+        seg["d"].set_real( coeffs[static_cast<size_t>( 6 * i + 3 )] );
+        seg["e"].set_real( coeffs[static_cast<size_t>( 6 * i + 4 )] );
+        seg["f"].set_real( coeffs[static_cast<size_t>( 6 * i + 5 )] );
+      }
+    }
+  }  // namespace
+
 
   void QuinticSplineBase::copy_spline( QuinticSplineBase const & S )
   {
@@ -226,6 +279,58 @@ namespace Splines
         m_Ypp[i],
         m_Ypp[i + 1],
         ( m_Y[i + 1] - m_Y[i] ) / ( m_X[i + 1] - m_X[i] ) );
+  }
+
+  void QuinticSplineBase::export_csv( ostream_type & s ) const
+  {
+    fmt::print( s, "x,a,b,c,d,e,f\n" );
+
+    if ( m_npts <= 0 ) return;
+
+    integer const nseg = m_npts > 0 ? m_npts - 1 : 0;
+    if ( nseg > 0 )
+    {
+      std::vector<real_type> coeffs( static_cast<size_t>( 6 * nseg ) );
+      std::vector<real_type> nodes( static_cast<size_t>( m_npts ) );
+      this->coeffs( coeffs.data(), nodes.data(), true );
+
+      for ( integer i = 0; i < nseg; ++i )
+        fmt::print(
+          s,
+          "{:.17g},{:.17g},{:.17g},{:.17g},{:.17g},{:.17g},{:.17g}\n",
+          nodes[static_cast<size_t>( i )],
+          coeffs[static_cast<size_t>( 6 * i + 0 )],
+          coeffs[static_cast<size_t>( 6 * i + 1 )],
+          coeffs[static_cast<size_t>( 6 * i + 2 )],
+          coeffs[static_cast<size_t>( 6 * i + 3 )],
+          coeffs[static_cast<size_t>( 6 * i + 4 )],
+          coeffs[static_cast<size_t>( 6 * i + 5 )] );
+    }
+
+    fmt::print(
+      s,
+      "{:.17g},{:.17g},{:.17g},{:.17g},{:.17g},{:.17g},{:.17g}\n",
+      m_X[m_npts - 1],
+      m_Y[m_npts - 1],
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0 );
+  }
+
+  void QuinticSplineBase::export_json( ostream_type & s ) const
+  {
+    GenericContainer gc;
+    fill_quintic_export_data( *this, gc );
+    gc.to_json( s );
+  }
+
+  void QuinticSplineBase::export_yaml( ostream_type & s ) const
+  {
+    GenericContainer gc;
+    fill_quintic_export_data( *this, gc );
+    gc.to_yaml( s );
   }
 
   void QuinticSplineBase::set_range( real_type const xmin, real_type const xmax )

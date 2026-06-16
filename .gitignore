@@ -88,3 +88,7 @@ toolbox/cmake-build-debug
 /Xcode
 toolbox/bin
 .cache
+doc_quintic/*.aux
+doc_quintic/*.out
+doc_quintic/*.toc
+doc_quintic/*.pdf

@@ -32,8 +32,8 @@ namespace pySpline
   {
     py::class_<CubicSpline, CubicSplineBase>( m, "CubicSpline" )
       .def( py::init<std::string const &>(), py::arg( "name" ) = "CubicSpline" )
-      .def( "setInitialBC", &CubicSpline::setInitialBC )
-      .def( "setFinalBC", &CubicSpline::setFinalBC );
+      .def( "set_initial_BC", &CubicSpline::set_initial_BC )
+      .def( "set_final_BC", &CubicSpline::set_final_BC );
   }
 
 }  // namespace pySpline

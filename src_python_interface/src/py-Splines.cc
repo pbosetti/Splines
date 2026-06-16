@@ -9,7 +9,7 @@
 #include "py-CubicSplines.hh"
 #include "py-ConstantSplines.hh"
 #include "py-AkimaSplines.hh"
-#include "py-BesselSplines.hh"
+#include "py-VanLeerSplines.hh"
 #include "py-HermiteSplines.hh"
 #include "py-LinearSplines.hh"
 #include "py-PchipSplines.hh"
@@ -23,9 +23,9 @@ namespace pySpline
   using Splines::integer;
   using Splines::real_type;
 
-  using Splines::CUBIC_SPLINE_TYPE_BC;
-  using Splines::QUINTIC_SPLINE_TYPE;
+  using Splines::CubicSpline_BC;
   using Splines::Spline;
+  using Splines::Spline_sub_type;
   using Splines::SplineType1D;
   using Splines::SplineType2D;
 
@@ -38,9 +38,12 @@ namespace pySpline
       .value( "LINEAR_TYPE", SplineType1D::LINEAR )
       .value( "CUBIC_TYPE", SplineType1D::CUBIC )
       .value( "AKIMA_TYPE", SplineType1D::AKIMA )
-      .value( "BESSEL_TYPE", SplineType1D::BESSEL )
+      .value( "VANLEER_TYPE", SplineType1D::VANLEER )
       .value( "PCHIP_TYPE", SplineType1D::PCHIP )
-      .value( "QUINTIC_TYPE", SplineType1D::QUINTIC )
+      .value( "QUINTIC_CUBIC_TYPE", SplineType1D::QUINTIC_CUBIC )
+      .value( "QUINTIC_AKIMA_TYPE", SplineType1D::QUINTIC_AKIMA )
+      .value( "QUINTIC_VANLEER_TYPE", SplineType1D::QUINTIC_VANLEER )
+      .value( "QUINTIC_PCHIP_TYPE", SplineType1D::QUINTIC_PCHIP )
       .value( "HERMITE_TYPE", SplineType1D::HERMITE )
       .value( "SPLINE_SET_TYPE", SplineType1D::SPLINE_SET )
       .value( "SPLINE_VEC_TYPE", SplineType1D::SPLINE_VEC )
@@ -48,27 +51,31 @@ namespace pySpline
 
     py::enum_<SplineType2D>( m, "SplineType2D" )
       .value( "BILINEAR_TYPE", SplineType2D::BILINEAR )
-      .value( "BICUBIC_TYPE", SplineType2D::BICUBIC )
-      .value( "BIQUINTIC_TYPE", SplineType2D::BIQUINTIC )
-      .value( "AKIMA2D_TYPE", SplineType2D::AKIMA2D )
+      .value( "BICUBIC_CUBIC_TYPE", SplineType2D::BICUBIC_CUBIC )
+      .value( "BICUBIC_AKIMA_TYPE", SplineType2D::BICUBIC_AKIMA )
+      .value( "BICUBIC_VANLEER_TYPE", SplineType2D::BICUBIC_VANLEER )
+      .value( "BICUBIC_PCHIP_TYPE", SplineType2D::BICUBIC_PCHIP )
+      .value( "BIQUINTIC_CUBIC_TYPE", SplineType2D::BIQUINTIC_CUBIC )
+      .value( "BIQUINTIC_AKIMA_TYPE", SplineType2D::BIQUINTIC_AKIMA )
+      .value( "BIQUINTIC_VANLEER_TYPE", SplineType2D::BIQUINTIC_VANLEER )
+      .value( "BIQUINTIC_PCHIP_TYPE", SplineType2D::BIQUINTIC_PCHIP )
       .export_values();
 
-    py::enum_<CUBIC_SPLINE_TYPE_BC>( m, "CUBIC_SPLINE_TYPE_BC" )
-      .value( "EXTRAPOLATE_BC", CubicSpline_BC:: ::EXTRAPOLATE )
-      .value( "NATURAL_BC", CubicSpline_BC:: ::NATURAL )
-      .value( "PARABOLIC_RUNOUT_BC", CubicSpline_BC:: ::PARABOLIC_RUNOUT )
-      .value( "NOT_A_KNOT", CubicSpline_BC:: ::NOT_A_KNOT )
+    py::enum_<CubicSpline_BC>( m, "CubicSpline_BC" )
+      .value( "EXTRAPOLATE", CubicSpline_BC::EXTRAPOLATE )
+      .value( "NATURAL", CubicSpline_BC::NATURAL )
+      .value( "PARABOLIC_RUNOUT", CubicSpline_BC::PARABOLIC_RUNOUT )
+      .value( "NOT_A_KNOT", CubicSpline_BC::NOT_A_KNOT )
       .export_values();
 
-    py::enum_<QUINTIC_SPLINE_TYPE>( m, "QUINTIC_SPLINE_TYPE" )
-      .value( "CUBIC_QUINTIC", QuinticSpline_sub_type::CUBIC )
-      .value( "PCHIP_QUINTIC", QuinticSpline_sub_type::PCHIP )
-      .value( "AKIMA_QUINTIC", QuinticSpline_sub_type::AKIMA )
-      .value( "BESSEL_QUINTIC", QuinticSpline_sub_type::BESSEL )
+    py::enum_<Spline_sub_type>( m, "Spline_sub_type" )
+      .value( "CUBIC", Spline_sub_type::CUBIC )
+      .value( "PCHIP", Spline_sub_type::PCHIP )
+      .value( "AKIMA", Spline_sub_type::AKIMA )
+      .value( "VANLEER", Spline_sub_type::VANLEER )
       .export_values();
 
     py::class_<Spline, PythonicSpline>( m, "Spline" )
-      .def( py::init<std::string const &>(), py::arg( "name" ) = "Spline" )
       .def( "name", &Spline::name )
       .def( "is_closed", &Spline::is_closed )
       .def( "make_closed", &Spline::make_closed )
@@ -86,10 +93,10 @@ namespace pySpline
       .def( "reserve", &Spline::reserve )
       .def( "push_back", &Spline::push_back )
       .def( "drop_back", &Spline::drop_back )
-      .def( "build", py::overload_cast<>( &Spline::build ) )
+      .def( "build", []( Spline & self ) { self.build(); } )
       .def(
         "build",
-        py::overload_cast<std::vector<real_type> const &, std::vector<real_type> const &>( &Spline::build ) )
+        []( Spline & self, std::vector<real_type> const & x, std::vector<real_type> const & y ) { self.build( x, y ); } )
       .def( "clear", &Spline::clear )
       .def( "x_min", &Spline::x_min )
       .def( "x_max", &Spline::x_max )
@@ -98,13 +105,13 @@ namespace pySpline
       .def( "type", &Spline::type )
       .def( "set_origin", &Spline::set_origin )
       .def( "set_range", &Spline::set_range )
-      .def( "__call__", &Spline::operator() )
-      .def( "D", &Spline::D )
-      .def( "DD", &Spline::DD )
+      .def( "__call__", []( Spline const & self, real_type x ) { return self( x ); } )
+      .def( "D", []( Spline const & self, real_type x ) { return self.D( x ); } )
+      .def( "DD", []( Spline const & self, real_type x ) { return self.DD( x ); } )
       .def( "DDD", &Spline::DDD )
       .def( "DDDD", &Spline::DDDD )
       .def( "DDDDD", &Spline::DDDDD )
-      .def( "eval", &Spline::eval )
+      .def( "eval", []( Spline const & self, real_type x ) { return self.eval( x ); } )
       .def( "eval_D", &Spline::eval_D )
       .def( "eval_DD", &Spline::eval_DD )
       .def( "eval_DDD", &Spline::eval_DDD )
@@ -123,7 +130,7 @@ namespace pySpline
         },
         py::arg( "transpose" ) = false )
       .def( "order", &Spline::order )
-      .def( "typre_name", &Spline::type_name )
+      .def( "type_name", &Spline::type_name )
       .def(
         "__str__",
         []( const Spline & self ) -> std::string
@@ -245,7 +252,7 @@ PYBIND11_MODULE( Splines, m )
   pySpline::python_register_cubic_splines_class( m );
   pySpline::python_register_constant_splines_class( m );
   pySpline::python_register_akima_splines_class( m );
-  pySpline::python_register_bessel_splines_class( m );
+  pySpline::python_register_vanleer_splines_class( m );
   pySpline::python_register_hermite_splines_class( m );
   pySpline::python_register_linear_splines_class( m );
   pySpline::python_register_pchip_splines_class( m );

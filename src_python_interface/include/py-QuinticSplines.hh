@@ -8,6 +8,8 @@
 #ifndef PY_QUINTIC_SPLINES_HH
 #define PY_QUINTIC_SPLINES_HH
 
+#include <string>
+
 #include <Splines.hh>
 #include <pybind11/pybind11.h>
 
@@ -24,37 +26,51 @@ namespace pySpline
   class PythonicQuinticSplineBase : public QuinticSplineBase
   {
   public:
-    PythonicQuinticSplineBase string_view name = "QuinticSplineBase" ) : QuinticSplineBase(name) {}
+    PythonicQuinticSplineBase( std::string const & name = "QuinticSplineBase" )
+    : QuinticSplineBase( Splines::Spline_sub_type::PCHIP, name ) {}
 
-    real_type operator()( real_type x ) const override
-    { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, operator(), x ); }
+    real_type eval( real_type x ) const override { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, eval, x ); }
 
-    real_type D( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, D, x ); }
+    real_type D( real_type x ) const override { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, D, x ); }
 
-    real_type DD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, DD, x ); }
+    real_type DD( real_type x ) const override { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, DD, x ); }
 
-    real_type DDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, DDD, x ); }
+    real_type DDD( real_type x ) const override { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, DDD, x ); }
 
-    real_type DDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, DDDD, x ); }
+    real_type DDDD( real_type x ) const override { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, DDDD, x ); }
 
-    real_type DDDDD( real_type x ) const override { PYBIND11_OVERLOAD_PURE( real_type, QuinticSplineBase, DDDDD, x ); }
+    real_type DDDDD( real_type x ) const override { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, DDDDD, x ); }
 
     integer coeffs( real_type cfs[], real_type nodes[], bool transpose = false ) const override
-    { PYBIND11_OVERLOAD_PURE( integer, QuinticSplineBase, coeffs, cfs, nodes, transpose ); }
+    { PYBIND11_OVERLOAD( integer, QuinticSplineBase, coeffs, cfs, nodes, transpose ); }
 
-    integer order() const override { PYBIND11_OVERLOAD_PURE( integer, QuinticSplineBase, order ); }
+    integer order() const override { PYBIND11_OVERLOAD( integer, QuinticSplineBase, order ); }
 
     void write_to_stream( ostream_type & s ) const override
-    { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, write_to_stream, s ); }
+    { PYBIND11_OVERLOAD( void, QuinticSplineBase, write_to_stream, s ); }
 
-    unsigned type() const override { PYBIND11_OVERLOAD_PURE( unsigned, QuinticSplineBase, type ); }
+    Splines::SplineType1D type() const override
+    { PYBIND11_OVERLOAD( Splines::SplineType1D, QuinticSplineBase, type ); }
 
-    void build( real_type const x[], integer incx, real_type const y[], integer incy, integer n ) override
-    { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, build, x, incx, y, incy, n ); }
-
-    void reserve( integer npts ) override { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, reserve, npts ); }
+    void reserve( integer npts ) override { PYBIND11_OVERLOAD( void, QuinticSplineBase, reserve, npts ); }
 
     void build() override { PYBIND11_OVERLOAD_PURE( void, QuinticSplineBase, build ); }
+
+    void D( real_type x, real_type dd[2] ) const override { PYBIND11_OVERLOAD( void, QuinticSplineBase, D, x, dd ); }
+
+    void DD( real_type x, real_type dd[3] ) const override { PYBIND11_OVERLOAD( void, QuinticSplineBase, DD, x, dd ); }
+
+    real_type id_eval( integer ni, real_type x ) const override
+    { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, id_eval, ni, x ); }
+
+    real_type id_D( integer ni, real_type x ) const override
+    { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, id_D, ni, x ); }
+
+    real_type id_DD( integer ni, real_type x ) const override
+    { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, id_DD, ni, x ); }
+
+    real_type id_DDD( integer ni, real_type x ) const override
+    { PYBIND11_OVERLOAD( real_type, QuinticSplineBase, id_DDD, ni, x ); }
   };
 
   void python_register_quintic_splines_base_class( module & m );
@@ -62,4 +78,4 @@ namespace pySpline
 
 }  // namespace pySpline
 
-#endif /* PY_CUBIC_SPLINES_HH */
+#endif /* PY_QUINTIC_SPLINES_HH */

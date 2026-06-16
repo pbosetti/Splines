@@ -31,6 +31,60 @@
 
 namespace Splines
 {
+  namespace
+  {
+    void
+    fill_cubic_export_data( CubicSplineBase const & spline, GenericContainer & gc )
+    {
+      integer const nseg = spline.num_points() > 0 ? spline.num_points() - 1 : 0;
+
+      auto & root = gc.set_map();
+      root["name"].set_string( spline.name() );
+      root["spline_type"].set_string( spline.type_name() );
+      root["polynomial_order"].set_int( 3 );
+      root["num_points"].set_int( spline.num_points() );
+      root["num_segments"].set_int( nseg );
+      root["closed"].set_bool( spline.is_closed() );
+      root["cyclic"].set_bool( spline.is_closed() );
+      root["bounded"].set_bool( spline.is_bounded() );
+      root["can_extend"].set_bool( !spline.is_bounded() );
+      root["extended_constant"].set_bool( spline.is_extended_constant() );
+      if ( spline.num_points() > 0 )
+      {
+        root["xmin"].set_real( spline.x_min() );
+        root["xmax"].set_real( spline.x_max() );
+      }
+      else
+      {
+        root["xmin"].set_real( 0 );
+        root["xmax"].set_real( 0 );
+      }
+
+      auto & segments = root["segments"].set_vector( static_cast<unsigned>( nseg ) );
+      if ( nseg <= 0 ) return;
+
+      std::vector<real_type> coeffs( static_cast<size_t>( 4 * nseg ) );
+      std::vector<real_type> nodes( static_cast<size_t>( spline.num_points() ) );
+      spline.coeffs( coeffs.data(), nodes.data(), true );
+
+      for ( integer i = 0; i < nseg; ++i )
+      {
+        size_t ii  = i;
+        size_t ii4 = 4*ii;
+        
+        auto & seg = segments[static_cast<unsigned>( i )].set_map();
+        seg["index"].set_int( i );
+        seg["x"].set_real( nodes[ii] );
+        seg["x_next"].set_real( nodes[ii+1] );
+        seg["h"].set_real( nodes[ii+1] - nodes[ii] );
+        seg["a"].set_real( coeffs[ii4+0] );
+        seg["b"].set_real( coeffs[ii4+1] );
+        seg["c"].set_real( coeffs[ii4+2] );
+        seg["d"].set_real( coeffs[ii4+3] );
+      }
+    }
+  }  // namespace
+
 
   void CubicSplineBase::copy_spline( CubicSplineBase const & S )
   {
@@ -334,6 +388,53 @@ namespace Splines
         m_Yp[i],
         m_Yp[i + 1],
         ( m_Y[i + 1] - m_Y[i] ) / ( m_X[i + 1] - m_X[i] ) );
+  }
+
+  void CubicSplineBase::export_csv( ostream_type & s ) const
+  {
+    fmt::print( s, "x,a,b,c,d\n" );
+
+    if ( m_npts <= 0 ) return;
+
+    integer const nseg = m_npts > 0 ? m_npts - 1 : 0;
+    if ( nseg > 0 )
+    {
+      std::vector<real_type> coeffs( static_cast<size_t>( 4 * nseg ) );
+      std::vector<real_type> nodes( static_cast<size_t>( m_npts ) );
+      this->coeffs( coeffs.data(), nodes.data(), true );
+
+      for ( integer i = 0; i < nseg; ++i ) {
+        size_t ii  = i;
+        size_t ii4 = ii*4;
+        fmt::print(
+          s,
+          "{:.17g},{:.17g},{:.17g},{:.17g},{:.17g}\n",
+          nodes[ii], coeffs[ii4+0], coeffs[ii4+1], coeffs[ii4+2], coeffs[ii4+3] );
+      }
+    }
+
+    fmt::print(
+      s,
+      "{:.17g},{:.17g},{:.17g},{:.17g},{:.17g}\n",
+      m_X[m_npts - 1],
+      m_Y[m_npts - 1],
+      0.0,
+      0.0,
+      0.0 );
+  }
+
+  void CubicSplineBase::export_json( ostream_type & s ) const
+  {
+    GenericContainer gc;
+    fill_cubic_export_data( *this, gc );
+    gc.to_json( s );
+  }
+
+  void CubicSplineBase::export_yaml( ostream_type & s ) const
+  {
+    GenericContainer gc;
+    fill_cubic_export_data( *this, gc );
+    gc.to_yaml( s );
   }
 
   void CubicSplineBase::build(
