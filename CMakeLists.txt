@@ -13,15 +13,14 @@ cmake_minimum_required(VERSION 3.14)
 
 project( Splines )
 
-if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/cmake_utils")
-  set( HOME "${PROJECT_SOURCE_DIR}/cmake_utils/" )
-else()
-  if (IS_DIRECTORY "${PROJECT_SOURCE_DIR}/../cmake_utils")
-    set( HOME "${PROJECT_SOURCE_DIR}/../cmake_utils/" )
-  else()
-    set( HOME "${PROJECT_SOURCE_DIR}/../../cmake_utils/" )
-  endif()
-endif()
+include(FetchContent)
+FetchContent_Declare(
+  cmake_utils
+  GIT_REPOSITORY https://github.com/ebertolazzi/cmake_utils.git
+  GIT_TAG        e8c50a2eda739e569dde5d2851ac713e28ddc9f3
+)
+FetchContent_MakeAvailable( cmake_utils )
+set( HOME "${cmake_utils_SOURCE_DIR}/" )
 
 
 include( "${HOME}/CMakeLists-common.txt" )
@@ -111,11 +110,17 @@ include_directories( ./lib3rd/include )
 #
 set(DEPEND_TARGETS)
 
-include(FetchContent)
+FetchContent_Declare(
+  nlohmann_json
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 FetchContent_Declare(
   GenericContainer
   GIT_REPOSITORY https://github.com/pbosetti/GenericContainer
-  GIT_TAG        fe71170f11f57d103e1f1707cc79ce7b4f1c195e
+  GIT_TAG        ab02f2f5cbc7c2af9915172fbabdd07694ba7636
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(GenericContainer)
@@ -181,7 +186,7 @@ if ( UTILS_ENABLE_TESTS )
 
   set(
     EXELISTCPP
-    test00 test01 test02 test03 test04 test05 test06 test07 test08 test09 test10 test11 test12 test13 test14 test15 test16 test17
+    test00 test01 test02 test03 test04 test05 test06 test07 test08 test09 test10 test11 test12 test13 test14 test15 test16 test17 test18
   )
 
   add_custom_target( "${PROJECT_NAME}_all_tests" ALL )
@@ -195,6 +200,9 @@ if ( UTILS_ENABLE_TESTS )
     add_test( NAME "${S}" COMMAND ./bin/${S}.exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
     add_dependencies( "${PROJECT_NAME}_all_tests" ${S} )
   endforeach()
+
+  # test18 exercises the nlohmann::json <-> GenericContainer bridge
+  target_link_libraries( test18 nlohmann_json::nlohmann_json )
 
 endif()
 
