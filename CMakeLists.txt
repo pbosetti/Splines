@@ -120,7 +120,7 @@ FetchContent_MakeAvailable(nlohmann_json)
 FetchContent_Declare(
   GenericContainer
   GIT_REPOSITORY https://github.com/pbosetti/GenericContainer
-  GIT_TAG        ab02f2f5cbc7c2af9915172fbabdd07694ba7636
+  GIT_TAG        12d9f60343c3aff0d4b25eeacb45859b04157edb
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(GenericContainer)
@@ -195,10 +195,10 @@ if ( UTILS_ENABLE_TESTS )
   set( LIBS ${UTILS_NAMESPACE}_${PROJECT_NAME}_Static ${UTILS} ${ROOTS} ${GC} ${CMAKE_DL_LIBS} )
   foreach( S ${EXELISTCPP} )
     add_executable( ${S} ${CMAKE_CURRENT_SOURCE_DIR}/src_tests/${S}.cc )
-    target_link_libraries( ${S} ${LIBS} )
+    target_link_libraries( ${S} ${LIBS} ${GC})
     set_target_properties( ${S} PROPERTIES SUFFIX ".exe" )
     add_test( NAME "${S}" COMMAND ./bin/${S}.exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
-    add_dependencies( "${PROJECT_NAME}_all_tests" ${S} )
+    add_dependencies( "${PROJECT_NAME}_all_tests" )
   endforeach()
 
   # test18 exercises the nlohmann::json <-> GenericContainer bridge
