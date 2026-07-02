@@ -111,10 +111,21 @@ include_directories( ./lib3rd/include )
 #
 set(DEPEND_TARGETS)
 
+include(FetchContent)
+FetchContent_Declare(
+  GenericContainer
+  GIT_REPOSITORY https://github.com/pbosetti/GenericContainer
+  GIT_TAG        fe71170f11f57d103e1f1707cc79ce7b4f1c195e
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(GenericContainer)
+set(GC utils::GenericContainer_Static)
+
+
 # DEPENDENCIES (TRY TO USE ALREADY COMPILED SUBMODULE IN LARGE PROJECT)
 utils_add_library_or_submodule( "quarticRootsFlocke" ROOTS )
 utils_add_library_or_submodule( "UtilsLite" UTILS )
-utils_add_library_or_submodule( "GenericContainer" GC "GC" )
+# utils_add_library_or_submodule( "GenericContainer" GC "GC" )
 
 message( STATUS "----------------------------------------------------------------" )
 message( STATUS "UTILS = ${UTILS}" )
@@ -139,6 +150,7 @@ utils_setup_target(
   "${SOURCE_DIR}"
   "${PUBLIC_HEADERS}"
 )
+target_link_libraries( ${UTILS_NAMESPACE}_${PROJECT_NAME}_Static PUBLIC ${GC} )
 if ( UTILS_BUILD_SHARED )
   utils_setup_target(
     ${PROJECT_NAME}
