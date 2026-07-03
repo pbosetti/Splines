@@ -227,7 +227,7 @@ if ( UTILS_ENABLE_TESTS )
     target_link_libraries( ${S} ${LIBS} )
     set_target_properties( ${S} PROPERTIES SUFFIX ".exe" )
     add_test( NAME "${S}" COMMAND ./bin/${S}.exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
-    add_dependencies( "${PROJECT_NAME}_all_tests" )
+    add_dependencies( "${PROJECT_NAME}_all_tests" ${S} )
   endforeach()
 
   # test18 exercises the nlohmann::json <-> GenericContainer bridge
@@ -243,7 +243,7 @@ endif()
 install(
   TARGETS ${TARGETS_TO_BE_INSTALLED}
   # EXPORT (da definire)
-  LIBRARY DESTINATION ${INSTALL_PREFIX}/dll
+  LIBRARY DESTINATION ${INSTALL_PREFIX}/lib
   ARCHIVE DESTINATION ${INSTALL_PREFIX}/lib
   RUNTIME DESTINATION ${INSTALL_PREFIX}/bin
   PUBLIC_HEADER DESTINATION ${PROJECT_PUBLIC_HEADER_DESTINATION}
