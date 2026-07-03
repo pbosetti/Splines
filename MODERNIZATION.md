@@ -152,21 +152,34 @@ and macOS (`build/`).
   `id_eval`. Devirtualizing `id_eval` (leaf overrides, leaning on the Tier-3c
   `final`) and/or a SIMD inner loop are the next levers if profiles justify.
 
-### 3b. Hoist reciprocals / precompute inverse interval widths
-- **Where:** `id_eval` and the Hermite basis recompute
-  `1/(m_X[ni+1]-m_X[ni])`, `1/H`, `1/H²` on every call
-  ([`Splines.hh:210-249`](include/Splines/Splines.hh#L210),
-  [`SplineLinear.cc:84`](src/SplineLinear.cc#L84)).
-- **Proposal:** precompute inverse interval widths at build time; pass the
-  reciprocal into the Hermite helpers.
-- **Risk:** low–moderate; must confirm bit-for-bit-close numerics (division
-  vs. multiply-by-reciprocal changes rounding — verify test tolerances hold).
+### 3b. Hoist reciprocals — MEASURED, NOT WORTH IT (rejected)
+- **Finding:** the benchmark bounds the ceiling directly. On the sorted
+  interval-reuse path, `Linear` eval is 2.30 ns and `Cubic` eval is 2.59 ns
+  — only **0.29 ns** separates a trivial evaluator from the full Hermite
+  arithmetic. Reciprocal hoisting targets a slice *inside* that 0.3 ns, so the
+  best case is a fraction of a fraction of a nanosecond, in exchange for a
+  precomputed inverse-width array on every `reserve()`/`build()` and a
+  floating-point rounding change (divide → multiply-by-reciprocal). Not worth
+  it. Left the Hermite helpers dividing.
 
-### 3c. Devirtualization
-- **Proposal:** ensure `final` on leaf spline classes (24 already have it) so
-  the compiler can devirtualize when the static type is known; measure whether
-  it moves the needle for scalar loops (3a may make this moot).
-- **Risk:** minimal.
+### 3c. Devirtualization — DONE (`final`) + MEASURED (no batch gain)
+- **`final`** on the leaf classes shipped with Tier 3c (helps the compiler
+  where a static type is known).
+- **Batch-path devirtualization measured & rejected:** prototyped making the
+  batch `eval`/`D`/`DD(span,span)` virtual and overriding them in `CubicSpline`
+  (`final`, so `id_eval` resolves statically) — the sorted-batch eval measured
+  **2.59 ns, byte-identical** to the virtual-dispatch version (and equal to the
+  non-devirtualized `Akima` control). Reason: the `id_eval` bodies are
+  out-of-line (in `.cc`), so devirtualization only turns an indirect call into
+  a direct call — no inlining, no vectorization — and the CPU already hides
+  that indirect-branch cost. Reverted.
+- **Net conclusion for Tier 3:** the eval hot path is memory/loop-bound, not
+  dispatch- or arithmetic-bound. The one real lever was skipping redundant
+  searches (3a interval-reuse, 3-4x on sorted); further micro-optimization
+  (3b, batch devirt) does not move the needle and was rejected on measurement.
+  A larger win would require moving `id_eval` into headers to inline+vectorize
+  the whole sorted loop — a big, rounding-sensitive change deferred unless a
+  profile of real workloads justifies it.
 
 ---
 

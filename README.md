@@ -156,6 +156,12 @@ separate library to link.
 ctest --test-dir build --output-on-failure
 ```
 
+Or just:
+
+```sh
+./build.sh test
+```
+
 `test00` through `test18` cover each curve/surface type, the C interface,
 and the `nlohmann::json` / `GenericContainer` bridges (`test18`).
 
