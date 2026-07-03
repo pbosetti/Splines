@@ -47,6 +47,7 @@
 #include <mutex>
 #include <set>
 #include <functional>
+#include <span>
 #include <type_traits>
 #include <utility>
 

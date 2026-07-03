@@ -117,16 +117,23 @@ and macOS (`build/`).
 > one). **Step 0 of this tier is to add a micro-benchmark** so every change
 > below is validated against a baseline on the VM and macOS.
 
-### 3a. Batch evaluation API — largest expected win
-- **Context:** the scalar hot path is a **virtual** call per point:
-  `operator()` → `virtual eval()`
-  ([`Splines.hh:1092`](include/Splines/Splines.hh#L1092),
-  [`1156`](include/Splines/Splines.hh#L1156)).
-- **Proposal:** add
-  `void eval( std::span<const real_type> xs, std::span<real_type> out ) const`
-  that resolves the dynamic type once and loops internally, amortizing the
-  indirect call and enabling auto-vectorization of the inner loop.
-- **Risk:** low; additive API. Validate numerics equal the scalar path.
+### 3a. Batch evaluation API — DONE
+- **Shipped:** `eval`/`D`/`DD( std::span<const real_type>, std::span<real_type> )`
+  on the base `Spline` ([`Splines.hh`](include/Splines/Splines.hh)), one
+  implementation, no per-leaf boilerplate. Bit-identical to the scalar path
+  (asserted in [`benchmarks/bench_eval.cc`](benchmarks/bench_eval.cc) across
+  exact knots, out-of-domain points, sorted input, and a closed/periodic
+  spline).
+- **Finding:** amortizing the *dispatch* alone was ~1.03x — measurement showed
+  the outer virtual call is **not** the cost; the per-point interval `find()`
+  is. The win comes from skipping redundant searches: for **sorted/monotone**
+  input the batch reuses the current segment (strict half-open guard, falls
+  back to `find()` at boundaries / out-of-domain / wrapping), giving **3-4x**.
+  An up-front `is_sorted` gate keeps **random** input at ~1.0x (no regression,
+  no footgun).
+- **Left for later:** the remaining per-point cost is `find()` + the virtual
+  `id_eval`. Devirtualizing `id_eval` (leaf overrides, leaning on the Tier-3c
+  `final`) and/or a SIMD inner loop are the next levers if profiles justify.
 
 ### 3b. Hoist reciprocals / precompute inverse interval widths
 - **Where:** `id_eval` and the Hermite basis recompute

@@ -20,7 +20,15 @@ spline.build( x, y );
 
 double value      = spline( 2.5 );   // interpolated value
 double derivative = spline.D( 2.5 ); // first derivative
+
+// Batch evaluation over an array of abscissas (eval / D / DD):
+std::vector<double> xs = { 0.5, 1.5, 2.5, 3.5 }, ys( xs.size() );
+spline.eval( xs, ys );               // ys[i] == spline(xs[i]), bit-for-bit
 ```
+
+Batch results are identical to calling the scalar form per element; for
+**sorted** abscissas (resampling, plotting) the batch path reuses the
+current segment instead of re-searching, ~3-4x faster than the scalar loop.
 
 ---
 
