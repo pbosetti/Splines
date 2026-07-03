@@ -43,6 +43,7 @@ current segment instead of re-searching, ~3-4x faster than the scalar loop.
     - [If other subprojects also fetch Splines](#if-other-subprojects-also-fetch-splines)
     - [Installing without CMake integration](#installing-without-cmake-integration)
   - [The C interface](#the-c-interface)
+  - [Performance](#performance)
   - [Testing](#testing)
   - [License](#license)
 
@@ -148,7 +149,33 @@ Splines from another CMake project.
 `Splines/SplinesCinterface.h` exposes a handle-based C API
 (`Spline_new`, `Spline_build`, `Spline_eval`, ...) for embedding in
 non-C++ hosts — it's part of the same `Splines::Splines` target, no
-separate library to link.
+separate library to link. The C API is internally synchronized (each call
+is atomic), so it is memory-safe under concurrent use; it remains logically
+stateful, so heavy concurrent evaluation should go through the C++ API.
+
+## Performance
+
+Evaluating an array of abscissas through the batch API
+(`eval`/`D`/`DD( span, span )`) is **3–4× faster** than a per-point scalar
+loop when the abscissas are **sorted** (resampling, plotting, arc-length
+reparametrization): the batch reuses the current segment instead of
+re-searching for every point. On unsorted input it auto-detects the ordering
+and falls back to a plain per-point loop, staying at scalar speed — never a
+regression. Batch results are always bit-for-bit identical to the scalar path.
+
+Sorted queries, Apple M1 Max, 1000 knots, 2M queries, ns per evaluation:
+
+| Spline  | scalar loop | batch | speedup |
+|---------|------------:|------:|--------:|
+| Linear  |  8.9 | 2.3 | 3.8× |
+| Cubic   | 10.5 | 2.6 | 4.0× |
+| Akima   | 10.4 | 2.6 | 4.0× |
+| PCHIP   | 10.4 | 2.6 | 4.0× |
+| Quintic | 12.5 | 4.1 | 3.0× |
+
+Numbers are machine-dependent; reproduce with
+`./bin/bench_eval [knots] [queries] [reps]` (built when
+`SPLINES_BUILD_BENCHMARKS` is on).
 
 ## Testing
 
