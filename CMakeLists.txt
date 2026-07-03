@@ -144,8 +144,14 @@ if( TARGET Eigen3::Eigen AND EXISTS "${UtilsLite_SOURCE_DIR}/src/Utils/3rd/Eigen
   )
 endif()
 
-# DEPENDENCIES (TRY TO USE ALREADY COMPILED SUBMODULE IN LARGE PROJECT)
-utils_add_library_or_submodule( "quarticRootsFlocke" ROOTS )
+FetchContent_Declare(
+  quarticRootsFlocke
+  GIT_REPOSITORY https://github.com/ebertolazzi/quarticRootsFlocke.git
+  GIT_TAG        b13bd707f713e19d4d1e7c22ff8c00c60b34e90b
+)
+FetchContent_MakeAvailable(quarticRootsFlocke)
+set(ROOTS utils_quarticRootsFlocke_Static)
+
 # utils_add_library_or_submodule( "UtilsLite" UTILS )
 # utils_add_library_or_submodule( "GenericContainer" GC "GC" )
 
@@ -174,7 +180,7 @@ utils_setup_target(
 )
 target_link_libraries(
   ${UTILS_NAMESPACE}_${PROJECT_NAME}_Static
-  PUBLIC ${GC} ${UTILS} nlohmann_json::nlohmann_json
+  PUBLIC ${ROOTS} ${GC} ${UTILS} nlohmann_json::nlohmann_json
 )
 if ( UTILS_BUILD_SHARED )
   utils_setup_target(
