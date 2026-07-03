@@ -150,6 +150,11 @@ add_library( Splines::Splines ALIAS Splines )
 
 target_compile_features( Splines PUBLIC cxx_std_20 )
 target_compile_definitions( Splines PUBLIC SPLINES_NO_COMPATIBILITY )
+# MSVC's <cmath> only defines M_PI (and friends) if _USE_MATH_DEFINES is set
+# before it's included; the test executables use M_PI directly. PUBLIC so it
+# reaches them (and any other consumer) the same way cmake_utils used to set
+# it globally for every target.
+target_compile_definitions( Splines PUBLIC _USE_MATH_DEFINES )
 target_include_directories(
   Splines PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
