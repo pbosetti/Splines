@@ -180,6 +180,17 @@ if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
   target_link_options( Splines PUBLIC -stdlib=libc++ )
 endif()
 
+# Splines' own public headers pull in fmt (Utils_fmt.hh, used throughout for
+# error messages), and fmt static_asserts on MSVC unless the source is
+# compiled as UTF-8 explicitly (MSVC's default source/execution charset
+# isn't UTF-8). PUBLIC because anything that includes Splines' headers --
+# including our own test executables -- hits the same fmt headers.
+# /bigobj avoids "too many sections" from the heavy SplineSet_eval*.hxx
+# template instantiations.
+if ( MSVC )
+  target_compile_options( Splines PUBLIC /utf-8 /bigobj )
+endif()
+
 message( STATUS "Compiler used: ${CMAKE_CXX_COMPILER_ID}" )
 
 #   _____         _
