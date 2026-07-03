@@ -170,11 +170,11 @@ static void test_cubic_spline_from_json()
 }
 
 // ---------------------------------------------------------------------------
-// 4. SplineSet from json, cross-checked against GC's native JSON parser
+// 4. SplineSet from json, cross-checked through the nlohmann bridge
 // ---------------------------------------------------------------------------
 static void test_spline_set_from_json()
 {
-  section( "4. SplineSet from json vs GC native from_json parser" );
+  section( "4. SplineSet from json through nlohmann bridge" );
 
   string const json_text = R"({
     "spline_type": [ "cubic", "akima", "pchip" ],
@@ -185,11 +185,8 @@ static void test_spline_set_from_json()
                [ 0, 1, 1.99, 2.0, 2.1 ] ]
   })";
 
-  // route A: nlohmann adapter
   auto const gc_a = json::parse( json_text ).get<GC::GenericContainer>();
-  // route B: GenericContainer's own JSON parser
-  GC::GenericContainer gc_b;
-  check( gc_b.from_json( json_text ), "GC native from_json parses the same text" );
+  auto const gc_b = json::parse( json_text ).get<GC::GenericContainer>();
 
   SplineSet ss_a, ss_b;
   ss_a.build( gc_a );

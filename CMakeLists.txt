@@ -120,22 +120,39 @@ FetchContent_MakeAvailable(nlohmann_json)
 FetchContent_Declare(
   GenericContainer
   GIT_REPOSITORY https://github.com/pbosetti/GenericContainer
-  GIT_TAG        12d9f60343c3aff0d4b25eeacb45859b04157edb
+  GIT_TAG        main
   GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(GenericContainer)
-set(GC utils::GenericContainer_Static)
+set(GC GenericContainer::Yaml)
 
+include(FetchContent)
+FetchContent_Declare(
+  UtilsLite
+  GIT_REPOSITORY https://github.com/pbosetti/UtilsLite.git
+  GIT_TAG        main
+)
+FetchContent_MakeAvailable(UtilsLite)
+set(UTILS utils::UtilsLite_Static)
+
+if( TARGET Eigen3::Eigen AND EXISTS "${UtilsLite_SOURCE_DIR}/src/Utils/3rd/Eigen/Core" )
+  set( _SPLINES_UTILSLITE_EIGEN_DIR "${UtilsLite_SOURCE_DIR}/src/Utils/3rd" )
+  set_target_properties(
+    Eigen3::Eigen PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_SPLINES_UTILSLITE_EIGEN_DIR}"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_SPLINES_UTILSLITE_EIGEN_DIR}"
+  )
+endif()
 
 # DEPENDENCIES (TRY TO USE ALREADY COMPILED SUBMODULE IN LARGE PROJECT)
 utils_add_library_or_submodule( "quarticRootsFlocke" ROOTS )
-utils_add_library_or_submodule( "UtilsLite" UTILS )
+# utils_add_library_or_submodule( "UtilsLite" UTILS )
 # utils_add_library_or_submodule( "GenericContainer" GC "GC" )
 
 message( STATUS "----------------------------------------------------------------" )
 message( STATUS "UTILS = ${UTILS}" )
 message( STATUS "ROOTS = ${ROOTS}" )
-message( STATUS "GC    = ${GC}" )
+message( STATUS "GC    = ${GC} Eigen3::Eigen" )
 message( STATUS "----------------------------------------------------------------" )
 
 add_definitions( -DSPLINES_NO_COMPATIBILITY )
@@ -155,7 +172,10 @@ utils_setup_target(
   "${SOURCE_DIR}"
   "${PUBLIC_HEADERS}"
 )
-target_link_libraries( ${UTILS_NAMESPACE}_${PROJECT_NAME}_Static PUBLIC ${GC} )
+target_link_libraries(
+  ${UTILS_NAMESPACE}_${PROJECT_NAME}_Static
+  PUBLIC ${GC} ${UTILS} nlohmann_json::nlohmann_json
+)
 if ( UTILS_BUILD_SHARED )
   utils_setup_target(
     ${PROJECT_NAME}
@@ -165,7 +185,10 @@ if ( UTILS_BUILD_SHARED )
     "${SOURCE_DIR}"
     "${PUBLIC_HEADERS}"
   )
-  target_link_libraries( ${UTILS_NAMESPACE}_${PROJECT_NAME} ${ROOTS} ${GC} ${UTILS} )
+  target_link_libraries(
+    ${UTILS_NAMESPACE}_${PROJECT_NAME}
+    ${ROOTS} ${GC} ${UTILS} nlohmann_json::nlohmann_json
+  )
 endif()
 
 if ( DEPEND_TARGETS )
@@ -195,7 +218,7 @@ if ( UTILS_ENABLE_TESTS )
   set( LIBS ${UTILS_NAMESPACE}_${PROJECT_NAME}_Static ${UTILS} ${ROOTS} ${GC} ${CMAKE_DL_LIBS} )
   foreach( S ${EXELISTCPP} )
     add_executable( ${S} ${CMAKE_CURRENT_SOURCE_DIR}/src_tests/${S}.cc )
-    target_link_libraries( ${S} ${LIBS} ${GC})
+    target_link_libraries( ${S} ${LIBS} )
     set_target_properties( ${S} PROPERTIES SUFFIX ".exe" )
     add_test( NAME "${S}" COMMAND ./bin/${S}.exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
     add_dependencies( "${PROJECT_NAME}_all_tests" )

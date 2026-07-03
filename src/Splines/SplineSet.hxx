@@ -786,7 +786,7 @@ namespace Splines
           case -1: res += " is NOT monotone\n"; break;
           case 0: res += " is monotone\n"; break;
           case 1: res += " is strictly monotone\n"; break;
-          default: UTILS_ERROR( "SplineSet::info classification: {} not in range {-2,-1,0,1}\n", m_is_monotone[i] );
+          default: UTILS_ERROR( "SplineSet::info classification: {} not in range {{-2,-1,0,1}}\n", m_is_monotone[i] );
         }
         res += m_splines[i]->info();
       }
