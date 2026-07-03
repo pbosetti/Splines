@@ -84,6 +84,7 @@ Useful configure-time options:
 | `BUILD_SHARED_LIBS` | `OFF` | Build a shared (`.so`/`.dylib`/`.dll`) instead of a static library |
 | `BUILD_TESTING` | `ON` | Build the `test00`..`test18` executables |
 | `SPLINES_INSTALL` | `ON` (top-level) | Generate install/package rules |
+| `SPLINES_BUILD_BENCHMARKS` | `ON` (top-level) | Build `bin/bench_eval` (micro-benchmark, run manually) |
 
 ## Using it from your own CMake project
 

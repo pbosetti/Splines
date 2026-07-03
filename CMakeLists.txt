@@ -33,6 +33,7 @@ endif()
 # and installing shouldn't be forced on a project that FetchContent's us.
 option( BUILD_SHARED_LIBS "Build Splines as a shared library" OFF )
 option( SPLINES_INSTALL "Generate the install target" ${PROJECT_IS_TOP_LEVEL} )
+option( SPLINES_BUILD_BENCHMARKS "Build the micro-benchmarks" ${PROJECT_IS_TOP_LEVEL} )
 
 include( GNUInstallDirs )
 include( FetchContent )
@@ -238,6 +239,22 @@ if ( BUILD_TESTING AND PROJECT_IS_TOP_LEVEL )
     add_test( NAME "${S}" COMMAND ./bin/${S} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
     add_dependencies( "${PROJECT_NAME}_all_tests" ${S} )
   endforeach()
+endif()
+
+#   ___                _                         _
+#  | _ ) ___ _ _  __ | |_  _ __  __ _ _ _ | |__ ___
+#  | _ \/ -_) ' \/ _|| ' \| '  \/ _` | '_|| / /(_-<
+#  |___/\___|_||_\__||_||_|_|_|_\__,_|_|  |_\_\/__/
+#
+# Micro-benchmarks (not tests): built only standalone. Output goes to bin/
+# like the tests; run manually, e.g. `./bin/bench_eval 2000 5000000 7`.
+if ( SPLINES_BUILD_BENCHMARKS AND PROJECT_IS_TOP_LEVEL )
+  add_executable( bench_eval "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/bench_eval.cc" )
+  target_link_libraries( bench_eval PRIVATE Splines::Splines )
+  set_target_properties(
+    bench_eval PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+  )
 endif()
 
 #   ___         _        _ _
