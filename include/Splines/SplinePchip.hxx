@@ -33,7 +33,7 @@ namespace Splines
 {
 
   //! Pchip (Piecewise Cubic Hermite Interpolating Polynomial) spline class
-  class PchipSpline : public CubicSplineBase
+  class PchipSpline final : public CubicSplineBase
   {
   public:
     using CubicSplineBase::build;
@@ -52,7 +52,7 @@ namespace Splines
     ~PchipSpline() override {}
 
     //! Return spline type (as number)
-    SplineType1D type() const override { return SplineType1D::PCHIP; }
+    [[nodiscard]] SplineType1D type() const override { return SplineType1D::PCHIP; }
 
     // --------------------------- VIRTUALS -----------------------------------
 

@@ -91,42 +91,42 @@ namespace Splines
     //!
     //! Estimated `x` derivatives at node `(i,j)`
     //!
-    real_type Dx_node( integer const i, integer const j ) const { return mDX.coeff( i, j ); }
+    [[nodiscard]] real_type Dx_node( integer const i, integer const j ) const { return mDX.coeff( i, j ); }
 
     //!
     //! Estimated `y` derivatives at node `(i,j)`
     //!
-    real_type Dy_node( integer const i, integer const j ) const { return mDY.coeff( i, j ); }
+    [[nodiscard]] real_type Dy_node( integer const i, integer const j ) const { return mDY.coeff( i, j ); }
 
     //!
     //! Estimated second `x` second derivatives at node `(i,j)`
     //!
-    real_type Dxx_node( integer const i, integer const j ) const { return mDXX.coeff( i, j ); }
+    [[nodiscard]] real_type Dxx_node( integer const i, integer const j ) const { return mDXX.coeff( i, j ); }
 
     //!
     //! Estimated second`y` derivatives at node `(i,j)`
     //!
-    real_type Dyy_node( integer const i, integer const j ) const { return mDYY.coeff( i, j ); }
+    [[nodiscard]] real_type Dyy_node( integer const i, integer const j ) const { return mDYY.coeff( i, j ); }
 
     //!
     //! Estimated mixed `xy` derivatives at node `(i,j)`
     //!
-    real_type Dxy_node( integer const i, integer const j ) const { return mDXY.coeff( i, j ); }
+    [[nodiscard]] real_type Dxy_node( integer const i, integer const j ) const { return mDXY.coeff( i, j ); }
 
     //!
     //! Estimated `xxy` second derivatives at node `(i,j)`
     //!
-    real_type Dxxy_node( integer const i, integer const j ) const { return mDXXY.coeff( i, j ); }
+    [[nodiscard]] real_type Dxxy_node( integer const i, integer const j ) const { return mDXXY.coeff( i, j ); }
 
     //!
     //! Estimated `xyy` derivatives at node `(i,j)`
     //!
-    real_type Dxyy_node( integer const i, integer const j ) const { return mDXYY.coeff( i, j ); }
+    [[nodiscard]] real_type Dxyy_node( integer const i, integer const j ) const { return mDXYY.coeff( i, j ); }
 
     //!
     //! Estimated mixed `xxyy` derivatives at node `(i,j)`
     //!
-    real_type Dxxyy_node( integer const i, integer const j ) const { return mDXXYY.coeff( i, j ); }
+    [[nodiscard]] real_type Dxxyy_node( integer const i, integer const j ) const { return mDXXYY.coeff( i, j ); }
 
     ///@}
 
@@ -137,7 +137,7 @@ namespace Splines
     //!
     //! Evaluate spline at point \f$ (x,y) \f$
     //!
-    real_type eval( real_type x, real_type y ) const override;
+    [[nodiscard]] real_type eval( real_type x, real_type y ) const override;
 
     //!
     //! Evaluate spline with derivative at point \f$ (x,y) \f$
@@ -151,12 +151,12 @@ namespace Splines
     //!
     //! Evaluate spline `x`  derivative at point \f$ (x,y) \f$
     //!
-    real_type Dx( real_type const x, real_type const y ) const override;
+    [[nodiscard]] real_type Dx( real_type const x, real_type const y ) const override;
 
     //!
     //! Evaluate spline `y`  derivative at point \f$ (x,y) \f$
     //!
-    real_type Dy( real_type const x, real_type const y ) const override;
+    [[nodiscard]] real_type Dy( real_type const x, real_type const y ) const override;
 
     //!
     //! Evaluate spline with derivative at point \f$ (x,y) \f$
@@ -173,17 +173,17 @@ namespace Splines
     //!
     //! Evaluate spline `x` second derivative at point \f$ (x,y) \f$
     //!
-    real_type Dxx( real_type const x, real_type const y ) const override;
+    [[nodiscard]] real_type Dxx( real_type const x, real_type const y ) const override;
 
     //!
     //! Evaluate spline `xy` mixed derivative at point \f$ (x,y) \f$
     //!
-    real_type Dxy( real_type const x, real_type const y ) const override;
+    [[nodiscard]] real_type Dxy( real_type const x, real_type const y ) const override;
 
     //!
     //! Evaluate spline `y` second derivative at point \f$ (x,y) \f$
     //!
-    real_type Dyy( real_type const x, real_type const y ) const override;
+    [[nodiscard]] real_type Dyy( real_type const x, real_type const y ) const override;
 
     ///@}
 
@@ -192,8 +192,8 @@ namespace Splines
     //! \name Autodiff
     //!
     ///@{
-    autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const override;
-    autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const override;
+    [[nodiscard]] autodiff::dual1st eval( autodiff::dual1st const & x, autodiff::dual1st const & y ) const override;
+    [[nodiscard]] autodiff::dual2nd eval( autodiff::dual2nd const & x, autodiff::dual2nd const & y ) const override;
     ///@}
 #endif
   };

@@ -36,7 +36,7 @@ namespace Splines
   //!
   //! Cubic spline base class
   //!
-  class BiCubicSpline : public BiCubicSplineBase
+  class BiCubicSpline final : public BiCubicSplineBase
   {
     using BiCubicSplineBase::mDX;
     using BiCubicSplineBase::mDXY;
@@ -72,7 +72,7 @@ namespace Splines
 
     void write_to_stream( ostream_type & s ) const override;
 
-    char const * type_name() const override { return "BiCubic"; }
+    [[nodiscard]] char const * type_name() const override { return "BiCubic"; }
   };
 
 }  // namespace Splines

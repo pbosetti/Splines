@@ -31,7 +31,7 @@ namespace Splines
 {
 
   //! Quintic spline class
-  class QuinticSpline : public QuinticSplineBase
+  class QuinticSpline final : public QuinticSplineBase
   {
     using QuinticSplineBase::m_sub_type;
 

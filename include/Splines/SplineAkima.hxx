@@ -41,7 +41,7 @@ namespace Splines
   //!
   //! - *Hiroshi Akima*, Journal of the ACM, Vol.17, No. 4, 589-602, 1970.
   //!
-  class AkimaSpline : public CubicSplineBase
+  class AkimaSpline final : public CubicSplineBase
   {
   public:
     using CubicSplineBase::build;
@@ -62,7 +62,7 @@ namespace Splines
     //!
     //! Return spline type (as number).
     //!
-    SplineType1D type() const override { return SplineType1D::AKIMA; }
+    [[nodiscard]] SplineType1D type() const override { return SplineType1D::AKIMA; }
 
     // --------------------------- VIRTUALS -----------------------------------
 

@@ -103,7 +103,7 @@ namespace Splines
     {
     public:
       /// Data type stored in the search structure: (name, index) pair
-      typedef std::pair<std::string, integer> DATA_TYPE;
+      using DATA_TYPE = std::pair<std::string, integer>;
 
     private:
       /// Sorted vector of (name, index) pairs

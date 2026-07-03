@@ -97,6 +97,23 @@ set( UTILS utils::UtilsLite_Static )
 # (src/Utils/3rd/Eigen) -- UtilsLite's own CMakeLists.txt doesn't reference
 # that target at all, so GenericContainer's Eigen3::Eigen (fetched above,
 # GLOBAL IMPORTED) is used everywhere, with no duplicate Eigen in the tree.
+#
+# Treat UtilsLite's headers as SYSTEM includes for anything that links it
+# (i.e. Splines' own TUs): Utils.hh transitively pulls in its vendored
+# Eigen ThreadPool, whose -Wextra unused-parameter warnings are not ours to
+# fix. Re-tagging the interface include dirs as SYSTEM silences third-party
+# header noise while keeping -Wall -Wextra active on Splines' own sources.
+foreach( _utils_tgt utils_UtilsLite_Static utils_UtilsLite )
+  if ( TARGET ${_utils_tgt} )
+    get_target_property( _utils_inc ${_utils_tgt} INTERFACE_INCLUDE_DIRECTORIES )
+    if ( _utils_inc )
+      set_target_properties(
+        ${_utils_tgt} PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_utils_inc}"
+      )
+    endif()
+  endif()
+endforeach()
 
 FetchContent_Declare(
   quarticRootsFlocke

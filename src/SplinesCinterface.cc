@@ -49,8 +49,6 @@ using namespace SplinesLoad;
 #pragma clang diagnostic ignored "-Wglobal-constructors"
 #endif
 
-using namespace std;  // load standard namspace
-
 namespace
 {
   template <typename F> int
@@ -194,10 +192,10 @@ extern "C"
       {
         if ( head != nullptr )
         {
-          head->write_to_stream( cout );
+          head->write_to_stream( std::cout );
           return 0;
         }
-        cout << "No Spline!\n";
+        std::cout << "No Spline!\n";
         return -1;
       } );
   }

@@ -33,7 +33,7 @@ namespace Splines
   \*/
 
   //! Hermite Spline Management Class
-  class HermiteSpline : public CubicSplineBase
+  class HermiteSpline final : public CubicSplineBase
   {
   public:
     using CubicSplineBase::build;
@@ -52,7 +52,7 @@ namespace Splines
     ~HermiteSpline() override {}
 
     //! Return spline type (as number)
-    SplineType1D type() const override { return SplineType1D::HERMITE; }
+    [[nodiscard]] SplineType1D type() const override { return SplineType1D::HERMITE; }
 
     // --------------------------- VIRTUALS -----------------------------------
 

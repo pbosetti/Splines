@@ -37,7 +37,7 @@ namespace Splines
   //!
   //! Van Leer spline class
   //!
-  class VanLeerSpline : public CubicSplineBase
+  class VanLeerSpline final : public CubicSplineBase
   {
   public:
     using CubicSplineBase::build;
@@ -58,7 +58,7 @@ namespace Splines
     //!
     //! Return spline type (as number)
     //!
-    SplineType1D type() const override { return SplineType1D::VANLEER; }
+    [[nodiscard]] SplineType1D type() const override { return SplineType1D::VANLEER; }
 
     // --------------------------- VIRTUALS -----------------------------------
 
