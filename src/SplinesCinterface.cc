@@ -35,8 +35,8 @@
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #endif
 
-#include "Splines.hh"
-#include "SplinesCinterface.h"
+#include "Splines/Splines.hh"
+#include "Splines/SplinesCinterface.h"
 #include "Utils_fmt.hh"
 
 using namespace SplinesLoad;
