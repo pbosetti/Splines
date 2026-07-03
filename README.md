@@ -93,6 +93,7 @@ Useful configure-time options:
 | `BUILD_TESTING` | `ON` | Build the `test00`..`test18` executables |
 | `SPLINES_INSTALL` | `ON` (top-level) | Generate install/package rules |
 | `SPLINES_BUILD_BENCHMARKS` | `ON` (top-level) | Build `bin/bench_eval` (micro-benchmark, run manually) |
+| `SPLINES_STRICT_WARNINGS` | `OFF` | Compile the Splines target with `-Wconversion`/`-Wsign-conversion`/`-Wshadow`/`-Wdouble-promotion` (GCC/Clang) |
 
 ## Using it from your own CMake project
 

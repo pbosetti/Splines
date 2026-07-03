@@ -42,6 +42,7 @@
 using namespace SplinesLoad;
 
 #include <map>
+#include <mutex>
 #include <string>
 
 #ifdef __clang__
@@ -51,11 +52,27 @@ using namespace SplinesLoad;
 
 namespace
 {
+  // This C interface keeps a single process-wide registry (`spline_stored`)
+  // plus a "currently selected" `head`, all mutated by the entry points
+  // below. Every entry point funnels through one of the c_api_call_* wrappers,
+  // so taking one lock there makes each C-API call atomic -- no data races on
+  // the registry/head and no use-after-free between a delete on one thread and
+  // an eval on another. The API remains logically stateful (two threads
+  // sharing `head` is a logic hazard, not a memory-safety one); heavy
+  // concurrent evaluation should use the C++ API directly. A function-local
+  // static sidesteps any static-init-order concerns.
+  std::mutex & c_api_mutex() noexcept
+  {
+    static std::mutex m;
+    return m;
+  }
+
   template <typename F> int
   c_api_call_int( F const & fn ) noexcept
   {
     try
     {
+      std::lock_guard<std::mutex> const lock( c_api_mutex() );
       return fn();
     }
     catch ( ... )
@@ -69,6 +86,7 @@ namespace
   {
     try
     {
+      std::lock_guard<std::mutex> const lock( c_api_mutex() );
       return fn();
     }
     catch ( ... )
@@ -82,6 +100,7 @@ namespace
   {
     try
     {
+      std::lock_guard<std::mutex> const lock( c_api_mutex() );
       return fn();
     }
     catch ( ... )
@@ -95,6 +114,7 @@ namespace
   {
     try
     {
+      std::lock_guard<std::mutex> const lock( c_api_mutex() );
       return fn();
     }
     catch ( ... )

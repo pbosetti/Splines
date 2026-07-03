@@ -34,6 +34,7 @@ endif()
 option( BUILD_SHARED_LIBS "Build Splines as a shared library" OFF )
 option( SPLINES_INSTALL "Generate the install target" ${PROJECT_IS_TOP_LEVEL} )
 option( SPLINES_BUILD_BENCHMARKS "Build the micro-benchmarks" ${PROJECT_IS_TOP_LEVEL} )
+option( SPLINES_STRICT_WARNINGS "Compile the Splines target with narrowing/conversion warnings" OFF )
 
 include( GNUInstallDirs )
 include( FetchContent )
@@ -189,6 +190,15 @@ set_target_properties(
 
 if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU" )
   target_compile_options( Splines PRIVATE -Wall -Wextra )
+  # Opt-in strict pass (CI): surfaces int/size_t narrowing and float->int
+  # truncation across Splines' own sources and headers. Kept off by default
+  # so a normal build isn't noisy, on in CI to hold the line.
+  if ( SPLINES_STRICT_WARNINGS )
+    target_compile_options(
+      Splines PRIVATE
+      -Wconversion -Wsign-conversion -Wshadow -Wdouble-promotion
+    )
+  endif()
 endif()
 
 # quarticRootsFlocke and UtilsLite build via their own vendored cmake_utils,

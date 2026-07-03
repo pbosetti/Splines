@@ -79,16 +79,28 @@ and macOS (`build/`).
   indexing is bounds-checkable in debug builds and the manual pointer juggling
   / `m_external_alloc` branching shrinks.
 - **Risk:** moderate (touches every derived class's `reserve`); purely internal.
+- **Reassessment (recommend DEFER):** the marginal safety is smaller than it
+  first looked. `std::span::operator[]` is **not** bounds-checked without a
+  hardened stdlib, so swapping `real_type*` for `span` doesn't add real
+  checking on its own; the eval-path indices come from `find()` (already
+  clamped in-range), and the build paths are already assert-covered. The
+  refactor is also more invasive than "internal only": `SearchInterval` holds
+  `real_type** p_X` and dereferences it (`m_search.setup(&m_X, ...)`), so `m_X`
+  must stay a raw pointer for that contract regardless. Net: mostly a
+  maintainability change (shrinking `m_external_alloc` juggling) for real risk.
+  Defer unless pursued for style; if done, keep `m_X`/`m_Y` raw for the search
+  and layer span *views* only on the derived-class access sites.
 
-### 2b. Re-enable narrowing diagnostics
-- **Context:** `integer = int` ([`Splines.hh:68`](include/Splines/Splines.hh#L68))
-  is used for all indexing. The CMake rewrite dropped the old
-  `-Wconversion -Wsign-conversion` flags (now only `-Wall -Wextra`).
-- **Proposal:** add a **strict** CI build variant re-enabling
-  `-Wconversion -Wsign-conversion` (GCC/Clang) to surface `int`/`size_t`
-  boundary narrowing, then fix the hits. Decide per-site whether to keep `int`
-  or move to `std::ptrdiff_t`.
-- **Risk:** low; diagnostic-driven.
+### 2b. Re-enable narrowing diagnostics — DONE (ratchet; code already clean)
+- **Shipped:** `SPLINES_STRICT_WARNINGS` option (off by default) adds
+  `-Wconversion -Wsign-conversion -Wshadow -Wdouble-promotion` to the Splines
+  target on GCC/Clang ([`CMakeLists.txt`](CMakeLists.txt)).
+- **Finding:** probing with it on produced **zero** warnings across all of
+  `src/` and `include/Splines/` (Clang) — the code was maintained clean under
+  these flags before the CMake rewrite dropped them. So this is a ratchet, not
+  a fix: turn it on in CI to keep it clean. (Not wired into CI here since GCC's
+  `-Wconversion` is stricter than Clang's and couldn't be previewed on macOS;
+  enable in a CI job when a GCC runner can verify it stays green.)
 
 ### 2c. `[[nodiscard]]` on pure observers
 - **Context:** currently **0** occurrences in the library.
@@ -96,18 +108,23 @@ and macOS (`build/`).
   `is_closed`, … so dropped results are caught at compile time.
 - **Risk:** minimal; may reveal (and want to fix) existing misuse.
 
-### 2d. C-API global mutable state
-- **Where:** `spline_stored` map + `head`
-  ([`SplinesCinterface.cc:132-133`](src/SplinesCinterface.cc#L132)).
-- **Problem:** process-global, non-reentrant; concurrent C-API calls race.
-- **Proposal:** at minimum document "not thread-safe"; better, guard the map
-  with a mutex, or add an explicit context-handle variant of the API.
-- **Risk:** low (documentation) to moderate (new API surface).
+### 2d. C-API global mutable state — DONE
+- **Shipped:** a single process-wide `std::mutex` acquired in the four
+  `c_api_call_*` wrappers ([`SplinesCinterface.cc`](src/SplinesCinterface.cc)),
+  which every entry point funnels through. Each C-API call is now atomic --
+  no data races on `spline_stored`/`head`, and no use-after-free between a
+  delete on one thread and an eval on another. The API stays logically
+  stateful (sharing `head` across threads is a logic hazard, not a
+  memory-safety one); documented that heavy concurrent eval should use the
+  C++ API directly.
 
-### 2e. `std::span` overloads on buffer APIs
-- **Proposal:** offer `std::span<const real_type>` overloads alongside the
-  existing `(ptr, n)` build/eval signatures (C++20 is already required).
-- **Risk:** minimal; additive.
+### 2e. `std::span` overloads on buffer APIs — DONE (already worked)
+- **Finding:** no code needed. The existing generic
+  `build( VectorX const &, VectorY const & )` template uses `.size()` /
+  `operator[]`, which `std::span` satisfies, so `spline.build( span_x, span_y )`
+  already compiles and is safe today (verified). Likewise the batch
+  `eval/D/DD( span, span )` from Tier 3a. The raw `(ptr, incx, n)` overloads
+  remain for strided / C-style access by design.
 
 ---
 
