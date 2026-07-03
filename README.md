@@ -1,6 +1,6 @@
 # Splines
 
-[![CI](https://github.com/ebertolazzi/Splines/actions/workflows/ci.yml/badge.svg)](https://github.com/ebertolazzi/Splines/actions/workflows/ci.yml)
+[![CI](https://github.com/pbosetti/Splines/actions/workflows/ci.yml/badge.svg)](https://github.com/pbosetti/Splines/actions/workflows/ci.yml)
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 ![CMake](https://img.shields.io/badge/CMake-3.25%2B-informational.svg)
 
