@@ -40,6 +40,29 @@ endif()
 include( "${HOME}/CMakeLists-cflags.txt" )
 include( "${HOME}/CMakeLists-utilities.txt" )
 
+function( splines_select_cxx20 )
+  set( CMAKE_CXX_STANDARD          20  PARENT_SCOPE )
+  set( CMAKE_CXX_STANDARD_REQUIRED ON  PARENT_SCOPE )
+  set( CMAKE_CXX_EXTENSIONS        OFF PARENT_SCOPE )
+  foreach(
+    SPLINES_FLAG_VAR
+    CMAKE_CXX_FLAGS
+    CMAKE_CXX_FLAGS_DEBUG
+    CMAKE_CXX_FLAGS_RELEASE
+    CMAKE_CXX_FLAGS_RELWITHDEBINFO
+    CMAKE_CXX_FLAGS_MINSIZEREL
+  )
+    if( DEFINED ${SPLINES_FLAG_VAR} )
+      set( SPLINES_FLAGS_VALUE "${${SPLINES_FLAG_VAR}}" )
+      string( REPLACE "/std:c++17"  "" SPLINES_FLAGS_VALUE "${SPLINES_FLAGS_VALUE}" )
+      string( REPLACE "-std=c++17"  "" SPLINES_FLAGS_VALUE "${SPLINES_FLAGS_VALUE}" )
+      string( REPLACE "-std=gnu++17" "" SPLINES_FLAGS_VALUE "${SPLINES_FLAGS_VALUE}" )
+      string( STRIP "${SPLINES_FLAGS_VALUE}" SPLINES_FLAGS_VALUE )
+      set( ${SPLINES_FLAG_VAR} "${SPLINES_FLAGS_VALUE}" PARENT_SCOPE )
+    endif()
+  endforeach()
+endfunction()
+
 # Evaluating the suffix to append to target built by this CMake file
 utils_artifacts_suffix(ARTIFACTS_STATIC_SUFFIX TRUE)
 if( UTILS_BUILD_SHARED )
@@ -151,6 +174,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(quarticRootsFlocke)
 set(ROOTS utils_quarticRootsFlocke_Static)
+
+splines_select_cxx20()
 
 # utils_add_library_or_submodule( "UtilsLite" UTILS )
 # utils_add_library_or_submodule( "GenericContainer" GC "GC" )

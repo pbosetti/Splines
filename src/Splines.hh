@@ -968,7 +968,9 @@ namespace Splines
     //!
     template <typename VectorX, typename VectorY> void build( VectorX const & x, VectorY const & y )
     {
-      integer n = std::min<integer>( x.size(), y.size() );
+      integer const nx = static_cast<integer>( x.size() );
+      integer const ny = static_cast<integer>( y.size() );
+      integer const n  = std::min( nx, ny );
       reserve( n );
       for ( integer i = 0; i < n; ++i )
       {

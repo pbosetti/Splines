@@ -54,7 +54,7 @@ Thumbs.db
 out
 DerivedData
 include
-build
+/*build/
 lib
 
 toolbox/doc
