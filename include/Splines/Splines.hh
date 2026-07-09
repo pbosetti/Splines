@@ -1415,6 +1415,7 @@ namespace SplinesLoad
   using Splines::ConstantSpline;
   using Splines::CubicSpline;
   using Splines::CubicSplineBase;
+  using Splines::HermiteSpline;
   using Splines::LinearSpline;
   using Splines::PchipSpline;
   using Splines::QuinticSpline;
