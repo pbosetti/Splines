@@ -56,6 +56,18 @@ jobs:
             --ignore-filename-regex='/(build|_deps)/' \
             > build/coverage.lcov
 
+      - name: Print coverage summary
+        run: |
+          LLVM_COV="$(command -v llvm-cov || command -v llvm-cov-14)"
+          OBJECTS=()
+          for t in bin/test*; do
+            OBJECTS+=(-object "${t}")
+          done
+          "${LLVM_COV}" report \
+            "${OBJECTS[@]}" \
+            --instr-profile=build/coverage.profdata \
+            --ignore-filename-regex='/(build|_deps)/'
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:

@@ -156,6 +156,58 @@ template <typename STYPE> void test_spline_construction( const string & name, ST
 }
 
 // ============================================================================
+// Test 2b: HermiteSpline construction (needs derivative data, so it can't
+// use the generic push_back(x,y) path exercised by test_spline_construction)
+// ============================================================================
+
+void test_hermite_construction()
+{
+  fmt::print(
+    HEADER_COLOR,
+    "\n┌{0:─^{2}}┐\n"
+    "│{1: ^{2}}│\n"
+    "└{0:─^{2}}┘\n",
+    "",
+    "Hermite Construction Test",
+    70 );
+
+  HermiteSpline hs;
+
+  integer   npts = 12;
+  real_type xx[] = { -10, -9, -6, -1, 2, 3, 5, 6, 7, 9, 10, 11 };
+  real_type yy[] = { 595, 635, 695, 795, 855, 875, 895, 915, 935, 985, 1035, 1075 };
+  real_type yp[] = { 0, 5, 20, 30, 15, 10, 5, 5, 15, -20, -10, -5 };
+
+  fmt::print( DATA_COLOR, "\n  Dataset (array build method):\n" );
+  fmt::print( "  ┌────────────┬────────────┬────────────┐\n" );
+  fmt::print( "  │     x      │     y      │     y'     │\n" );
+  fmt::print( "  ├────────────┼────────────┼────────────┤\n" );
+  for ( integer i = 0; i < npts; ++i )
+  {
+    fmt::print( "  │ {:10.3f} │ {:10.3f} │ {:10.3f} │\n", xx[i], yy[i], yp[i] );
+  }
+  fmt::print( "  └────────────┴────────────┴────────────┘\n" );
+
+  hs.build( xx, yy, yp, npts );
+
+  // GenericContainer method -- exercises HermiteSpline::setup(gc)
+  fmt::print( DATA_COLOR, "\n  Dataset (GenericContainer method):\n" );
+  GenericContainer gc;
+  vec_real_type &  x   = gc["xdata"].set_vec_real( npts );
+  vec_real_type &  y   = gc["ydata"].set_vec_real( npts );
+  vec_real_type &  ypd = gc["ypdata"].set_vec_real( npts );
+  copy_n( xx, npts, x.begin() );
+  copy_n( yy, npts, y.begin() );
+  copy_n( yp, npts, ypd.begin() );
+  hs.build( gc );
+
+  fmt::print( SPLINE_COLOR, "\n  Spline Information:\n" );
+  stringstream info_stream;
+  hs.info( info_stream );
+  fmt::print( "{}\n", info_stream.str() );
+}
+
+// ============================================================================
 // Test 3: SplineSet construction
 // ============================================================================
 
@@ -281,6 +333,7 @@ int main()
   test_spline_construction( "Quintic_akima", qs_akima );
   test_spline_construction( "Quintic_vanleer", qs_vanleer );
   test_spline_construction( "Quintic_pchip", qs_pchip );
+  test_hermite_construction();
 
   // Test 2: AutoDiff spline evaluation
   fmt::print(

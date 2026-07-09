@@ -634,6 +634,27 @@ void test_utility_functions()
   for ( int i = 0; i < npts; i++ ) { centripetal_data.push_back( { static_cast<real_type>( i ), t[i] } ); }
   print_result_table( { "i", "t[i]" }, centripetal_data );
 
+  // Universal distribution
+  fmt::print( fg( fmt::color::light_cyan ), "\n🌐 Universal Distribution:\n" );
+  universal( dim, npts, pnts, dim, t );
+  vector<vector<real_type>> universal_data;
+  for ( int i = 0; i < npts; i++ ) { universal_data.push_back( { static_cast<real_type>( i ), t[i] } ); }
+  print_result_table( { "i", "t[i]" }, universal_data );
+
+  // Foley-Nielsen distribution
+  fmt::print( fg( fmt::color::light_yellow ), "\n📉 Foley-Nielsen Distribution:\n" );
+  FoleyNielsen( dim, npts, pnts, dim, t );
+  vector<vector<real_type>> foley_data;
+  for ( int i = 0; i < npts; i++ ) { foley_data.push_back( { static_cast<real_type>( i ), t[i] } ); }
+  print_result_table( { "i", "t[i]" }, foley_data );
+
+  // Fang-Hung distribution
+  fmt::print( fg( fmt::color::light_green ), "\n📊 Fang-Hung Distribution:\n" );
+  FangHung( dim, npts, pnts, dim, t );
+  vector<vector<real_type>> fanghung_data;
+  for ( int i = 0; i < npts; i++ ) { fanghung_data.push_back( { static_cast<real_type>( i ), t[i] } ); }
+  print_result_table( { "i", "t[i]" }, fanghung_data );
+
   // Test Hermite functions
   fmt::print( fg( fmt::color::light_yellow ), "\n🔺 Hermite Basis Functions (H=1):\n" );
   real_type base[4];

@@ -874,6 +874,85 @@ void test_SplineSet_evaluation()
   }
 
   // ========================================================================
+  // TEST 14b: Remaining eval2 overloads not exercised above --
+  // derivative-by-name (SplineSet_eval2_ss.hxx), derivatives and no-x forms
+  // for vector/C-array outputs (SplineSet_eval2_sv.hxx, SplineSet_eval2_v.hxx)
+  // and the no-x index forms (SplineSet_eval2_ii.hxx)
+  // ========================================================================
+  fmt::print(
+    fg( fmt::color::cyan ) | fmt::emphasis::bold,
+    "\n14b. Testing remaining eval2 overloads (derivatives / no-x forms):\n" );
+  {
+    integer   indep = 0;
+    string    indep_name = "linear";
+    real_type zeta       = 10.0;
+    real_type x;
+
+    // -- SplineSet_eval2_ss.hxx: derivative-by-name, and no-x forms --
+    vector<string> names = { "cubic", "akima", "vanleer", "pchip" };
+    for ( const auto & name : names )
+    {
+      real_type dy   = spline_set.eval2_D( zeta, indep_name, x, name );
+      real_type ddy  = spline_set.eval2_DD( zeta, indep_name, x, name );
+      real_type dddy = spline_set.eval2_DDD( zeta, indep_name, x, name );
+      real_type y0   = spline_set.eval2( zeta, indep_name, name );
+      real_type dy0  = spline_set.eval2_D( zeta, indep_name, name );
+      real_type ddy0 = spline_set.eval2_DD( zeta, indep_name, name );
+      real_type dddy0 = spline_set.eval2_DDD( zeta, indep_name, name );
+      fmt::print(
+        "  '{}': dy={:.6f} ddy={:.6f} dddy={:.6f} (no-x: y={:.6f} dy={:.6f} ddy={:.6f} dddy={:.6f})\n",
+        name, dy, ddy, dddy, y0, dy0, ddy0, dddy0 );
+    }
+
+    // -- SplineSet_eval2_ii.hxx: no-x index forms --
+    for ( integer i = 0; i < spline_set.num_splines(); ++i )
+    {
+      real_type y   = spline_set.eval2( zeta, indep, i );
+      real_type dy  = spline_set.eval2_D( zeta, indep, i );
+      real_type ddy = spline_set.eval2_DD( zeta, indep, i );
+      real_type dddy = spline_set.eval2_DDD( zeta, indep, i );
+      fmt::print( "  spline {} (no-x): y={:.6f} dy={:.6f} ddy={:.6f} dddy={:.6f}\n", i, y, dy, ddy, dddy );
+    }
+
+    // -- SplineSet_eval2_sv.hxx: derivatives (with x) and all no-x vector forms --
+    vector<real_type> vals;
+    spline_set.eval2_D( indep, zeta, x, vals );
+    spline_set.eval2_DD( indep, zeta, x, vals );
+    spline_set.eval2_DDD( indep, zeta, x, vals );
+    spline_set.eval2( indep, zeta, vals );
+    spline_set.eval2_D( indep, zeta, vals );
+    spline_set.eval2_DD( indep, zeta, vals );
+    spline_set.eval2_DDD( indep, zeta, vals );
+    fmt::print( "  vector form: last size={}\n", vals.size() );
+
+    // -- SplineSet_eval2_v.hxx: all no-x C-array forms --
+    vector<real_type> cvals( static_cast<size_t>( spline_set.num_splines() ) );
+    spline_set.eval2( indep, zeta, cvals.data() );
+    spline_set.eval2_D( indep, zeta, cvals.data() );
+    spline_set.eval2_DD( indep, zeta, cvals.data() );
+    spline_set.eval2_DDD( indep, zeta, cvals.data() );
+    fmt::print( "  C-array form: first value={:.6f}\n", cvals[0] );
+
+#ifdef AUTODIFF_SUPPORT
+    {
+      using namespace autodiff;
+      dual1st z1 = zeta;
+      z1.grad    = 1.0;
+      dual2nd z2 = zeta;
+      z2.grad    = 1.0;
+
+      dual1st y1_idx  = spline_set.eval2( z1, indep, 1 );
+      dual2nd y2_idx  = spline_set.eval2( z2, indep, 1 );
+      dual1st y1_name = spline_set.eval2( z1, indep_name, string( "cubic" ) );
+      dual2nd y2_name = spline_set.eval2( z2, indep_name, string( "cubic" ) );
+      fmt::print(
+        "  autodiff: idx y1={:.6f} y2={:.6f}, name y1={:.6f} y2={:.6f}\n",
+        y1_idx.val, y2_idx.val.val, y1_name.val, y2_name.val.val );
+    }
+#endif
+  }
+
+  // ========================================================================
   // TEST 15: Autodiff support (if compiled)
   // ========================================================================
 #ifdef AUTODIFF_SUPPORT
